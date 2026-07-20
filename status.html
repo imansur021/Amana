@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amana — Track your order</title>
+<meta name="description" content="Check the status of your Amana order.">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;600;700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ============ DESIGN TOKENS (matches main site) ============ */
+  :root{
+    --indigo-950:#141B33;
+    --indigo-900:#1B2340;
+    --indigo-800:#232C52;
+    --indigo-700:#303E6E;
+    --parchment:#F1E9D8;
+    --parchment-dim:#E7DCC3;
+    --cream:#F6F1E4;
+    --ink:#1B2033;
+    --ink-soft:#585C6E;
+    --ochre:#AB5B2E;
+    --ochre-dark:#8A481F;
+    --ochre-light:#C97A45;
+    --olive:#5C7A4E;
+    --red:#A3372E;
+    --font-display:'Zilla Slab', Georgia, serif;
+    --font-body:'Work Sans', -apple-system, sans-serif;
+    --font-mono:'IBM Plex Mono', 'Courier New', monospace;
+  }
+
+  *{ box-sizing:border-box; }
+  html{ -webkit-text-size-adjust:100%; }
+  @media (prefers-reduced-motion:no-preference){ html{ scroll-behavior:smooth; } }
+  @media (prefers-reduced-motion:reduce){ *{ transition:none !important; animation:none !important; } }
+  body{
+    margin:0; font-family:var(--font-body); background:var(--parchment); color:var(--ink);
+    line-height:1.55; -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{ font-family:var(--font-display); margin:0; }
+  p{ margin:0; }
+  button{ font-family:inherit; cursor:pointer; }
+  input{ font-family:inherit; }
+  a{ color:inherit; }
+  :focus-visible{ outline:2px solid var(--ochre); outline-offset:2px; }
+
+  .wrap{ max-width:640px; margin:0 auto; padding:0 24px; }
+
+  .site-header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 24px; background:var(--indigo-950); border-bottom:1px solid var(--indigo-800);
+  }
+  .logo{ display:flex; align-items:center; gap:8px; font-family:var(--font-display); font-weight:700; font-size:22px; color:var(--cream); letter-spacing:.2px; text-decoration:none; }
+  .logo em{ font-style:normal; color:var(--ochre-light); }
+  .logo-mark{ width:26px; height:26px; flex-shrink:0; }
+  .header-link{ font-size:13.5px; color:#C9CEE0; text-decoration:none; }
+  .header-link:hover{ color:var(--cream); }
+
+  .page-head{ padding:48px 0 8px; text-align:center; }
+  .page-head h1{ font-size:clamp(26px,5vw,34px); font-weight:700; margin-bottom:8px; }
+  .page-head p{ color:var(--ink-soft); font-size:15px; }
+
+  .btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:13px 22px; border-radius:8px; border:1px solid transparent; font-size:15px; font-weight:600; text-decoration:none; }
+  .btn-ochre{ background:var(--ochre); color:var(--cream); }
+  .btn-ochre:hover{ background:var(--ochre-dark); }
+  .btn-ghost{ background:transparent; border-color:var(--ink-soft); color:var(--ink); }
+  .btn-ghost:hover{ background:rgba(0,0,0,.04); }
+  .btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+  /* ---- login panel ---- */
+  .login-panel{
+    background:var(--cream); border:1px solid #E1D6BA; border-radius:12px;
+    padding:28px; margin:32px 0; max-width:420px; margin-left:auto; margin-right:auto;
+  }
+  .field{ margin-bottom:16px; }
+  .field label{ display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:var(--ink-soft); }
+  .field input{
+    width:100%; padding:12px 14px; border-radius:8px; border:1px solid #C9BFA4;
+    background:#fff; font-size:15px; color:var(--ink);
+  }
+  .inline-error{ color:var(--red); font-size:13.5px; margin-top:10px; }
+  .small-link{ background:none; border:none; color:var(--ink-soft); font-size:13px; text-decoration:underline; padding:10px 0 0; display:block; text-align:center; }
+  .small-link:hover{ color:var(--ink); }
+  .modal-sub{ font-size:14px; color:var(--ink-soft); margin-bottom:18px; }
+  .bank-details-box{ background:var(--parchment-dim); border:1px solid #D9CBA5; border-radius:10px; padding:16px; margin:-6px 0 16px; }
+  .bank-details-title{ font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); margin-bottom:10px; }
+  .bank-row{ display:flex; align-items:center; gap:8px; font-size:14px; padding:6px 0; border-bottom:1px solid #D9CBA5; }
+  .bank-row:last-of-type{ border-bottom:none; }
+  .bank-label{ color:var(--ink-soft); flex-shrink:0; min-width:110px; }
+  .bank-value{ font-weight:600; flex:1; word-break:break-word; }
+  .bank-value-mono{ font-family:var(--font-mono); }
+  .bank-copy-btn{ background:var(--ochre); color:var(--cream); border:none; border-radius:6px; padding:5px 10px; font-size:12px; font-weight:600; cursor:pointer; flex-shrink:0; }
+  .bank-copy-btn:hover{ background:var(--ochre-dark); }
+  .bank-details-note{ font-size:12px; color:var(--ink-soft); margin-top:10px; }
+
+  /* ---- order list ---- */
+  #orderList{ margin:24px 0 60px; }
+  .order-card{
+    background:var(--cream); border:1px solid #E1D6BA; border-radius:12px;
+    padding:22px; margin-bottom:18px; position:relative;
+  }
+  .order-card h3{ font-size:16px; font-weight:600; font-family:var(--font-body); margin-bottom:4px; padding-right:90px; }
+  .order-meta{ font-size:13px; color:var(--ink-soft); margin-bottom:6px; }
+  .order-price{ font-family:var(--font-mono); font-size:14.5px; margin-bottom:14px; }
+  .payment-pill{
+    display:inline-block; font-size:11.5px; font-weight:600; text-transform:uppercase;
+    letter-spacing:.03em; padding:4px 10px; border-radius:100px; margin-bottom:16px;
+  }
+  .payment-pill.paid{ background:#E4EEDD; color:var(--olive); }
+  .payment-pill.unpaid{ background:#F6E7E5; color:var(--red); }
+  .payment-pill.unpaid.claimed{ background:#FBF0DE; color:var(--ochre-dark); }
+  .claim-paid-row{ margin:-8px 0 16px; display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .claim-paid-btn{ display:block; width:100%; justify-content:center; }
+  .pay-now-row{ margin:0 0 8px; }
+  .pay-now-btn{ display:block; width:100%; justify-content:center; }
+  .pay-divider{ text-align:center; font-size:12px; color:var(--muted, #8a8577); margin:2px 0 12px; }
+  .receipt-link{ display:block; font-size:12.5px; margin:-4px 0 10px; }
+  .source-tag{
+    position:absolute; top:22px; right:22px; font-size:11px; font-weight:600; text-transform:uppercase;
+    letter-spacing:.03em; padding:3px 9px; border-radius:100px; background:var(--indigo-950); color:var(--cream);
+  }
+  .escrow-note{
+    font-size:13px; color:var(--ink-soft); background:var(--parchment-dim); border-radius:8px;
+    padding:10px 12px; margin-top:14px;
+  }
+  .escrow-note--done{ background:#E4EEDD; color:var(--olive); }
+  .confirm-arrival-btn{ width:100%; justify-content:center; margin-top:14px; }
+
+  /* stamp tracker, reused from main site */
+  .tracker-wrap{ position:relative; padding-top:22px; }
+  .tracker-line{
+    position:absolute; left:22px; right:22px; top:38px; height:2px;
+    background-image:repeating-linear-gradient(to right, #C9BFA4 0 7px, transparent 7px 15px);
+  }
+  .tracker-line.cancelled{ background-image:repeating-linear-gradient(to right, var(--red) 0 7px, transparent 7px 15px); opacity:.5; }
+  .tracker{ display:flex; justify-content:space-between; position:relative; }
+  .stamp{ display:flex; flex-direction:column; align-items:center; gap:8px; width:64px; }
+  .stamp-circle{
+    width:34px; height:34px; border-radius:50%; border:2px dashed #C9BFA4;
+    display:flex; align-items:center; justify-content:center; background:var(--cream);
+    font-family:var(--font-mono); font-size:12px; color:var(--ink-soft); flex-shrink:0;
+  }
+  .stamp.done .stamp-circle{ border-style:solid; border-color:var(--ochre); background:var(--ochre); color:var(--cream); }
+  .stamp.current .stamp-circle{ border-style:solid; border-color:var(--ochre); background:var(--cream); color:var(--ochre); }
+  .stamp-label{ font-size:11px; color:var(--ink-soft); text-align:center; line-height:1.25; }
+  .stamp.done .stamp-label, .stamp.current .stamp-label{ color:var(--ink); font-weight:600; }
+  @media (max-width:420px){
+    .stamp{ width:auto; }
+    .stamp-label{ display:none; }
+  }
+
+  .cancelled-note{
+    background:#F6E7E5; border:1px solid #E3BFBA; color:var(--red);
+    border-radius:8px; padding:10px 14px; font-size:13.5px; margin-top:16px;
+  }
+
+  .empty-state{
+    text-align:center; padding:60px 24px; color:var(--ink-soft); font-size:15px;
+  }
+  .demo-banner{ background:var(--parchment-dim); border:1px dashed var(--ink-soft); border-radius:8px; padding:10px 14px; font-size:12.5px; color:var(--ink-soft); margin-bottom:16px; }
+
+  .top-actions{ display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+  .top-actions .email-label{ font-size:13px; color:var(--ink-soft); }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="logo" href="index.html">
+    <svg class="logo-mark" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <g transform="translate(50,52)">
+        <path d="M0,-30 L26,-19.5 L26,2.5 C26,21 14,32.5 0,37.5 C-14,32.5 -26,21 -26,2.5 L-26,-19.5 Z" fill="#AB5B2E"/>
+        <path d="M0,-30 L26,-19.5 L26,2.5 C26,21 14,32.5 0,37.5 Z" fill="#8A481F"/>
+        <path d="M-13,2.5 L-4,13 L15.5,-9" fill="none" stroke="#F6F1E4" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+    </svg>
+    Aman<em>a</em>
+  </a>
+  <a class="header-link" href="index.html">Back to site</a>
+</header>
+
+<div class="wrap">
+  <div class="page-head">
+    <h1>Track your order</h1>
+    <p>Enter your email to see where things stand.</p>
+  </div>
+
+  <div class="login-panel" id="loginPanel">
+    <div class="field">
+      <label for="emailInput">Email</label>
+      <input type="email" id="emailInput" placeholder="you@example.com" autofocus>
+    </div>
+    <button class="btn btn-ochre" style="width:100%;" id="continueBtn" onclick="handleEmailContinue()">Continue</button>
+    <div class="inline-error" id="loginError"></div>
+  </div>
+
+  <div id="passwordPanel" style="display:none;">
+    <div class="login-panel">
+      <h3 style="margin-bottom:6px; font-size:18px;">Enter your password</h3>
+      <p class="modal-sub" id="passwordSub">Logging in as <span id="passwordEmailLabel"></span></p>
+      <div class="field">
+        <label for="passwordInput">Password</label>
+        <input type="password" id="passwordInput" autofocus>
+      </div>
+      <button class="btn btn-ochre" style="width:100%;" id="loginBtn" onclick="handlePasswordLogin()">Log in</button>
+      <div class="inline-error" id="passwordError"></div>
+      <button class="small-link" onclick="handleForgotPassword()">Forgot password? Use a code instead</button>
+      <button class="small-link" onclick="showPanel('login')">Use a different email</button>
+    </div>
+  </div>
+
+  <div id="verifyPanel" style="display:none;">
+    <div class="login-panel">
+      <h3 style="margin-bottom:6px; font-size:18px;">Enter your code</h3>
+      <p class="modal-sub" id="verifySub">We sent a code to your email.</p>
+      <div class="field">
+        <label for="codeInput">Verification code</label>
+        <input type="text" id="codeInput" inputmode="numeric">
+      </div>
+      <button class="btn btn-ochre" style="width:100%;" onclick="handleVerify()">Verify</button>
+      <div class="inline-error" id="verifyError"></div>
+      <button class="small-link" onclick="handleResend()">Didn't get it? Resend</button>
+    </div>
+  </div>
+
+  <div id="setPasswordPanel" style="display:none;">
+    <div class="login-panel">
+      <h3 style="margin-bottom:6px; font-size:18px;" id="setPasswordTitle">Set a password</h3>
+      <p class="modal-sub">So you can skip the email code next time.</p>
+      <div class="field">
+        <label for="newPasswordInput">New password</label>
+        <input type="password" id="newPasswordInput" autofocus>
+      </div>
+      <div class="field">
+        <label for="confirmPasswordInput">Confirm password</label>
+        <input type="password" id="confirmPasswordInput">
+      </div>
+      <button class="btn btn-ochre" style="width:100%;" onclick="handleSetPassword()">Save password</button>
+      <div class="inline-error" id="setPasswordError"></div>
+      <button class="small-link" id="skipPasswordBtn" onclick="handleSkipSetPassword()">Skip for now</button>
+    </div>
+  </div>
+
+  <div id="ordersPanel" style="display:none;">
+    <div class="top-actions">
+      <span class="email-label" id="emailLabel"></span>
+      <button class="btn btn-ghost" style="padding:8px 14px; font-size:13px;" onclick="handleLogout()">Log out</button>
+    </div>
+    <div id="orderList"></div>
+  </div>
+</div>
+
+
+<script src="amana-shared.js"></script>
+<script>
+/* ================= config — match index.html ================= */
+var WHATSAPP_NUMBER = '2348060001731';
+// Point this at your deployed backend, same as index.html's API_BASE.
+// Leave as '' to run the demo fallback (no real backend calls).
+var API_BASE = 'http://localhost:3000';
+
+var STAGES = [
+  { key:'pending',  label:'Placed',   mono:'1' },
+  { key:'ordered',  label:'Ordered',  mono:'2' },
+  { key:'shipped',  label:'Shipped',  mono:'3' },
+  { key:'arrived',  label:'Arrived',  mono:'4' }
+];
+
+var session = { email:null, token:null };
+
+function formatNGN(n){
+  return new Intl.NumberFormat('en-NG', { style:'currency', currency:'NGN', maximumFractionDigits:0 }).format(Math.round(n));
+}
+function normalizeEmailClient(raw){
+  var email = String(raw || '').trim().toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null;
+}
+// This page shows a terser date (no year, browser locale) than the
+// month/day/year en-NG format in amana-shared.js's Amana.fmtDate — that's
+// intentional for a compact order tracker list, not an oversight, so this
+// stays a local variant rather than calling the shared one directly.
+function fmtDate(iso){
+  var d = new Date(iso.replace(' ', 'T') + 'Z');
+  if(isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString(undefined, { month:'short', day:'numeric' });
+}
+
+/* ================= panel switching ================= */
+function showPanel(name){
+  document.getElementById('loginPanel').style.display = name === 'login' ? 'block' : 'none';
+  document.getElementById('passwordPanel').style.display = name === 'password' ? 'block' : 'none';
+  document.getElementById('verifyPanel').style.display = name === 'verify' ? 'block' : 'none';
+  document.getElementById('setPasswordPanel').style.display = name === 'setPassword' ? 'block' : 'none';
+  document.getElementById('ordersPanel').style.display = name === 'orders' ? 'block' : 'none';
+}
+
+// otpPurpose tracks why we're sending a code, so verify-otp's next step
+// differs: 'signup' (no password yet — offer to set one, skip allowed)
+// vs 'reset' (explicit "forgot password" — must set a new one to finish).
+session.otpPurpose = 'signup';
+
+/* ================= step 1: email -> route to password or code ================= */
+async function handleEmailContinue(){
+  var raw = document.getElementById('emailInput').value;
+  var email = normalizeEmailClient(raw);
+  var errEl = document.getElementById('loginError');
+  errEl.textContent = '';
+
+  if(!email){
+    errEl.textContent = 'Enter a valid email address.';
+    return;
+  }
+
+  session.email = email;
+
+  if(!API_BASE){
+    // Demo fallback — no real backend wired up yet.
+    session.demoCode = String(Math.floor(1000 + Math.random()*9000));
+    session.otpPurpose = 'signup';
+    document.getElementById('verifySub').innerHTML =
+      'Demo preview — your code is <strong>' + session.demoCode + '</strong>. ' +
+      'Once the real backend is connected, this arrives by email instead.';
+    showPanel('verify');
+    return;
+  }
+
+  // One session per device: if this browser already logged in and holds
+  // an unexpired token, skip straight to the order list.
+  var cachedToken = Amana.getSessionToken(email);
+  if(cachedToken){
+    session.token = cachedToken;
+    loadOrders(false);
+    return;
+  }
+
+  var btn = document.getElementById('continueBtn');
+  btn.disabled = true;
+  btn.textContent = 'Checking...';
+  try{
+    var res = await fetch(API_BASE + '/auth/check-email', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email: email })
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not check that email right now.'); }
+
+    if(data.hasPassword){
+      document.getElementById('passwordEmailLabel').textContent = email;
+      document.getElementById('passwordError').textContent = '';
+      showPanel('password');
+    }else{
+      await sendOtpFor(email, 'signup');
+    }
+  }catch(err){
+    errEl.textContent = err.message;
+  }finally{
+    btn.disabled = false;
+    btn.textContent = 'Continue';
+  }
+}
+
+// Shared by first-time signup and "forgot password" — both just need a
+// fresh code sent and land on the same verify panel.
+async function sendOtpFor(email, purpose){
+  session.otpPurpose = purpose;
+  var res = await fetch(API_BASE + '/auth/request-otp', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ email: email })
+  });
+  var data = await res.json();
+  if(!res.ok){ throw new Error(data.error || 'Could not send a code right now.'); }
+  document.getElementById('verifySub').textContent = 'We sent a code to your email. It expires in 5 minutes.';
+  document.getElementById('verifyError').textContent = '';
+  showPanel('verify');
+}
+
+/* ================= password login ================= */
+async function handlePasswordLogin(){
+  var password = document.getElementById('passwordInput').value;
+  var errEl = document.getElementById('passwordError');
+  errEl.textContent = '';
+  if(!password){ errEl.textContent = 'Enter your password.'; return; }
+
+  var btn = document.getElementById('loginBtn');
+  btn.disabled = true;
+  btn.textContent = 'Logging in...';
+  try{
+    var res = await fetch(API_BASE + '/auth/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email: session.email, password: password })
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Incorrect password.'); }
+    session.token = data.token;
+    Amana.saveSessionToken(session.email, data.token);
+    loadOrders(false);
+  }catch(err){
+    errEl.textContent = err.message;
+  }finally{
+    btn.disabled = false;
+    btn.textContent = 'Log in';
+  }
+}
+
+async function handleForgotPassword(){
+  var errEl = document.getElementById('passwordError');
+  errEl.textContent = '';
+  if(!API_BASE){ showPanel('verify'); return; }
+  try{
+    await sendOtpFor(session.email, 'reset');
+  }catch(err){
+    errEl.textContent = err.message;
+  }
+}
+
+/* ================= step 2: verify code ================= */
+async function handleVerify(){
+  var code = document.getElementById('codeInput').value.trim();
+  var errEl = document.getElementById('verifyError');
+  errEl.textContent = '';
+  if(!code){ errEl.textContent = 'Enter the code you received.'; return; }
+
+  if(!API_BASE){
+    if(code !== session.demoCode){
+      errEl.textContent = "That code doesn't match — try again.";
+      return;
+    }
+    session.token = 'demo-token';
+    loadOrders(true);
+    return;
+  }
+
+  try{
+    var res = await fetch(API_BASE + '/auth/verify-otp', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email: session.email, code: code })
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || "That code doesn't match — try again."); }
+    session.token = data.token;
+
+    // Reset flow must end in a new password; signup flow can skip and
+    // just fall back to a code again next time.
+    document.getElementById('setPasswordTitle').textContent =
+      session.otpPurpose === 'reset' ? 'Set a new password' : 'Set a password';
+    document.getElementById('skipPasswordBtn').style.display =
+      session.otpPurpose === 'reset' ? 'none' : 'block';
+    document.getElementById('newPasswordInput').value = '';
+    document.getElementById('confirmPasswordInput').value = '';
+    document.getElementById('setPasswordError').textContent = '';
+    showPanel('setPassword');
+  }catch(err){
+    errEl.textContent = err.message;
+  }
+}
+
+/* ================= step 3: set password (after OTP) ================= */
+async function handleSetPassword(){
+  var pw = document.getElementById('newPasswordInput').value;
+  var confirm = document.getElementById('confirmPasswordInput').value;
+  var errEl = document.getElementById('setPasswordError');
+  errEl.textContent = '';
+
+  if(pw.length < 8){ errEl.textContent = 'Password must be at least 8 characters.'; return; }
+  if(pw !== confirm){ errEl.textContent = "Passwords don't match."; return; }
+
+  try{
+    var res = await fetch(API_BASE + '/auth/set-password', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + session.token },
+      body: JSON.stringify({ email: session.email, password: pw })
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not save that password.'); }
+    Amana.saveSessionToken(session.email, session.token);
+    loadOrders(false);
+  }catch(err){
+    errEl.textContent = err.message;
+  }
+}
+
+function handleSkipSetPassword(){
+  Amana.saveSessionToken(session.email, session.token);
+  loadOrders(false);
+}
+
+async function handleResend(){
+  if(!API_BASE) return;
+  try{
+    await fetch(API_BASE + '/auth/request-otp', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email: session.email })
+    });
+  }catch(e){ /* silent — cooldown message will surface on next verify attempt anyway */ }
+}
+
+/* ================= step 3: load + render orders ================= */
+var ordersPollTimer = null;
+var POLL_INTERVAL_MS = 20000;
+
+async function loadOrders(isDemo){
+  document.getElementById('emailLabel').textContent = session.email;
+  showPanel('orders');
+  var listEl = document.getElementById('orderList');
+  listEl.innerHTML = '<div class="empty-state">Loading your orders...</div>';
+
+  if(isDemo){
+    renderOrders([
+      { id:'demo1', item_name:'JBL Bluetooth Speaker — Grade A', price_usd:27.5, total_ngn:45000, status:'shipped', payment_status:'paid', order_type:'sourced', created_at:'2026-07-10 12:00:00' }
+    ], true);
+    return;
+  }
+
+  await fetchAndRenderOrders();
+  startOrdersPolling();
+}
+
+async function fetchAndRenderOrders(){
+  var listEl = document.getElementById('orderList');
+  try{
+    var res = await fetch(API_BASE + '/orders/mine/' + session.email, {
+      headers:{ 'Authorization':'Bearer ' + session.token }
+    });
+    if(res.status === 401 || res.status === 403){
+      // Cached token no longer valid server-side — drop it and send them
+      // back to the login step for a fresh OTP, rather than looping on
+      // a dead token every poll.
+      stopOrdersPolling();
+      Amana.clearSessionToken(session.email);
+      session.token = null;
+      showPanel('login');
+      document.getElementById('loginError').textContent = 'Your session expired — enter your email again.';
+      return;
+    }
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not load your orders.'); }
+    renderOrders(data.orders, false);
+  }catch(err){
+    listEl.innerHTML = '<div class="empty-state">' + err.message + '</div>';
+  }
+}
+
+function startOrdersPolling(){
+  stopOrdersPolling();
+  ordersPollTimer = setInterval(function(){
+    // Silent background refresh — don't blow away the list with a loading
+    // state on every poll, just swap in new data once it arrives.
+    fetchAndRenderOrders();
+  }, POLL_INTERVAL_MS);
+}
+
+function stopOrdersPolling(){
+  if(ordersPollTimer){ clearInterval(ordersPollTimer); ordersPollTimer = null; }
+}
+
+// Pause polling when the tab isn't visible, resume (with an immediate
+// refresh) when it becomes visible again — no point hammering the API
+// for a tab nobody's looking at, and a stale view should catch up the
+// moment someone comes back to it.
+document.addEventListener('visibilitychange', function(){
+  if(document.hidden){
+    stopOrdersPolling();
+  }else if(session.token){
+    fetchAndRenderOrders();
+    startOrdersPolling();
+  }
+});
+
+function stampsHTML(status){
+  if(status === 'cancelled'){
+    return '<div class="tracker-wrap">' +
+      '<div class="tracker-line cancelled"></div>' +
+      '<div class="tracker">' +
+      STAGES.map(function(s){ return '<div class="stamp"><div class="stamp-circle">' + s.mono + '</div><div class="stamp-label">' + s.label + '</div></div>'; }).join('') +
+      '</div></div>' +
+      '<div class="cancelled-note">This order was cancelled. Message Amana on WhatsApp if you have questions.</div>';
+  }
+
+  var currentIdx = STAGES.findIndex(function(s){ return s.key === status; });
+  var stampsMarkup = STAGES.map(function(s, i){
+    var cls = 'stamp';
+    if(i < currentIdx) cls += ' done';
+    else if(i === currentIdx) cls += ' current';
+    return '<div class="' + cls + '"><div class="stamp-circle">' + s.mono + '</div><div class="stamp-label">' + s.label + '</div></div>';
+  }).join('');
+
+  return '<div class="tracker-wrap"><div class="tracker-line"></div><div class="tracker">' + stampsMarkup + '</div></div>';
+}
+
+function payoutNote(order){
+  var text = Amana.escrowNote(order);
+  if(!text) return '';
+  var isDone = order.payout_status === 'released' || order.payout_status === 'refunded';
+  return '<div class="escrow-note' + (isDone ? ' escrow-note--done' : '') + '">' + text + '</div>';
+}
+
+async function handleConfirmArrival(orderId, btnEl){
+  btnEl.disabled = true;
+  btnEl.textContent = 'Confirming...';
+  try{
+    var res = await fetch(API_BASE + '/orders/' + orderId + '/confirm-arrival', {
+      method:'PATCH',
+      headers:{ 'Authorization':'Bearer ' + session.token }
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not confirm arrival.'); }
+    fetchAndRenderOrders();
+  }catch(err){
+    alert(err.message);
+    btnEl.disabled = false;
+    btnEl.textContent = 'Confirm it arrived';
+  }
+}
+
+// clickedEl is whichever button/control triggered this (upload button,
+// the "no receipt" link, or the hidden file input itself via onchange) —
+// only used to show a brief "sending" state; the row is fully re-rendered
+// from fresh order data right after, so there's nothing to reset by hand.
+async function handleClaimPaid(orderId, file, clickedEl){
+  var row = clickedEl.closest('.claim-paid-row');
+  if(row) row.querySelectorAll('button').forEach(function(b){ b.disabled = true; });
+  if(clickedEl && clickedEl.tagName === 'BUTTON'){ clickedEl.textContent = file ? 'Uploading receipt...' : 'Notifying Amana...'; }
+
+  try{
+    var res;
+    if(file){
+      var formData = new FormData();
+      formData.append('receipt', file);
+      res = await fetch(API_BASE + '/orders/' + orderId + '/claim-paid', {
+        method:'PATCH',
+        headers:{ 'Authorization':'Bearer ' + session.token },
+        body: formData
+      });
+    }else{
+      res = await fetch(API_BASE + '/orders/' + orderId + '/claim-paid', {
+        method:'PATCH',
+        headers:{ 'Authorization':'Bearer ' + session.token }
+      });
+    }
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not send that right now.'); }
+    fetchAndRenderOrders();
+  }catch(err){
+    alert(err.message);
+    if(row) row.querySelectorAll('button').forEach(function(b){ b.disabled = false; });
+    fetchAndRenderOrders();
+  }
+}
+
+function renderOrders(orders, isDemo){
+  var listEl = document.getElementById('orderList');
+  listEl.innerHTML = '';
+
+  if(isDemo){
+    listEl.insertAdjacentHTML('beforebegin', '<div class="demo-banner">Demo preview — showing a sample order. Once the real backend is connected, this shows your actual orders.</div>');
+  }
+
+  if(!orders || !orders.length){
+    listEl.innerHTML = '<div class="empty-state">No orders yet. Once you place one on WhatsApp, it\'ll show up here.</div>';
+    return;
+  }
+
+  listEl.innerHTML = orders.map(function(o){
+    var isMarketplace = o.order_type === 'marketplace';
+    var priceLine = isMarketplace
+      ? formatNGN(o.total_ngn)
+      : '$' + o.price_usd + ' → ' + formatNGN(o.total_ngn);
+    var sourceTag = isMarketplace ? '<span class="source-tag">Marketplace</span>' : '';
+    var confirmBtn = (!isDemo && o.status === 'shipped')
+      ? '<button class="btn btn-ochre confirm-arrival-btn" onclick="handleConfirmArrival(\'' + o.id + '\', this)">Confirm it arrived</button>'
+      : '';
+
+    var paymentLabel, claimBtn, receiptNote;
+    receiptNote = '';
+    if(o.payment_status === 'paid'){
+      paymentLabel = 'Payment received';
+      claimBtn = '';
+    }else if(o.claimed_paid_at){
+      paymentLabel = 'Payment claimed — checking';
+      claimBtn = '';
+      receiptNote = o.receipt_url
+        ? '<a class="receipt-link" href="' + o.receipt_url + '" target="_blank" rel="noopener">View uploaded receipt</a>'
+        : '';
+    }else{
+      paymentLabel = 'Payment pending';
+      claimBtn = (!isDemo)
+        ? '<div class="pay-now-row">' +
+          '<button class="btn btn-ochre pay-now-btn" onclick="handlePayWithPaystack(\'' + o.id + '\', this)">Pay ' + formatNGN(o.total_ngn) + ' now</button>' +
+          '</div>' +
+          '<div class="pay-divider">or pay by bank transfer</div>' +
+          Amana.bankDetailsHTML(o.id) +
+          '<div class="claim-paid-row">' +
+          '<input type="file" id="receiptInput-' + o.id + '" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" style="display:none;" onchange="handleClaimPaid(\'' + o.id + '\', this.files[0], this)">' +
+          '<button class="btn btn-ochre claim-paid-btn" onclick="document.getElementById(\'receiptInput-' + o.id + '\').click()">Upload payment receipt</button>' +
+          '<button class="small-link" onclick="handleClaimPaid(\'' + o.id + '\', null, this)">I\'ve paid, no receipt to attach</button>' +
+          '</div>'
+        : '';
+    }
+
+    return '<div class="order-card">' +
+      sourceTag +
+      '<h3>' + o.item_name + '</h3>' +
+      '<div class="order-meta">Placed ' + fmtDate(o.created_at) + '</div>' +
+      '<div class="order-price">' + priceLine + '</div>' +
+      '<span class="payment-pill ' + o.payment_status + (o.claimed_paid_at && o.payment_status === 'unpaid' ? ' claimed' : '') + '">' + paymentLabel + '</span>' +
+      receiptNote +
+      claimBtn +
+      stampsHTML(o.status) +
+      payoutNote(o) +
+      confirmBtn +
+      '</div>';
+  }).join('');
+}
+
+function handleLogout(){
+  stopOrdersPolling();
+  session = { email:null, token:null, otpPurpose:'signup' };
+  document.getElementById('emailInput').value = '';
+  document.getElementById('codeInput').value = '';
+  document.getElementById('passwordInput').value = '';
+  document.getElementById('newPasswordInput').value = '';
+  document.getElementById('confirmPasswordInput').value = '';
+  document.getElementById('loginError').textContent = '';
+  document.getElementById('verifyError').textContent = '';
+  document.getElementById('passwordError').textContent = '';
+  document.getElementById('setPasswordError').textContent = '';
+  showPanel('login');
+}
+
+// Starts a Paystack checkout for this order. Before leaving the page,
+// stashes {orderId, email} in localStorage under a fixed key — not the
+// session token itself, just enough to look the cached token back up —
+// so that when Paystack redirects the browser back here (a full page
+// reload, so all JS state is gone), checkPendingPaystackPayment() below
+// knows which order and which cached session to resume with.
+async function handlePayWithPaystack(orderId, btnEl){
+  var originalLabel = btnEl.textContent;
+  btnEl.disabled = true;
+  btnEl.textContent = 'Starting payment...';
+  try{
+    var res = await fetch(API_BASE + '/orders/' + orderId + '/pay/initialize', {
+      method:'POST',
+      headers:{ 'Authorization':'Bearer ' + session.token }
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not start payment.'); }
+    window.localStorage.setItem('amana_pending_payment', JSON.stringify({ orderId: orderId, email: session.email }));
+    window.location.href = data.authorizationUrl;
+  }catch(err){
+    alert(err.message);
+    btnEl.disabled = false;
+    btnEl.textContent = originalLabel;
+  }
+}
+
+// Runs once on page load, before anything else, to catch the case where
+// this page load IS the redirect back from Paystack. If there's a pending
+// payment stashed and a still-valid cached token for that email, resumes
+// the session automatically (no re-typing an email/OTP) and verifies the
+// payment right away instead of waiting on the webhook. Always clears the
+// stashed key so a stale one never re-triggers on an unrelated visit.
+async function checkPendingPaystackPayment(){
+  var raw = window.localStorage.getItem('amana_pending_payment');
+  if(!raw) return;
+  window.localStorage.removeItem('amana_pending_payment');
+
+  var pending;
+  try{ pending = JSON.parse(raw); }catch(e){ return; }
+  if(!pending || !pending.orderId || !pending.email) return;
+
+  var cachedToken = Amana.getSessionToken(pending.email);
+  if(!cachedToken) return; // session expired between leaving and coming back — normal orders list will still load once they log in
+
+  session.email = pending.email;
+  session.token = cachedToken;
+  document.getElementById('emailInput').value = pending.email;
+
+  try{
+    var res = await fetch(API_BASE + '/orders/' + pending.orderId + '/pay/verify', {
+      headers:{ 'Authorization':'Bearer ' + session.token }
+    });
+    var data = await res.json();
+    if(res.ok && data.paid){
+      loadOrders(false);
+    }else{
+      // Not confirmed yet on this check (webhook may still be in flight) —
+      // still show the orders list so they're not stuck on the login screen.
+      loadOrders(false);
+    }
+  }catch(err){
+    loadOrders(false);
+  }
+}
+checkPendingPaystackPayment();
+
+document.getElementById('emailInput').addEventListener('keydown', function(e){ if(e.key === 'Enter') handleEmailContinue(); });
+document.getElementById('passwordInput').addEventListener('keydown', function(e){ if(e.key === 'Enter') handlePasswordLogin(); });
+document.getElementById('codeInput').addEventListener('keydown', function(e){ if(e.key === 'Enter') handleVerify(); });
+document.getElementById('confirmPasswordInput').addEventListener('keydown', function(e){ if(e.key === 'Enter') handleSetPassword(); });
+</script>
+</body>
+</html>

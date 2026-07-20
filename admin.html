@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amana — Orders</title>
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<style>
+  :root {
+    --bg: #0f1210;
+    --panel: #171b18;
+    --border: #2a2f2b;
+    --text: #eef0ec;
+    --muted: #9aa39a;
+    --accent: #d9a441;
+    --pending: #8a8f89;
+    --ordered: #4a90d9;
+    --shipped: #d9a441;
+    --arrived: #4caf6e;
+    --cancelled: #d9534f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 24px;
+  }
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 4px;
+  }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+
+  #login {
+    max-width: 360px;
+    margin: 80px auto;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+  }
+  #login input {
+    width: 100%;
+    padding: 10px 12px;
+    background: #0f1210;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 14px;
+    margin: 12px 0;
+  }
+  button {
+    background: var(--accent);
+    color: #1a1a1a;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:hover { opacity: 0.9; }
+  button.ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .error { color: var(--cancelled); font-size: 13px; margin-top: 8px; min-height: 18px; }
+
+  #app { display: none; max-width: 900px; margin: 0 auto; }
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; }
+  .filters button {
+    background: var(--panel);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    font-weight: 500;
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+  .filters button.active {
+    background: var(--accent);
+    color: #1a1a1a;
+    border-color: var(--accent);
+  }
+
+  .order {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .order .info { flex: 1; min-width: 220px; }
+  .order .item { font-weight: 600; font-size: 15px; }
+  .order .meta { color: var(--muted); font-size: 12.5px; margin-top: 4px; line-height: 1.5; }
+  .order .price { color: var(--text); font-size: 13px; margin-top: 4px; }
+
+  .badge {
+    display: inline-block;
+    font-size: 11.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 4px 9px;
+    border-radius: 100px;
+    color: #0f1210;
+  }
+  .badge.pending { background: var(--pending); }
+  .badge.ordered { background: var(--ordered); color: #fff; }
+  .badge.shipped { background: var(--shipped); }
+  .badge.arrived { background: var(--arrived); }
+  .badge.cancelled { background: var(--cancelled); color: #fff; }
+  .badge.paid { background: var(--arrived); }
+  .badge.unpaid { background: var(--cancelled); color: #fff; }
+  .badge.pending_review { background: var(--pending); }
+  .badge.approved { background: var(--arrived); }
+  .badge.rejected { background: var(--cancelled); color: #fff; }
+  .badge.held { background: var(--shipped); }
+  .badge.released { background: var(--arrived); }
+  .badge.refunded { background: var(--cancelled); color: #fff; }
+  .badge.not_applicable { background: var(--pending); }
+  .badge.claimed { background: #e07a3f; color: #fff; }
+  .order.claimed-paid { border-color: #e07a3f; box-shadow: 0 0 0 1px #e07a3f inset; }
+  .source-tag {
+    display: inline-block; font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.03em; padding: 2px 7px; border-radius: 100px;
+    background: var(--panel); border: 1px solid var(--border); color: var(--muted);
+    vertical-align: middle; margin-left: 4px;
+  }
+
+  .tabs { display: flex; gap: 6px; margin-bottom: 4px; }
+  .tab {
+    background: transparent;
+    color: var(--muted);
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 8px 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tab.active { color: var(--text); border-bottom-color: var(--accent); }
+  .tab-count {
+    background: var(--accent);
+    color: #1a1a1a;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 100px;
+    padding: 1px 7px;
+    min-width: 16px;
+    text-align: center;
+  }
+
+  .listing {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 10px;
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .listing .photos { display: flex; gap: 6px; flex-shrink: 0; }
+  .listing .photos img {
+    width: 64px; height: 64px; object-fit: cover; border-radius: 8px;
+    border: 1px solid var(--border); background: #0f1210;
+  }
+  .listing .info { flex: 1; min-width: 200px; }
+  .listing .item { font-weight: 600; font-size: 15px; }
+  .listing .desc { color: var(--muted); font-size: 13px; margin-top: 4px; line-height: 1.5; max-width: 480px; }
+  .listing .meta { color: var(--muted); font-size: 12.5px; margin-top: 6px; }
+  .listing .price { font-family: inherit; font-size: 13.5px; margin-top: 4px; font-weight: 600; }
+  .listing .controls { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; justify-content: center; }
+  .listing .controls .row { display: flex; gap: 8px; }
+  .reject-note { min-height: 18px; }
+  textarea.note-input {
+    background: #0f1210; color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px 10px; font-size: 13px; width: 220px;
+    font-family: inherit; resize: vertical; min-height: 50px;
+  }
+  button.approve { background: var(--arrived); color: #0f1210; }
+  button.reject { background: var(--cancelled); color: #fff; }
+  button.small { padding: 6px 12px; font-size: 13px; }
+
+  select {
+    background: #0f1210;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .empty {
+    text-align: center;
+    color: var(--muted);
+    padding: 60px 0;
+    font-size: 14px;
+  }
+  .top-right { display: flex; align-items: center; gap: 10px; }
+</style>
+</head>
+<body>
+
+<div id="login">
+  <h1 style="display:flex; align-items:center; gap:8px;">
+    <svg width="22" height="22" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0;">
+      <g transform="translate(50,52)">
+        <path d="M0,-30 L26,-19.5 L26,2.5 C26,21 14,32.5 0,37.5 C-14,32.5 -26,21 -26,2.5 L-26,-19.5 Z" fill="#AB5B2E"/>
+        <path d="M0,-30 L26,-19.5 L26,2.5 C26,21 14,32.5 0,37.5 Z" fill="#8A481F"/>
+        <path d="M-13,2.5 L-4,13 L15.5,-9" fill="none" stroke="#eef0ec" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+    </svg>
+    Amana Admin
+  </h1>
+  <div class="sub">Enter your admin key to view orders.</div>
+  <input id="keyInput" type="password" placeholder="Admin key" autocomplete="off">
+  <button id="loginBtn" style="width:100%">Enter</button>
+  <div class="error" id="loginError"></div>
+</div>
+
+<div id="app">
+  <div class="tabs">
+    <button class="tab active" id="tabOrders">Orders</button>
+    <button class="tab" id="tabListings">Listings <span class="tab-count" id="pendingCount" style="display:none;"></span></button>
+    <button class="tab" id="tabSellers">Sellers <span class="tab-count" id="pendingSellerCount" style="display:none;"></span></button>
+  </div>
+
+  <div class="toolbar">
+    <div>
+      <h1 id="panelTitle">Orders</h1>
+      <div class="sub" id="countLabel">Loading…</div>
+    </div>
+    <div class="top-right">
+      <div class="filters" id="filters"></div>
+      <button class="ghost" id="logoutBtn">Log out</button>
+    </div>
+  </div>
+
+  <div id="ordersPanel"><div id="list"></div></div>
+  <div id="listingsPanel" style="display:none;"><div id="listingsList"></div></div>
+  <div id="sellersPanel" style="display:none;"><div id="sellersList"></div></div>
+</div>
+
+<script src="amana-shared.js"></script>
+<script>
+  // Point this at your deployed backend. Defaults to same-origin, which
+  // works if this file is served by the backend itself; override if hosted
+  // separately (e.g. static file host) — set window.API_BASE before this
+  // script runs, or just hardcode it below.
+  const API_BASE = window.API_BASE || 'http://localhost:3000';
+
+  const STATUSES = ['pending', 'ordered', 'shipped', 'arrived', 'cancelled'];
+  const PAYMENT_STATUSES = ['unpaid', 'paid'];
+  const REVIEW_STATUSES = ['pending_review', 'approved', 'rejected'];
+  const APPLICATION_STATUSES = ['pending', 'approved', 'rejected'];
+  let adminKey = sessionStorage.getItem('amana_admin_key') || '';
+  let currentTab = 'orders'; // 'orders' | 'listings' | 'sellers'
+  let currentFilter = null; // order status filter
+  let claimedPaidOnly = false; // independent toggle, combinable with status filter
+  let currentReviewFilter = 'pending_review'; // listings review-status filter
+  let currentApplicationFilter = 'pending'; // seller application-status filter
+
+  const el = {
+    login: document.getElementById('login'),
+    app: document.getElementById('app'),
+    keyInput: document.getElementById('keyInput'),
+    loginBtn: document.getElementById('loginBtn'),
+    loginError: document.getElementById('loginError'),
+    logoutBtn: document.getElementById('logoutBtn'),
+    list: document.getElementById('list'),
+    filters: document.getElementById('filters'),
+    countLabel: document.getElementById('countLabel'),
+    panelTitle: document.getElementById('panelTitle'),
+    tabOrders: document.getElementById('tabOrders'),
+    tabListings: document.getElementById('tabListings'),
+    tabSellers: document.getElementById('tabSellers'),
+    pendingCount: document.getElementById('pendingCount'),
+    pendingSellerCount: document.getElementById('pendingSellerCount'),
+    ordersPanel: document.getElementById('ordersPanel'),
+    listingsPanel: document.getElementById('listingsPanel'),
+    listingsList: document.getElementById('listingsList'),
+    sellersPanel: document.getElementById('sellersPanel'),
+    sellersList: document.getElementById('sellersList'),
+  };
+
+  function fmtDate(iso) {
+    const d = new Date(iso + 'Z');
+    return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+
+  function fmtNaira(n) {
+    return '₦' + Number(n).toLocaleString('en-NG', { maximumFractionDigits: 0 });
+  }
+
+  async function api(path, opts = {}) {
+    const res = await fetch(API_BASE + path, {
+      ...opts,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + adminKey,
+        ...(opts.headers || {}),
+      },
+    });
+    if (res.status === 401) {
+      logout();
+      throw new Error('Not authorized — check your admin key.');
+    }
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Request failed.');
+    return data;
+  }
+
+  function renderFilters() {
+    if (currentTab === 'orders') {
+      const options = [{ label: 'All', value: null }, ...STATUSES.map(s => ({ label: s, value: s }))];
+      el.filters.innerHTML = '';
+      options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.textContent = opt.label;
+        if (opt.value === currentFilter) btn.classList.add('active');
+        btn.onclick = () => { currentFilter = opt.value; loadOrders(); };
+        el.filters.appendChild(btn);
+      });
+      const claimBtn = document.createElement('button');
+      claimBtn.textContent = claimedPaidOnly ? '✓ Claimed payment' : 'Claimed payment';
+      claimBtn.style.marginLeft = '8px';
+      if (claimedPaidOnly) claimBtn.classList.add('active');
+      claimBtn.onclick = () => { claimedPaidOnly = !claimedPaidOnly; loadOrders(); };
+      el.filters.appendChild(claimBtn);
+    } else if (currentTab === 'listings') {
+      const options = [{ label: 'All', value: null }, ...REVIEW_STATUSES.map(s => ({ label: s.replace('_', ' '), value: s }))];
+      el.filters.innerHTML = '';
+      options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.textContent = opt.label;
+        if (opt.value === currentReviewFilter) btn.classList.add('active');
+        btn.onclick = () => { currentReviewFilter = opt.value; loadListings(); };
+        el.filters.appendChild(btn);
+      });
+    } else {
+      const options = [{ label: 'All', value: null }, ...APPLICATION_STATUSES.map(s => ({ label: s, value: s }))];
+      el.filters.innerHTML = '';
+      options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.textContent = opt.label;
+        if (opt.value === currentApplicationFilter) btn.classList.add('active');
+        btn.onclick = () => { currentApplicationFilter = opt.value; loadSellers(); };
+        el.filters.appendChild(btn);
+      });
+    }
+  }
+
+  function switchTab(tab) {
+    currentTab = tab;
+    el.tabOrders.classList.toggle('active', tab === 'orders');
+    el.tabListings.classList.toggle('active', tab === 'listings');
+    el.tabSellers.classList.toggle('active', tab === 'sellers');
+    el.ordersPanel.style.display = tab === 'orders' ? 'block' : 'none';
+    el.listingsPanel.style.display = tab === 'listings' ? 'block' : 'none';
+    el.sellersPanel.style.display = tab === 'sellers' ? 'block' : 'none';
+    el.panelTitle.textContent = tab === 'orders' ? 'Orders' : tab === 'listings' ? 'Listings' : 'Sellers';
+    if (tab === 'orders') loadOrders();
+    else if (tab === 'listings') loadListings();
+    else loadSellers();
+  }
+  el.tabOrders.onclick = () => switchTab('orders');
+  el.tabListings.onclick = () => switchTab('listings');
+  el.tabSellers.onclick = () => switchTab('sellers');
+
+  function renderOrders(orders) {
+    el.list.innerHTML = '';
+    el.countLabel.textContent = orders.length
+      ? `${orders.length} order${orders.length === 1 ? '' : 's'}`
+      : 'No orders yet.';
+
+    if (!orders.length) {
+      el.list.innerHTML = '<div class="empty">Nothing here yet.</div>';
+      return;
+    }
+
+    orders.forEach(order => {
+      const isClaimedUnpaid = !!order.claimed_paid_at && order.payment_status === 'unpaid';
+      const isMarketplace = order.order_type === 'marketplace';
+      const card = document.createElement('div');
+      card.className = 'order' + (isClaimedUnpaid ? ' claimed-paid' : '');
+      card.innerHTML = `
+        <div class="info">
+          <div class="item">${escapeHtml(order.item_name)}${isMarketplace ? ' <span class="source-tag">Marketplace</span>' : ''}</div>
+          <div class="meta">${order.email} · ${fmtDate(order.created_at)}${isMarketplace ? ' · seller ' + escapeHtml(order.seller_email || '—') : ''}</div>
+          <div class="price">$${order.price_usd} → ${fmtNaira(order.total_ngn)}</div>
+        </div>
+      `;
+
+      const controls = document.createElement('div');
+      controls.style.display = 'flex';
+      controls.style.alignItems = 'center';
+      controls.style.gap = '10px';
+      controls.style.flexWrap = 'wrap';
+
+      if (isClaimedUnpaid) {
+        const claimBadge = document.createElement('span');
+        claimBadge.className = 'badge claimed';
+        claimBadge.title = 'Buyer said they paid at ' + fmtDate(order.claimed_paid_at);
+        claimBadge.textContent = 'Says paid';
+        controls.appendChild(claimBadge);
+
+        // The buyer's claim-paid tap can optionally carry a photo of the
+        // bank transfer alert — when present, show it right in the queue
+        // so payment can usually be confirmed on sight instead of
+        // switching over to WhatsApp to ask for proof separately.
+        if (order.receipt_url) {
+          const receiptLink = document.createElement('a');
+          receiptLink.href = order.receipt_url;
+          receiptLink.target = '_blank';
+          receiptLink.rel = 'noopener';
+          receiptLink.title = 'View uploaded payment receipt';
+          receiptLink.style.display = 'inline-block';
+          const receiptThumb = document.createElement('img');
+          receiptThumb.src = order.receipt_url;
+          receiptThumb.alt = 'Payment receipt';
+          receiptThumb.style.width = '40px';
+          receiptThumb.style.height = '40px';
+          receiptThumb.style.objectFit = 'cover';
+          receiptThumb.style.borderRadius = '6px';
+          receiptThumb.style.border = '1px solid #C9BFA4';
+          receiptLink.appendChild(receiptThumb);
+          controls.appendChild(receiptLink);
+        }
+      }
+
+      const paymentBadge = document.createElement('span');
+      paymentBadge.className = 'badge ' + order.payment_status;
+      paymentBadge.textContent = order.payment_status;
+
+      const paymentBtn = document.createElement('button');
+      paymentBtn.className = 'ghost';
+      paymentBtn.style.padding = '6px 12px';
+      paymentBtn.style.fontSize = '13px';
+      const nextPayment = order.payment_status === 'paid' ? 'unpaid' : 'paid';
+      paymentBtn.textContent = 'Mark ' + nextPayment;
+      paymentBtn.onclick = async () => {
+        paymentBtn.disabled = true;
+        try {
+          await api(`/orders/${order.id}/payment`, {
+            method: 'PATCH',
+            body: JSON.stringify({ paymentStatus: nextPayment }),
+          });
+          loadOrders();
+        } catch (err) {
+          alert(err.message);
+          paymentBtn.disabled = false;
+        }
+      };
+
+      const badge = document.createElement('span');
+      badge.className = 'badge ' + order.status;
+      badge.textContent = order.status;
+
+      const select = document.createElement('select');
+      STATUSES.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s;
+        opt.textContent = 'Move to: ' + s;
+        select.appendChild(opt);
+      });
+      select.value = order.status;
+      select.onchange = async () => {
+        const newStatus = select.value;
+        select.disabled = true;
+        try {
+          await api(`/orders/${order.id}/status`, {
+            method: 'PATCH',
+            body: JSON.stringify({ status: newStatus }),
+          });
+          loadOrders();
+        } catch (err) {
+          alert(err.message);
+          select.value = order.status;
+          select.disabled = false;
+        }
+      };
+
+      controls.appendChild(paymentBadge);
+      controls.appendChild(paymentBtn);
+      controls.appendChild(badge);
+      controls.appendChild(select);
+
+      if (isMarketplace && order.payout_status !== 'not_applicable') {
+        const payoutBadge = document.createElement('span');
+        payoutBadge.className = 'badge ' + order.payout_status;
+        payoutBadge.title = order.payout_amount_ngn ? fmtNaira(order.payout_amount_ngn) + ' owed to seller' : '';
+        payoutBadge.textContent = 'Payout: ' + order.payout_status;
+        controls.appendChild(payoutBadge);
+
+        if (order.payout_status === 'held') {
+          const canRelease = order.status === 'arrived';
+
+          const releaseBtn = document.createElement('button');
+          releaseBtn.className = 'ghost';
+          releaseBtn.style.padding = '6px 12px';
+          releaseBtn.style.fontSize = '13px';
+          releaseBtn.textContent = 'Release payout';
+          releaseBtn.disabled = !canRelease;
+          releaseBtn.title = canRelease ? '' : "Buyer hasn't confirmed arrival yet";
+          releaseBtn.onclick = async () => {
+            if (!confirm(`Release ${fmtNaira(order.payout_amount_ngn || 0)} to seller ${order.seller_email}?`)) return;
+            releaseBtn.disabled = true;
+            try {
+              await api(`/orders/${order.id}/payout`, {
+                method: 'PATCH',
+                body: JSON.stringify({ payoutStatus: 'released' }),
+              });
+              loadOrders();
+            } catch (err) {
+              alert(err.message);
+              releaseBtn.disabled = false;
+            }
+          };
+
+          const refundBtn = document.createElement('button');
+          refundBtn.className = 'ghost';
+          refundBtn.style.padding = '6px 12px';
+          refundBtn.style.fontSize = '13px';
+          refundBtn.textContent = 'Refund buyer';
+          refundBtn.onclick = async () => {
+            if (!confirm(`Refund ${fmtNaira(order.payout_amount_ngn || 0)} to buyer ${order.email} instead of paying the seller?`)) return;
+            refundBtn.disabled = true;
+            try {
+              await api(`/orders/${order.id}/payout`, {
+                method: 'PATCH',
+                body: JSON.stringify({ payoutStatus: 'refunded' }),
+              });
+              loadOrders();
+            } catch (err) {
+              alert(err.message);
+              refundBtn.disabled = false;
+            }
+          };
+
+          controls.appendChild(releaseBtn);
+          controls.appendChild(refundBtn);
+        }
+      }
+
+      card.appendChild(controls);
+      el.list.appendChild(card);
+    });
+  }
+
+  function escapeHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  async function loadOrders() {
+    renderFilters();
+    el.countLabel.textContent = 'Loading…';
+    try {
+      const params = new URLSearchParams();
+      if (currentFilter) params.set('status', currentFilter);
+      if (claimedPaidOnly) params.set('claimedPaid', 'true');
+      const query = params.toString() ? `?${params.toString()}` : '';
+      const { orders } = await api('/orders' + query);
+      renderOrders(orders);
+    } catch (err) {
+      el.list.innerHTML = `<div class="empty">${escapeHtml(err.message)}</div>`;
+      el.countLabel.textContent = '';
+    }
+    checkPendingCount();
+  }
+
+  function conditionLabel(c) { return Amana.conditionLabel(c); }
+
+  function categoryLabel(c) { return Amana.categoryLabel(c); }
+
+  function renderListings(listings) {
+    el.listingsList.innerHTML = '';
+    el.countLabel.textContent = listings.length
+      ? `${listings.length} listing${listings.length === 1 ? '' : 's'}`
+      : 'No listings here.';
+
+    if (!listings.length) {
+      el.listingsList.innerHTML = '<div class="empty">Nothing here yet.</div>';
+      return;
+    }
+
+    listings.forEach(listing => {
+      const card = document.createElement('div');
+      card.className = 'listing';
+
+      const photos = document.createElement('div');
+      photos.className = 'photos';
+      (listing.photo_urls || []).slice(0, 3).forEach(url => {
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = '';
+        img.onerror = () => { img.style.display = 'none'; };
+        photos.appendChild(img);
+      });
+
+      const info = document.createElement('div');
+      info.className = 'info';
+      info.innerHTML = `
+        <div class="item">${escapeHtml(listing.item_name)}</div>
+        <div class="desc">${escapeHtml(listing.description)}</div>
+        <div class="meta">${escapeHtml(listing.seller_email)} · ${categoryLabel(listing.category)} · ${conditionLabel(listing.condition)} · ${fmtDate(listing.created_at)}</div>
+        <div class="price">${fmtNaira(listing.price_ngn)}</div>
+        ${listing.review_note ? `<div class="meta">Note: ${escapeHtml(listing.review_note)}</div>` : ''}
+      `;
+
+      const controls = document.createElement('div');
+      controls.className = 'controls';
+
+      const badge = document.createElement('span');
+      badge.className = 'badge ' + listing.review_status;
+      badge.textContent = listing.review_status.replace('_', ' ');
+      controls.appendChild(badge);
+
+      if (listing.review_status === 'pending_review') {
+        const row = document.createElement('div');
+        row.className = 'row';
+
+        const approveBtn = document.createElement('button');
+        approveBtn.className = 'approve small';
+        approveBtn.textContent = 'Approve';
+        approveBtn.onclick = () => reviewListing(listing.id, 'approved', null, card);
+
+        const rejectBtn = document.createElement('button');
+        rejectBtn.className = 'reject small';
+        rejectBtn.textContent = 'Reject';
+        rejectBtn.onclick = () => {
+          if (card.querySelector('.note-input')) return;
+          const note = document.createElement('textarea');
+          note.className = 'note-input';
+          note.placeholder = 'Optional reason for rejection…';
+          const confirmBtn = document.createElement('button');
+          confirmBtn.className = 'reject small';
+          confirmBtn.style.marginTop = '6px';
+          confirmBtn.textContent = 'Confirm reject';
+          confirmBtn.onclick = () => reviewListing(listing.id, 'rejected', note.value.trim() || null, card);
+          controls.appendChild(note);
+          controls.appendChild(confirmBtn);
+        };
+
+        row.appendChild(approveBtn);
+        row.appendChild(rejectBtn);
+        controls.appendChild(row);
+      }
+
+      card.appendChild(photos);
+      card.appendChild(info);
+      card.appendChild(controls);
+      el.listingsList.appendChild(card);
+    });
+  }
+
+  async function reviewListing(id, reviewStatus, reviewNote, card) {
+    const buttons = card.querySelectorAll('button');
+    buttons.forEach(b => b.disabled = true);
+    try {
+      await api(`/listings/${id}/review`, {
+        method: 'PATCH',
+        body: JSON.stringify({ reviewStatus, reviewNote }),
+      });
+      loadListings();
+    } catch (err) {
+      alert(err.message);
+      buttons.forEach(b => b.disabled = false);
+    }
+  }
+
+  async function loadListings() {
+    renderFilters();
+    el.countLabel.textContent = 'Loading…';
+    try {
+      const query = currentReviewFilter ? `?status=${currentReviewFilter}` : '';
+      const { listings } = await api('/listings/admin/queue' + query);
+      renderListings(listings);
+    } catch (err) {
+      el.listingsList.innerHTML = `<div class="empty">${escapeHtml(err.message)}</div>`;
+      el.countLabel.textContent = '';
+    }
+    checkPendingCount();
+  }
+
+  async function checkPendingCount() {
+    try {
+      const { listings } = await api('/listings/admin/queue?status=pending_review');
+      if (listings.length) {
+        el.pendingCount.textContent = listings.length;
+        el.pendingCount.style.display = 'inline-block';
+      } else {
+        el.pendingCount.style.display = 'none';
+      }
+    } catch (err) {
+      // silent — badge is a nice-to-have, not critical path
+    }
+  }
+
+  function renderSellers(applications) {
+    el.sellersList.innerHTML = '';
+    el.countLabel.textContent = applications.length
+      ? `${applications.length} application${applications.length === 1 ? '' : 's'}`
+      : 'No applications here.';
+
+    if (!applications.length) {
+      el.sellersList.innerHTML = '<div class="empty">Nothing here yet.</div>';
+      return;
+    }
+
+    applications.forEach(app => {
+      const card = document.createElement('div');
+      card.className = 'listing';
+
+      const info = document.createElement('div');
+      info.className = 'info';
+      info.innerHTML = `
+        <div class="item">${escapeHtml(app.display_name)}</div>
+        <div class="meta">${escapeHtml(app.email)} · applied ${fmtDate(app.applied_at)}</div>
+        <div class="desc">
+          ${escapeHtml(app.bank_name)} · ${escapeHtml(app.account_number)} · ${escapeHtml(app.account_name)}
+        </div>
+        ${app.application_note ? `<div class="meta">Note: ${escapeHtml(app.application_note)}</div>` : ''}
+      `;
+
+      const controls = document.createElement('div');
+      controls.className = 'controls';
+
+      const badge = document.createElement('span');
+      badge.className = 'badge ' + app.application_status;
+      badge.textContent = app.application_status;
+      controls.appendChild(badge);
+
+      if (app.application_status === 'pending') {
+        const row = document.createElement('div');
+        row.className = 'row';
+
+        const approveBtn = document.createElement('button');
+        approveBtn.className = 'approve small';
+        approveBtn.textContent = 'Approve';
+        approveBtn.onclick = () => reviewSellerApplication(app.email, 'approved', null, card);
+
+        const rejectBtn = document.createElement('button');
+        rejectBtn.className = 'reject small';
+        rejectBtn.textContent = 'Reject';
+        rejectBtn.onclick = () => {
+          if (card.querySelector('.note-input')) return;
+          const note = document.createElement('textarea');
+          note.className = 'note-input';
+          note.placeholder = 'Optional reason for rejection…';
+          const confirmBtn = document.createElement('button');
+          confirmBtn.className = 'reject small';
+          confirmBtn.style.marginTop = '6px';
+          confirmBtn.textContent = 'Confirm reject';
+          confirmBtn.onclick = () => reviewSellerApplication(app.email, 'rejected', note.value.trim() || null, card);
+          controls.appendChild(note);
+          controls.appendChild(confirmBtn);
+        };
+
+        row.appendChild(approveBtn);
+        row.appendChild(rejectBtn);
+        controls.appendChild(row);
+      }
+
+      card.appendChild(info);
+      card.appendChild(controls);
+      el.sellersList.appendChild(card);
+    });
+  }
+
+  async function reviewSellerApplication(email, status, reviewNote, card) {
+    const buttons = card.querySelectorAll('button');
+    buttons.forEach(b => b.disabled = true);
+    try {
+      await api(`/sellers/${encodeURIComponent(email)}/application-review`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status, reviewNote }),
+      });
+      loadSellers();
+    } catch (err) {
+      alert(err.message);
+      buttons.forEach(b => b.disabled = false);
+    }
+  }
+
+  async function loadSellers() {
+    renderFilters();
+    el.countLabel.textContent = 'Loading…';
+    try {
+      const query = currentApplicationFilter ? `?status=${currentApplicationFilter}` : '';
+      const { applications } = await api('/sellers/admin/queue' + query);
+      renderSellers(applications);
+    } catch (err) {
+      el.sellersList.innerHTML = `<div class="empty">${escapeHtml(err.message)}</div>`;
+      el.countLabel.textContent = '';
+    }
+    checkPendingSellerCount();
+  }
+
+  async function checkPendingSellerCount() {
+    try {
+      const { applications } = await api('/sellers/admin/queue?status=pending');
+      if (applications.length) {
+        el.pendingSellerCount.textContent = applications.length;
+        el.pendingSellerCount.style.display = 'inline-block';
+      } else {
+        el.pendingSellerCount.style.display = 'none';
+      }
+    } catch (err) {
+      // silent — badge is a nice-to-have, not critical path
+    }
+  }
+
+  function showApp() {
+    el.login.style.display = 'none';
+    el.app.style.display = 'block';
+    loadOrders();
+    checkPendingSellerCount();
+  }
+
+  function logout() {
+    adminKey = '';
+    sessionStorage.removeItem('amana_admin_key');
+    el.app.style.display = 'none';
+    el.login.style.display = 'block';
+    el.keyInput.value = '';
+  }
+
+  el.loginBtn.onclick = async () => {
+    const key = el.keyInput.value.trim();
+    if (!key) return;
+    adminKey = key;
+    el.loginError.textContent = '';
+    try {
+      await api('/orders');
+      sessionStorage.setItem('amana_admin_key', adminKey);
+      showApp();
+    } catch (err) {
+      el.loginError.textContent = err.message;
+      adminKey = '';
+    }
+  };
+
+  el.keyInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') el.loginBtn.click();
+  });
+
+  el.logoutBtn.onclick = logout;
+
+  if (adminKey) {
+    api('/orders').then(() => showApp()).catch(() => logout());
+  }
+</script>
+
+</body>
+</html>
