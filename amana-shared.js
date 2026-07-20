@@ -107,9 +107,16 @@
     refunded: 'Refunded'
   };
 
+  // keep in sync with amana-backend/routes/listings.js VALID_DELIVERY_AREAS
+  var DELIVERY_AREA_LABELS = {
+    katsina_only: 'Katsina only',
+    nationwide: 'Nationwide'
+  };
+
   function categoryLabel(c) { return CATEGORY_LABELS[c] || c; }
   function conditionLabel(c) { return CONDITION_LABELS[c] || c; }
   function payoutLabel(status) { return PAYOUT_LABELS[status] || status; }
+  function deliveryAreaLabel(a) { return DELIVERY_AREA_LABELS[a] || a; }
 
   // ---- pricing — edit these by hand as the real numbers change; mirrors amana-backend/.env USD_TO_NGN / FEE_PERCENT ----
   var USD_TO_NGN = 1374;
@@ -271,6 +278,7 @@
     calcPricing: calcPricing,
     categoryLabel: categoryLabel,
     conditionLabel: conditionLabel,
+    deliveryAreaLabel: deliveryAreaLabel,
     payoutLabel: payoutLabel,
     escrowNote: escrowNote,
     formatNGN: formatNGN,

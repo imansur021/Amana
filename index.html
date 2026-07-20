@@ -189,6 +189,12 @@
   .review-pill.pending_review{ background:var(--parchment-dim); color:var(--ink-soft); }
   .review-pill.approved{ background:#E4EEDD; color:var(--olive); }
   .review-pill.rejected{ background:#F6E7E5; color:var(--red); }
+  .stock-pill{ display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.03em; padding:3px 9px; border-radius:100px; background:var(--parchment-dim); color:var(--ink-soft); }
+  .stock-pill.low{ background:#FBF0DD; color:#8A6A1F; }
+  .stock-pill.out{ background:#F6E7E5; color:var(--red); }
+  .my-listing-card .stock-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .restock-link{ background:none; border:none; padding:0; font:inherit; font-size:12.5px; font-weight:600; color:var(--olive); text-decoration:underline; cursor:pointer; }
+  .market-card .stock-hint{ font-size:11.5px; font-weight:600; color:#8A6A1F; margin-top:-2px; }
   .payout-pill{ display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.03em; padding:3px 9px; border-radius:100px; }
   .payout-pill.held{ background:#FBF0DE; color:var(--ochre-dark); }
   .payout-pill.released{ background:#E4EEDD; color:var(--olive); }
@@ -434,6 +440,22 @@
           </div>
           <div class="field"><label for="sellPrice">Your price (NGN)</label><input type="number" id="sellPrice" placeholder="e.g. 180000" min="1"></div>
           <div class="field">
+            <label style="display:flex; align-items:center; gap:8px; font-weight:normal;">
+              <input type="checkbox" id="sellAlwaysInStock" style="width:auto;" onchange="handleAlwaysInStockToggle()">
+              I always have more — don't need to track quantity
+            </label>
+          </div>
+          <div class="field" id="sellStockQtyField">
+            <label for="sellStockQty">How many do you have?</label>
+            <input type="number" id="sellStockQty" placeholder="e.g. 1" min="1" step="1" value="1">
+          </div>
+          <div class="field"><label for="sellDeliveryArea">Delivery area</label>
+            <select id="sellDeliveryArea">
+              <option value="katsina_only" selected>Katsina only</option>
+              <option value="nationwide">Nationwide</option>
+            </select>
+          </div>
+          <div class="field">
             <label>Photos</label>
             <div id="photoThumbs" class="photo-thumbs"></div>
             <input type="file" id="photoFileInput" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple style="display:none;" onchange="handlePhotoFilesSelected(this.files)">
@@ -630,6 +652,7 @@ function renderCatalog(){
 /* ================= marketplace (buyer browsing) ================= */
 function conditionLabel(c){ return Amana.conditionLabel(c); }
 function categoryLabel(c){ return Amana.categoryLabel(c); }
+function deliveryAreaLabel(a){ return Amana.deliveryAreaLabel(a); }
 function populateSellCategoryOptions(){
   var select = document.getElementById('sellCategory');
   CATEGORIES.forEach(function(cat){
@@ -705,7 +728,9 @@ function renderMarketplace(listings){
         '<span class="cond">' + categoryLabel(l.category) + ' · ' + conditionLabel(l.condition) + '</span>' +
         '<h3>' + escapeHtml(l.item_name) + '</h3>' +
         '<p class="desc">' + escapeHtml(l.description) + '</p>' +
+        (!l.always_in_stock && l.stock_qty > 0 && l.stock_qty <= 3 ? '<div class="stock-hint">Only ' + l.stock_qty + ' left</div>' : '') +
         '<div class="price">' + formatNGN(l.price_ngn) + '</div>' +
+        '<span class="cond" style="text-transform:none;">' + (l.delivery_area === 'nationwide' ? 'Ships nationwide' : 'Katsina delivery only') + '</span>' +
         '<button class="btn btn-ink" style="margin-top:6px;" onclick="openMarketOrder(\'' + l.id + '\')">Buy this</button>' +
       '</div>' +
     '</div>';
@@ -1390,6 +1415,7 @@ async function viewSellerProfile(email){
               '<h3>' + escapeHtml(l.item_name) + '</h3>' +
               '<p class="desc">' + escapeHtml(l.description) + '</p>' +
               '<div class="price">' + formatNGN(l.price_ngn) + '</div>' +
+              '<span class="cond" style="text-transform:none;">' + (l.delivery_area === 'nationwide' ? 'Ships nationwide' : 'Katsina delivery only') + '</span>' +
               '<button class="btn btn-ink" style="margin-top:6px;" onclick="openMarketOrder(\'' + l.id + '\')">Buy this</button>' +
             '</div>' +
           '</div>';
@@ -1584,6 +1610,12 @@ async function handlePhotoVerifySubmit(email){
   }
 }
 
+function handleAlwaysInStockToggle(){
+  var checked = document.getElementById('sellAlwaysInStock').checked;
+  var qtyField = document.getElementById('sellStockQtyField');
+  qtyField.style.display = checked ? 'none' : '';
+}
+
 async function handleSellSubmit(){
   var errEl = document.getElementById('sellFormError');
   errEl.innerHTML = '';
@@ -1595,6 +1627,9 @@ async function handleSellSubmit(){
   var condition = document.getElementById('sellCondition').value;
   var priceNgn = Number(document.getElementById('sellPrice').value);
   var photoUrls = collectPhotoUrls();
+  var alwaysInStock = document.getElementById('sellAlwaysInStock').checked;
+  var stockQty = alwaysInStock ? 0 : Number(document.getElementById('sellStockQty').value);
+  var deliveryArea = document.getElementById('sellDeliveryArea').value;
 
   if(!/\S+@\S+\.\S+/.test(email) || !itemName || !description || !priceNgn || priceNgn <= 0){
     errEl.innerHTML = '<p class="inline-error">Fill in email, item name, description, and a valid price.</p>';
@@ -1602,6 +1637,10 @@ async function handleSellSubmit(){
   }
   if(!category){
     errEl.innerHTML = '<p class="inline-error">Pick a category for the item.</p>';
+    return;
+  }
+  if(!alwaysInStock && (!Number.isInteger(stockQty) || stockQty < 1)){
+    errEl.innerHTML = '<p class="inline-error">Enter how many you have, or check "I always have more".</p>';
     return;
   }
   var stillUploading = pendingPhotos.some(function(p){ return p.status === 'uploading'; });
@@ -1615,7 +1654,7 @@ async function handleSellSubmit(){
   }
   if(!API_BASE){
     sellSession.email = email;
-    renderSellVerifyStepDemo({ itemName:itemName, description:description, category:category, condition:condition, priceNgn:priceNgn, photoUrls:photoUrls });
+    renderSellVerifyStepDemo({ itemName:itemName, description:description, category:category, condition:condition, priceNgn:priceNgn, photoUrls:photoUrls, stockQty:stockQty, alwaysInStock:alwaysInStock, deliveryArea:deliveryArea });
     return;
   }
 
@@ -1627,7 +1666,7 @@ async function handleSellSubmit(){
   if(cachedToken){
     sellSession.sessionToken = cachedToken;
     errEl.innerHTML = '<p style="font-size:13px; color:var(--ink-soft);">Submitting…</p>';
-    await submitListing(cachedToken, { itemName:itemName, description:description, category:category, condition:condition, priceNgn:priceNgn, photoUrls:photoUrls }, errEl);
+    await submitListing(cachedToken, { itemName:itemName, description:description, category:category, condition:condition, priceNgn:priceNgn, photoUrls:photoUrls, stockQty:stockQty, alwaysInStock:alwaysInStock, deliveryArea:deliveryArea }, errEl);
     return;
   }
 
@@ -1641,7 +1680,7 @@ async function handleSellSubmit(){
     var data = await res.json();
     if(!res.ok){ throw new Error(data.error || 'Could not send code.'); }
 
-    renderSellVerifyStep({ itemName:itemName, description:description, category:category, condition:condition, priceNgn:priceNgn, photoUrls:photoUrls });
+    renderSellVerifyStep({ itemName:itemName, description:description, category:category, condition:condition, priceNgn:priceNgn, photoUrls:photoUrls, stockQty:stockQty, alwaysInStock:alwaysInStock, deliveryArea:deliveryArea });
   }catch(err){
     errEl.innerHTML = '<p class="inline-error">' + err.message + '</p>';
   }
@@ -1682,7 +1721,10 @@ async function submitListing(token, pendingListing, errEl){
         category: pendingListing.category,
         condition: pendingListing.condition,
         priceNgn: pendingListing.priceNgn,
-        photoUrls: pendingListing.photoUrls
+        photoUrls: pendingListing.photoUrls,
+        stockQty: pendingListing.stockQty,
+        alwaysInStock: pendingListing.alwaysInStock,
+        deliveryArea: pendingListing.deliveryArea
       })
     });
     if(listingRes.status === 401 || listingRes.status === 403){
@@ -1758,6 +1800,10 @@ async function handleSellVerifyDemo(pendingListing){
     condition: pendingListing.condition,
     price_ngn: pendingListing.priceNgn,
     photo_urls: pendingListing.photoUrls,
+    stock_qty: pendingListing.stockQty,
+    always_in_stock: pendingListing.alwaysInStock,
+    in_stock: pendingListing.alwaysInStock || pendingListing.stockQty > 0,
+    delivery_area: pendingListing.deliveryArea || 'katsina_only',
     review_status: 'pending_review',
     created_at: new Date().toISOString()
   };
@@ -1780,6 +1826,30 @@ async function saveDemoListing(email, listing){
   catch(e){ console.error('Storage error saving demo listing', e); }
 }
 
+// Builds the stock badge + "Restock" action for a My Listings card.
+// Shared by both the demo (local-storage) and real (API) listing views,
+// so the two stay visually identical. isDemo controls which restock
+// handler the button wires up to, since demo restocking never hits the
+// backend.
+function stockPillHtml(l, isDemo){
+  var restockBtn = '<button type="button" class="restock-link" onclick="' +
+    (isDemo ? 'openRestockDemo' : 'openRestock') + '(\'' + l.id + '\')">Restock</button>';
+  if(l.always_in_stock){
+    return '<div class="stock-row"><span class="stock-pill">Always in stock</span>' + restockBtn + '</div>';
+  }
+  if(!l.stock_qty || l.stock_qty <= 0){
+    return '<div class="stock-row"><span class="stock-pill out">Sold out</span>' + restockBtn + '</div>';
+  }
+  var low = l.stock_qty <= 3;
+  return '<div class="stock-row"><span class="stock-pill' + (low ? ' low' : '') + '">' + l.stock_qty + ' in stock</span>' + restockBtn + '</div>';
+}
+
+function deliveryAreaPillHtml(l, isDemo){
+  var editBtn = '<button type="button" class="restock-link" onclick="' +
+    (isDemo ? 'openDeliveryAreaDemo' : 'openDeliveryArea') + '(\'' + l.id + '\')">Edit</button>';
+  return '<div class="stock-row"><span class="stock-pill">' + deliveryAreaLabel(l.delivery_area) + '</span>' + editBtn + '</div>';
+}
+
 async function loadMyListingsDemo(email){
   var section = document.getElementById('myListingsSection');
   var list = document.getElementById('myListingsList');
@@ -1794,7 +1864,10 @@ async function loadMyListingsDemo(email){
   list.innerHTML = listings.map(function(l){
     return '<div class="my-listing-card">' +
       '<div><div class="name">' + escapeHtml(l.item_name) + '</div>' +
-      '<div class="price">' + categoryLabel(l.category) + ' · ' + formatNGN(l.price_ngn) + '</div></div>' +
+      '<div class="price">' + categoryLabel(l.category) + ' · ' + formatNGN(l.price_ngn) + '</div>' +
+      stockPillHtml(l, true) +
+      deliveryAreaPillHtml(l, true) +
+      '</div>' +
       '<span class="review-pill ' + l.review_status + '">' + l.review_status.replace('_',' ') + '</span>' +
       '</div>';
   }).join('');
@@ -1922,13 +1995,185 @@ async function loadMyListings(email, token){
     list.innerHTML = data.listings.map(function(l){
       return '<div class="my-listing-card">' +
         '<div><div class="name">' + escapeHtml(l.item_name) + '</div>' +
-        '<div class="price">' + categoryLabel(l.category) + ' · ' + formatNGN(l.price_ngn) + '</div></div>' +
+        '<div class="price">' + categoryLabel(l.category) + ' · ' + formatNGN(l.price_ngn) + '</div>' +
+        stockPillHtml(l, false) +
+        deliveryAreaPillHtml(l, false) +
+        '</div>' +
         '<span class="review-pill ' + l.review_status + '">' + l.review_status.replace('_',' ') + '</span>' +
         '</div>';
     }).join('');
   }catch(err){
     list.innerHTML = '<p class="inline-error">' + err.message + '</p>';
   }
+}
+
+// Restock modal for the real (API-backed) My Listings view. Reuses the
+// existing session token for this email — same auth as everything else
+// in this section, so there's no separate verify step.
+function openRestock(listingId){
+  var email = sellSession.email;
+  var token = Amana.getSessionToken(email);
+  if(!token){ alert('Your session expired — please verify your email again.'); return; }
+  document.getElementById('orderOverlay').classList.add('open');
+  document.getElementById('modalBody').innerHTML =
+    '<h3>Restock this item</h3>' +
+    '<p class="modal-sub">Enter how many you have now, or mark it as always in stock.</p>' +
+    '<div class="field"><label for="restockQty">New quantity</label>' +
+    '<input type="number" id="restockQty" min="0" step="1" placeholder="e.g. 5"></div>' +
+    '<label style="display:flex; align-items:center; gap:8px; font-size:13.5px; margin:6px 0 14px;">' +
+    '<input type="checkbox" id="restockAlways" onchange="document.getElementById(\'restockQty\').disabled=this.checked;"> I always have more — don\'t track quantity</label>' +
+    '<div id="restockError"></div>' +
+    '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick=\'submitRestock(' + JSON.stringify(listingId) + ')\'>Save</button>';
+}
+
+async function submitRestock(listingId){
+  var email = sellSession.email;
+  var token = Amana.getSessionToken(email);
+  var errEl = document.getElementById('restockError');
+  var always = document.getElementById('restockAlways').checked;
+  var qtyInput = document.getElementById('restockQty').value.trim();
+
+  var body = { email: email };
+  if(always){
+    body.alwaysInStock = true;
+  }else{
+    var qty = Number(qtyInput);
+    if(qtyInput === '' || !Number.isInteger(qty) || qty < 0){
+      errEl.innerHTML = '<p class="inline-error">Enter a whole number of 0 or more.</p>';
+      return;
+    }
+    body.stockQty = qty;
+  }
+
+  try{
+    var res = await fetch(API_BASE + '/listings/' + listingId + '/stock', {
+      method:'PATCH',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + token },
+      body: JSON.stringify(body)
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not update stock.'); }
+    closeModal();
+    loadMyListings(email, token);
+  }catch(err){
+    errEl.innerHTML = '<p class="inline-error">' + err.message + '</p>';
+  }
+}
+
+// Demo-mode restock: no backend, so it just rewrites the listing inside
+// this browser's local demo storage and re-renders.
+function openRestockDemo(listingId){
+  document.getElementById('orderOverlay').classList.add('open');
+  document.getElementById('modalBody').innerHTML =
+    '<h3>Restock this item</h3>' +
+    '<div class="demo-banner">Demo preview — this updates local demo storage only.</div>' +
+    '<div class="field"><label for="restockQty">New quantity</label>' +
+    '<input type="number" id="restockQty" min="0" step="1" placeholder="e.g. 5"></div>' +
+    '<label style="display:flex; align-items:center; gap:8px; font-size:13.5px; margin:6px 0 14px;">' +
+    '<input type="checkbox" id="restockAlways" onchange="document.getElementById(\'restockQty\').disabled=this.checked;"> I always have more — don\'t track quantity</label>' +
+    '<div id="restockError"></div>' +
+    '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick=\'submitRestockDemo(' + JSON.stringify(listingId) + ')\'>Save</button>';
+}
+
+async function submitRestockDemo(listingId){
+  var email = sellSession.email;
+  var errEl = document.getElementById('restockError');
+  var always = document.getElementById('restockAlways').checked;
+  var qtyInput = document.getElementById('restockQty').value.trim();
+
+  var qty = 0;
+  if(!always){
+    qty = Number(qtyInput);
+    if(qtyInput === '' || !Number.isInteger(qty) || qty < 0){
+      errEl.innerHTML = '<p class="inline-error">Enter a whole number of 0 or more.</p>';
+      return;
+    }
+  }
+
+  var listings = await getDemoListings(email);
+  var updated = listings.map(function(l){
+    if(l.id !== listingId) return l;
+    l.always_in_stock = always;
+    l.stock_qty = always ? 0 : qty;
+    l.in_stock = always || qty > 0;
+    return l;
+  });
+  try{ await window.storage.set('demo_listings:' + email, JSON.stringify(updated), false); }
+  catch(e){ console.error('Storage error saving restock', e); }
+
+  closeModal();
+  loadMyListingsDemo(email);
+}
+
+// Delivery-area edit modal, mirroring openRestock's shape and auth.
+function openDeliveryArea(listingId){
+  var email = sellSession.email;
+  var token = Amana.getSessionToken(email);
+  if(!token){ alert('Your session expired — please verify your email again.'); return; }
+  document.getElementById('orderOverlay').classList.add('open');
+  document.getElementById('modalBody').innerHTML =
+    '<h3>Delivery area</h3>' +
+    '<p class="modal-sub">Where can this item be delivered?</p>' +
+    '<div class="field"><label for="deliveryAreaSelect">Delivery area</label>' +
+    '<select id="deliveryAreaSelect">' +
+    '<option value="katsina_only">Katsina only</option>' +
+    '<option value="nationwide">Nationwide</option>' +
+    '</select></div>' +
+    '<div id="deliveryAreaError"></div>' +
+    '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick=\'submitDeliveryArea(' + JSON.stringify(listingId) + ')\'>Save</button>';
+}
+
+async function submitDeliveryArea(listingId){
+  var email = sellSession.email;
+  var token = Amana.getSessionToken(email);
+  var errEl = document.getElementById('deliveryAreaError');
+  var deliveryArea = document.getElementById('deliveryAreaSelect').value;
+
+  try{
+    var res = await fetch(API_BASE + '/listings/' + listingId + '/delivery-area', {
+      method:'PATCH',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + token },
+      body: JSON.stringify({ email: email, deliveryArea: deliveryArea })
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not update delivery area.'); }
+    closeModal();
+    loadMyListings(email, token);
+  }catch(err){
+    errEl.innerHTML = '<p class="inline-error">' + err.message + '</p>';
+  }
+}
+
+// Demo-mode delivery-area edit: rewrites local demo storage only.
+function openDeliveryAreaDemo(listingId){
+  document.getElementById('orderOverlay').classList.add('open');
+  document.getElementById('modalBody').innerHTML =
+    '<h3>Delivery area</h3>' +
+    '<div class="demo-banner">Demo preview — this updates local demo storage only.</div>' +
+    '<div class="field"><label for="deliveryAreaSelect">Delivery area</label>' +
+    '<select id="deliveryAreaSelect">' +
+    '<option value="katsina_only">Katsina only</option>' +
+    '<option value="nationwide">Nationwide</option>' +
+    '</select></div>' +
+    '<div id="deliveryAreaError"></div>' +
+    '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick=\'submitDeliveryAreaDemo(' + JSON.stringify(listingId) + ')\'>Save</button>';
+}
+
+async function submitDeliveryAreaDemo(listingId){
+  var email = sellSession.email;
+  var deliveryArea = document.getElementById('deliveryAreaSelect').value;
+
+  var listings = await getDemoListings(email);
+  var updated = listings.map(function(l){
+    if(l.id !== listingId) return l;
+    l.delivery_area = deliveryArea;
+    return l;
+  });
+  try{ await window.storage.set('demo_listings:' + email, JSON.stringify(updated), false); }
+  catch(e){ console.error('Storage error saving delivery area', e); }
+
+  closeModal();
+  loadMyListingsDemo(email);
 }
 
 function payoutLabel(status){ return Amana.payoutLabel(status); }
@@ -1970,7 +2215,7 @@ async function loadMySales(email, token){
     listEl.innerHTML = orders.map(function(o){
       return '<div class="my-listing-card">' +
         '<div><div class="name">' + escapeHtml(o.item_name) + '</div>' +
-        '<div class="price">' + formatNGN(o.payout_amount_ngn || o.total_ngn) + ' · order ' + o.status + '</div></div>' +
+        '<div class="price">Your payout: ' + formatNGN(o.payout_amount_ngn || o.total_ngn) + ' · order ' + o.status + '</div></div>' +
         '<span class="payout-pill ' + o.payout_status + '">' + payoutLabel(o.payout_status) + '</span>' +
         '</div>';
     }).join('');
