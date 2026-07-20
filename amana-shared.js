@@ -113,10 +113,22 @@
     nationwide: 'Nationwide'
   };
 
+  // keep in sync with amana-backend/lib/delivery.js DELIVERY_ZONES — fee/eta
+  // here are for display only; the backend is what actually computes and
+  // charges delivery_fee_ngn on an order, this just avoids re-deriving the
+  // same numbers by hand in multiple places in index.html/admin.html.
+  var DELIVERY_ZONES = {
+    katsina_metro: { label: 'Katsina metro (same city)', feeNgn: 1000, etaLabel: 'Same day' },
+    katsina_other_lga: { label: 'Other Katsina LGA', feeNgn: 2500, etaLabel: '1–2 days' }
+  };
+
   function categoryLabel(c) { return CATEGORY_LABELS[c] || c; }
   function conditionLabel(c) { return CONDITION_LABELS[c] || c; }
   function payoutLabel(status) { return PAYOUT_LABELS[status] || status; }
   function deliveryAreaLabel(a) { return DELIVERY_AREA_LABELS[a] || a; }
+  function deliveryZoneLabel(z) { return (DELIVERY_ZONES[z] || {}).label || z; }
+  function deliveryZoneFeeNgn(z) { return (DELIVERY_ZONES[z] || {}).feeNgn || 0; }
+  function deliveryZoneEtaLabel(z) { return (DELIVERY_ZONES[z] || {}).etaLabel || ''; }
 
   // ---- pricing — edit these by hand as the real numbers change; mirrors amana-backend/.env USD_TO_NGN / FEE_PERCENT ----
   var USD_TO_NGN = 1374;
@@ -125,12 +137,10 @@
 
   function calcPricing(priceUSD) {
     var price = Number(priceUSD) || 0;
-    var shipping = Math.max(8, price * 0.07);   // 7% of item price, $8 minimum
     var fee = price * (FEE_PERCENT / 100);       // Amana's cut
-    var totalNGN = (price + shipping + fee) * USD_TO_NGN;
+    var totalNGN = (price + fee) * USD_TO_NGN;
     return {
       priceUSD: price,
-      shipping: shipping,
       fee: fee,
       totalNGN: totalNGN
     };
@@ -165,6 +175,9 @@
   // ---- escrow status copy (buyer-facing, status.html order tracker) ----
   function escrowNote(order) {
     if (!order) return '';
+    if (order.disputed_at && order.payout_status === 'held') {
+      return "You've flagged this order as not as described — Amana will review and get back to you before releasing payment.";
+    }
     switch (order.payout_status) {
       case 'held':
         return 'Amana is holding this payment in escrow until you confirm the item has arrived.';
@@ -279,6 +292,10 @@
     categoryLabel: categoryLabel,
     conditionLabel: conditionLabel,
     deliveryAreaLabel: deliveryAreaLabel,
+    deliveryZoneLabel: deliveryZoneLabel,
+    deliveryZoneFeeNgn: deliveryZoneFeeNgn,
+    deliveryZoneEtaLabel: deliveryZoneEtaLabel,
+    DELIVERY_ZONES: DELIVERY_ZONES,
     payoutLabel: payoutLabel,
     escrowNote: escrowNote,
     formatNGN: formatNGN,

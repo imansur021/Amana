@@ -71,11 +71,13 @@
   /* ============ HEADER ============ */
   .site-header{
     position:sticky; top:0; z-index:60; display:flex; align-items:center; justify-content:space-between;
-    padding:16px 24px; background:var(--indigo-950); border-bottom:1px solid var(--indigo-800);
+    padding:10px 24px; background:var(--indigo-950); border-bottom:1px solid var(--indigo-800);
   }
-  .logo{ display:flex; align-items:center; gap:8px; font-family:var(--font-display); font-weight:700; font-size:22px; color:var(--cream); letter-spacing:.2px; }
+  .logo{ display:flex; align-items:center; gap:6px; font-family:var(--font-display); font-weight:700; font-size:17px; color:var(--cream); letter-spacing:.2px; }
   .logo em{ font-style:normal; color:var(--ochre-light); }
-  .logo-mark{ width:26px; height:26px; flex-shrink:0; }
+  .logo-mark{ width:19px; height:19px; flex-shrink:0; }
+  .site-header .btn{ padding:8px 14px; font-size:13px; }
+  .site-header a{ font-size:12.5px !important; }
 
   /* ============ HERO ============ */
   .hero{ background:var(--indigo-900); color:var(--cream); padding:64px 24px 90px; text-align:center; }
@@ -205,20 +207,8 @@
   .sales-summary-item .label{ font-size:11.5px; text-transform:uppercase; letter-spacing:.03em; color:var(--ink-soft); margin-bottom:4px; }
   .sales-summary-item .value{ font-family:var(--font-mono); font-size:18px; font-weight:600; color:var(--ink); }
 
-  .link-panel{ background:var(--cream); border:1px solid #E1D6BA; border-radius:12px; padding:24px; }
   .link-row{ display:flex; gap:10px; flex-wrap:wrap; }
   .link-row input{ flex:1; min-width:220px; padding:12px 14px; border-radius:8px; border:1px solid #C9BFA4; background:#fff; font-size:15px; }
-  .link-result{ margin-top:18px; font-size:14.5px; }
-  .link-result.estimated{ color:var(--olive); }
-  .link-result.failed{ color:var(--ink-soft); }
-  .tag{ display:inline-block; font-family:var(--font-mono); font-size:10.5px; padding:2px 7px; border-radius:5px; margin-left:6px; vertical-align:1px; }
-  .tag-est{ background:#E4EEDD; color:var(--olive); }
-
-  .preview-card{ display:flex; gap:14px; background:#fff; border:1px solid #E1D6BA; border-radius:10px; padding:14px; margin-top:4px; }
-  .preview-img{ width:76px; height:76px; border-radius:8px; object-fit:cover; flex-shrink:0; background:var(--parchment-dim); }
-  .preview-body{ flex:1; min-width:0; }
-  .preview-title{ font-size:14.5px; font-weight:600; font-family:var(--font-body); margin:0 0 4px; line-height:1.3; }
-  .preview-desc{ font-size:12.5px; color:var(--ink-soft); margin:0 0 8px; line-height:1.4; }
 
   /* ============ TRUST ============ */
   .trust-stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:44px; }
@@ -311,86 +301,35 @@
   </div>
   <div style="display:flex; align-items:center; gap:16px;">
     <a href="status.html" style="font-size:13.5px; color:#C9CEE0; text-decoration:none;">Track your order</a>
+    <a href="#order" style="font-size:13.5px; color:#C9CEE0; text-decoration:none;" onclick="switchTab('sell'); openViewMyListings();">My store</a>
     <a class="btn btn-ochre" id="headerWhatsapp" href="#" target="_blank" rel="noopener">Message on WhatsApp</a>
   </div>
 </header>
 
 <main>
 
-  <!-- ============ HERO ============ -->
-  <section class="hero">
-    <h1>I find it.<br>You watch it come home.</h1>
-    <p class="sub">Amana finds and buys anything you want from marketplaces abroad — brand new, any category, not just electronics — then shows you proof at every stage, from order to your doorstep anywhere in Nigeria.</p>
-    <div class="hero-ctas">
-      <button class="btn btn-ochre" onclick="scrollToId('order'); switchTab('link')">Get a price for something</button>
-      <button class="btn btn-outline" onclick="scrollToId('order'); switchTab('catalog')">Browse what's available</button>
-    </div>
-
-    <div class="tracker-wrap" aria-hidden="true">
-      <div class="tracker-line"></div>
-      <div class="tracker">
-        <div class="stamp done"><div class="stamp-circle">1</div><div class="stamp-label">Ordered</div></div>
-        <div class="stamp done"><div class="stamp-circle">2</div><div class="stamp-label">Paid</div></div>
-        <div class="stamp done"><div class="stamp-circle">3</div><div class="stamp-label">Bought</div></div>
-        <div class="stamp done"><div class="stamp-circle">4</div><div class="stamp-label">Shipped</div></div>
-        <div class="stamp pending"><div class="stamp-circle">5</div><div class="stamp-label">In Nigeria</div></div>
-        <div class="stamp pending"><div class="stamp-circle">6</div><div class="stamp-label">Delivered</div></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ HOW IT WORKS ============ -->
-  <section class="section">
-    <div class="wrap">
-      <p class="eyebrow">How it works</p>
-      <h2 class="section-title">Four steps, start to finish</h2>
-      <p class="section-sub">The same shape every time, whether it's something already found or something you spotted yourself.</p>
-      <div class="steps">
-        <div class="step"><div class="step-num">1</div><h3>Search or paste a link</h3><p>Pick from what's already found, or drop a link to something you saw yourself.</p></div>
-        <div class="step"><div class="step-num">2</div><h3>See the price</h3><p>Item cost, shipping estimate, and Amana's 5% fee — before you pay anything.</p></div>
-        <div class="step"><div class="step-num">3</div><h3>Pay to confirm</h3><p>Full payment upfront secures your order. First time? Start with something small.</p></div>
-        <div class="step"><div class="step-num">4</div><h3>Watch it come home</h3><p>A photo when it's ordered, a photo when it ships, updates until it's in your hands.</p></div>
-      </div>
-    </div>
-  </section>
-
   <!-- ============ ORDER ============ -->
   <section class="section section--dim" id="order">
     <div class="wrap">
       <p class="eyebrow">Start an order</p>
       <h2 class="section-title">What are you looking for?</h2>
-      <p class="section-sub">Sourced from Pinduoduo, AliExpress, Amazon and more — anything you want, brand new, checked before they ship.</p>
+      <p class="section-sub">A marketplace where people in Katsina buy and sell directly, with Amana holding payment until you confirm the item arrived as described.</p>
 
       <div class="order-tabs">
-        <button class="tab-btn" id="tabBtnCatalog" onclick="switchTab('catalog')">Search catalog</button>
-        <button class="tab-btn active" id="tabBtnLink" onclick="switchTab('link')">Paste a link</button>
-        <button class="tab-btn" id="tabBtnMarket" onclick="switchTab('market')">Marketplace</button>
+        <button class="tab-btn active" id="tabBtnMarket" onclick="switchTab('market')">Marketplace</button>
         <button class="tab-btn" id="tabBtnSell" onclick="switchTab('sell')">Sell an item</button>
       </div>
 
-      <div class="tab-panel" id="panelCatalog">
-        <div class="search-row">
-          <input type="text" id="catalogSearch" placeholder="Search, e.g. iEmail, sneakers, air fryer" oninput="renderCatalog()" aria-label="Search catalog">
-        </div>
-        <div class="catalog-grid" id="catalogGrid"></div>
-      </div>
-
-      <div class="tab-panel active" id="panelLink">
-        <div class="link-panel">
-          <label for="linkInput" style="font-weight:600; font-size:14px; display:block; margin-bottom:10px;">Paste an AliExpress, Amazon, or Temu link</label>
-          <div class="link-row">
-            <input type="url" id="linkInput" placeholder="https://...">
-            <button class="btn btn-ink" onclick="handleLinkSubmit()">Get a price</button>
-          </div>
-          <div id="linkResult"></div>
-        </div>
-      </div>
-
-      <div class="tab-panel" id="panelMarket">
-        <p class="section-sub" style="margin-bottom:20px;">Items posted by other Nigerians, reviewed by Amana before they're listed. Payment is held until you confirm the item arrived as described.</p>
+      <div class="tab-panel active" id="panelMarket">
+        <p class="section-sub" style="margin-bottom:20px;">Items posted by other people in Katsina, reviewed by Amana before they're listed. Payment is held until you confirm the item arrived as described.</p>
         <div style="display:flex; gap:16px; margin:-10px 0 16px;">
+          <button type="button" class="small-link" onclick="toggleMyOrders()" id="myOrdersToggle">My orders</button>
           <button type="button" class="small-link" onclick="toggleSavedItems()" id="savedItemsToggle">Saved items</button>
           <button type="button" class="small-link" onclick="toggleSellerSearch()" id="sellerSearchToggle">Find a seller</button>
+        </div>
+        <div class="my-listings" id="myOrdersSection" style="display:none;">
+          <h3 style="font-size:16px; margin-bottom:12px;" id="myOrdersHeading">Your orders</h3>
+          <div id="myOrdersList"></div>
         </div>
         <div class="my-listings" id="savedItemsSection" style="display:none;">
           <h3 style="font-size:16px; margin-bottom:12px;" id="savedItemsHeading">Your saved items</h3>
@@ -439,6 +378,7 @@
             </select>
           </div>
           <div class="field"><label for="sellPrice">Your price (NGN)</label><input type="number" id="sellPrice" placeholder="e.g. 180000" min="1"></div>
+          <p style="font-size:12px; color:var(--ink-soft); margin:-10px 0 16px;">Buyers pay this price exactly — Amana deducts a 5% fee from your payout once the sale is confirmed.</p>
           <div class="field">
             <label style="display:flex; align-items:center; gap:8px; font-weight:normal;">
               <input type="checkbox" id="sellAlwaysInStock" style="width:auto;" onchange="handleAlwaysInStockToggle()">
@@ -450,10 +390,18 @@
             <input type="number" id="sellStockQty" placeholder="e.g. 1" min="1" step="1" value="1">
           </div>
           <div class="field"><label for="sellDeliveryArea">Delivery area</label>
-            <select id="sellDeliveryArea">
+            <select id="sellDeliveryArea" onchange="handleDeliveryAreaChange()">
               <option value="katsina_only" selected>Katsina only</option>
               <option value="nationwide">Nationwide</option>
             </select>
+          </div>
+          <div class="field" id="sellDeliveryZoneField">
+            <label for="sellDeliveryZone">Katsina delivery zone</label>
+            <select id="sellDeliveryZone">
+              <option value="katsina_metro" selected>Katsina metro (same city) — ₦1,000 rider fee, same day</option>
+              <option value="katsina_other_lga">Other Katsina LGA (Daura, Funtua, Malumfashi, etc.) — ₦2,500 rider fee, 1–2 days</option>
+            </select>
+            <p style="font-size:12px; color:var(--ink-soft); margin-top:6px;">This fee is added to what the buyer pays and goes to the rider who delivers it — it's separate from your payout.</p>
           </div>
           <div class="field">
             <label>Photos</label>
@@ -463,6 +411,7 @@
             <p style="font-size:12px; color:var(--ink-soft); margin-top:6px;">Take or choose photos of the actual item — up to 8MB each.</p>
           </div>
           <div id="sellFormError"></div>
+          <p style="font-size:11.5px; color:var(--ink-soft); margin:10px 0 8px;">Listing this item is covered by the <a href="terms.html" target="_blank" rel="noopener" style="color:var(--ochre-dark);">Terms &amp; Conditions</a> you agreed to as a seller, including the 5% fee on completed sales.</p>
           <button class="btn btn-ochre" style="width:100%; justify-content:center; margin-top:6px;" onclick="handleSellSubmit()">Submit for review</button>
         </div>
 
@@ -498,6 +447,42 @@
     </div>
   </section>
 
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <h1>Buy and sell,<br>with Amana in between.</h1>
+    <p class="sub">A marketplace where people in Katsina buy and sell directly — Amana holds your payment until you confirm the item arrived as described.</p>
+    <div class="hero-ctas">
+      <button class="btn btn-ochre" onclick="scrollToId('order'); switchTab('market')">Browse the marketplace</button>
+      <button class="btn btn-outline" onclick="scrollToId('order'); switchTab('sell')">Sell an item</button>
+    </div>
+
+    <div class="tracker-wrap" aria-hidden="true">
+      <div class="tracker-line"></div>
+      <div class="tracker">
+        <div class="stamp done"><div class="stamp-circle">1</div><div class="stamp-label">Ordered</div></div>
+        <div class="stamp done"><div class="stamp-circle">2</div><div class="stamp-label">Paid</div></div>
+        <div class="stamp pending"><div class="stamp-circle">3</div><div class="stamp-label">Handed over</div></div>
+        <div class="stamp pending"><div class="stamp-circle">4</div><div class="stamp-label">Confirmed</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ HOW IT WORKS ============ -->
+  <section class="section">
+    <div class="wrap">
+      <p class="eyebrow">How it works</p>
+      <h2 class="section-title">Four steps, start to finish</h2>
+      <p class="section-sub">The same shape every time.</p>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><h3>Browse the marketplace</h3><p>Find what other people in Katsina are selling, reviewed by Amana before it's listed.</p></div>
+        <div class="step"><div class="step-num">2</div><h3>See the price</h3><p>The price is exactly what the seller listed — nothing added at checkout.</p></div>
+        <div class="step"><div class="step-num">3</div><h3>Pay to confirm</h3><p>Full payment upfront secures your order. First time? Start with something small.</p></div>
+        <div class="step"><div class="step-num">4</div><h3>Confirm you got it</h3><p>Payment stays in escrow until you confirm the item matches what you ordered.</p></div>
+      </div>
+    </div>
+  </section>
+
+
   <!-- ============ TRUST ============ -->
   <section class="section section--dark">
     <div class="wrap">
@@ -505,7 +490,7 @@
       <h2 class="section-title">A person you can call, not just a website</h2>
       <div class="trust-stats">
         <div class="stat-card"><div class="stat-num">48+</div><div class="stat-label">Orders delivered — edit me</div></div>
-        <div class="stat-card"><div class="stat-num">Katsina → Nigeria</div><div class="stat-label">Based here, delivering nationwide — not a faceless site</div></div>
+        <div class="stat-card"><div class="stat-num">Katsina</div><div class="stat-label">Based here, in your city — not a faceless site</div></div>
         <div class="stat-card"><div class="stat-num">24hr</div><div class="stat-label">Window to flag a mismatch</div></div>
       </div>
       <div class="nudge">New here? Start with something small — see how it goes before your next order.</div>
@@ -531,6 +516,7 @@
   <div class="wrap">
     <div><strong style="color:var(--cream);">Amana</strong> · Katsina, Nigeria</div>
     <div>WhatsApp: <span id="footerPhoneText">[add your number]</span></div>
+    <div style="margin-top:6px;"><a href="terms.html" style="color:#C9CEE0; font-size:13px; text-decoration:none;">Terms &amp; Conditions</a></div>
     <div class="foot-note">Hausa version coming — copy pending review by a native speaker before it goes live.</div>
   </div>
 </footer>
@@ -539,11 +525,10 @@
 <div class="float-stack">
   <div class="bot-panel" id="botPanel">
     <h3>Quick answers</h3>
-    <button class="bot-btn" onclick="showBotAnswer('shipping')">How long does shipping take?</button>
+    <button class="bot-btn" onclick="showBotAnswer('delivery')">How does delivery work?</button>
     <button class="bot-btn" onclick="showBotAnswer('safety')">Is my money safe?</button>
     <button class="bot-btn" onclick="showBotAnswer('mismatch')">What if my item doesn't match?</button>
-    <button class="bot-btn" onclick="closeBotAndGo('catalog')">Search for something</button>
-    <button class="bot-btn" onclick="closeBotAndGo('link')">I have a link</button>
+    <button class="bot-btn" onclick="closeBotAndGo('market')">Browse the marketplace</button>
     <div id="botAnswer"></div>
   </div>
   <button class="fab fab-bot" onclick="toggleBot()" aria-label="Open quick answers">?</button>
@@ -576,24 +561,17 @@ var FEE_PERCENT = Amana.FEE_PERCENT;
 var API_BASE = 'https://amana-backend-ln2p.onrender.com';
 
 /* ================= catalog — empty for now, add real stock here when ready ================= */
-/* Any category goes here, not just emails/electronics — e.g.:
-  // { id:'c1', name:'iEmail 12, 64GB', note:'Brand new, sealed box', priceUSD:210, mono:'IP' },
-  // { id:'c2', name:'Air fryer, 5.5L', note:'Brand new, sealed box', priceUSD:45, mono:'AF' },
-*/
-var CATALOG = [
-];
-
 var CATEGORIES = Amana.CATEGORIES;
 
 var FAQ = [
-  { q:'How long does shipping take?', a:'Most orders take 2 to 4 weeks door to door, depending on the item and how it ships.' },
-  { q:'Is my money safe?', a:"You pay once, upfront — and from there you get a photo when your order is placed, a photo when it ships, and updates the whole way. You're never left wondering." },
-  { q:"What if my item doesn't match?", a:"Send a photo or video within 24 hours of delivery. If it genuinely doesn't match what you ordered, the item cost is refunded — shipping isn't, since that cost is already spent. No proof, no claim." },
-  { q:'How does the price get calculated?', a:'Item cost plus a shipping estimate plus Amana\'s 5% fee — shown on screen before you pay anything, and repeated in the WhatsApp message.' }
+  { q:'How does delivery work?', a:'Once your order is confirmed, you and the seller sort out the handoff directly — Amana just handles the payment and the guarantee.' },
+  { q:'Is my money safe?', a:"You pay once, upfront — and from there you get a photo when your order is placed and updates the whole way. You're never left wondering." },
+  { q:"What if my item doesn't match?", a:"Send a photo or video within 24 hours of receiving it. If it genuinely doesn't match what you ordered, the item cost is refunded. No proof, no claim." },
+  { q:'How does the price get calculated?', a:'You pay exactly the price the seller listed — nothing added on top at checkout.' }
 ];
 
 var BOT_ANSWERS = {
-  shipping: FAQ[0].a,
+  delivery: FAQ[0].a,
   safety: FAQ[1].a,
   mismatch: FAQ[2].a
 };
@@ -609,7 +587,7 @@ document.getElementById('footerPhoneText').textContent = WHATSAPP_NUMBER === '23
 function scrollToId(id){ document.getElementById(id).scrollIntoView({ behavior:'smooth' }); }
 
 /* ================= tabs ================= */
-var TAB_NAMES = ['catalog', 'link', 'market', 'sell'];
+var TAB_NAMES = ['market', 'sell'];
 function switchTab(name){
   TAB_NAMES.forEach(function(t){
     var btn = document.getElementById('tabBtn' + t.charAt(0).toUpperCase() + t.slice(1));
@@ -627,27 +605,6 @@ function switchTab(name){
   }
 }
 
-/* ================= catalog ================= */
-function renderCatalog(){
-  var q = document.getElementById('catalogSearch').value.trim().toLowerCase();
-  var grid = document.getElementById('catalogGrid');
-  var items = CATALOG.filter(function(i){ return i.name.toLowerCase().indexOf(q) !== -1; });
-  if(items.length === 0){
-    grid.innerHTML = '<p class="no-results">No catalog yet — paste a link to what you want and Amana will price it for you.</p>';
-    return;
-  }
-  grid.innerHTML = items.map(function(i){
-    var p = calcPricing(i.priceUSD);
-    return '<div class="item-card">' +
-      '<div class="item-mono">' + i.mono + '</div>' +
-      '<h3>' + i.name + '</h3>' +
-      '<p class="item-note">' + i.note + '</p>' +
-      '<div class="item-price"><span class="from">from</span>' + formatNGN(p.totalNGN) + '</div>' +
-      '<p class="rate-note" style="margin:-4px 0 0;">rate as of ' + formatRateDate() + '</p>' +
-      '<button class="btn btn-ink" onclick="openOrder(\'' + i.id + '\')">Order this</button>' +
-      '</div>';
-  }).join('');
-}
 
 /* ================= marketplace (buyer browsing) ================= */
 function conditionLabel(c){ return Amana.conditionLabel(c); }
@@ -730,8 +687,8 @@ function renderMarketplace(listings){
         '<p class="desc">' + escapeHtml(l.description) + '</p>' +
         (!l.always_in_stock && l.stock_qty > 0 && l.stock_qty <= 3 ? '<div class="stock-hint">Only ' + l.stock_qty + ' left</div>' : '') +
         '<div class="price">' + formatNGN(l.price_ngn) + '</div>' +
-        '<span class="cond" style="text-transform:none;">' + (l.delivery_area === 'nationwide' ? 'Ships nationwide' : 'Katsina delivery only') + '</span>' +
         '<button class="btn btn-ink" style="margin-top:6px;" onclick="openMarketOrder(\'' + l.id + '\')">Buy this</button>' +
+        (l.seller_email ? '<button type="button" class="small-link" style="margin-top:6px; display:inline-block;" onclick="viewSellerProfile(\'' + l.seller_email + '\')">View seller →</button>' : '') +
       '</div>' +
     '</div>';
   }).join('');
@@ -909,12 +866,25 @@ async function finalizeMarketOrder(){
     var orderData = await orderRes.json();
     if(!orderRes.ok){ throw new Error(orderData.error || 'Could not complete the purchase.'); }
 
+    var order = orderData.order;
+    var deliveryFeeLine = order.delivery_fee_ngn
+      ? '<p style="font-size:12.5px; color:var(--ink-soft); margin:-6px 0 12px;">Includes ' + formatNGN(order.delivery_fee_ngn) + ' rider delivery fee' + (order.delivery_zone ? ' (' + Amana.deliveryZoneLabel(order.delivery_zone) + ')' : '') + '.</p>'
+      : '';
+    var handoffCodeBlock = order.handoff_code
+      ? '<div style="background:var(--sand,#F3EEE3); border-radius:10px; padding:14px 16px; margin:14px 0;">' +
+          '<p style="font-size:12.5px; color:var(--ink-soft); margin:0 0 4px;">Your handoff code</p>' +
+          '<p style="font-size:22px; font-weight:700; letter-spacing:2px; margin:0;">' + order.handoff_code + '</p>' +
+          '<p style="font-size:12px; color:var(--ink-soft); margin:6px 0 0;">Only give this to the rider once you\'ve checked the item and you\'re happy with it — it\'s how they confirm the handoff and how Amana knows to move your order along.</p>' +
+        '</div>'
+      : '';
     document.getElementById('modalBody').innerHTML =
       '<h3>Order placed</h3>' +
-      '<p class="modal-sub">Pay now to speed things along, or send payment by bank transfer using the details below. Once it\'s received, the seller ships and you can track progress on the status page.</p>' +
-      '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick="handlePayWithPaystackFromModal(\'' + orderData.order.id + '\', this)">Pay ' + formatNGN(orderData.order.total_ngn) + ' now</button>' +
+      '<p class="modal-sub">Pay now to speed things along, or send payment by bank transfer using the details below. Once it\'s received, a rider will be assigned and you can track progress on the status page.</p>' +
+      deliveryFeeLine +
+      '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick="handlePayWithPaystackFromModal(\'' + order.id + '\', this)">Pay ' + formatNGN(order.total_ngn) + ' now</button>' +
       '<p style="text-align:center; font-size:12px; color:var(--ink-soft); margin:10px 0;">or pay by bank transfer</p>' +
-      Amana.bankDetailsHTML(orderData.order.id) +
+      Amana.bankDetailsHTML(order.id) +
+      handoffCodeBlock +
       '<a class="btn btn-ochre" style="width:100%; justify-content:center; margin-top:16px;" href="status.html">Track this order</a>';
   }catch(err){
     document.getElementById('modalBody').innerHTML =
@@ -1090,9 +1060,227 @@ async function performWishlistToggle(listingId, btnEl){
 }
 
 function hideMarketSidePanels(){
+  document.getElementById('myOrdersSection').style.display = 'none';
   document.getElementById('savedItemsSection').style.display = 'none';
   document.getElementById('sellerSearchSection').style.display = 'none';
   document.getElementById('sellerProfileSection').style.display = 'none';
+}
+
+/* ================= buyer order history ("My orders") ================= */
+
+function toggleMyOrders(){
+  var section = document.getElementById('myOrdersSection');
+  var showing = section.style.display !== 'none';
+  hideMarketSidePanels();
+  if(showing){
+    return;
+  }
+  if(!buyerSession.sessionToken && buyerSession.email){
+    var cached = Amana.getSessionToken(buyerSession.email);
+    if(cached) buyerSession.sessionToken = cached;
+  }
+  if(!buyerSession.sessionToken){
+    openBuyerVerifyForOrdersView();
+    return;
+  }
+  section.style.display = 'block';
+  loadMyOrders();
+}
+
+function openBuyerVerifyForOrdersView(){
+  document.getElementById('orderOverlay').classList.add('open');
+  document.getElementById('modalBody').innerHTML =
+    '<h3>View your orders</h3>' +
+    '<p class="modal-sub">Enter your email address.</p>' +
+    '<div class="field"><label for="ordersEmailInput">Your email address</label>' +
+    '<input type="email" id="ordersEmailInput" placeholder="you@example.com" autofocus></div>' +
+    '<div id="ordersModalError"></div>' +
+    '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick="handleOrdersViewEmailSubmit()">Continue</button>';
+}
+
+async function handleOrdersViewEmailSubmit(){
+  var email = document.getElementById('ordersEmailInput').value.trim();
+  var errEl = document.getElementById('ordersModalError');
+  if(!/\S+@\S+\.\S+/.test(email)){
+    errEl.innerHTML = '<p class="inline-error">Enter a valid email address.</p>';
+    return;
+  }
+
+  var cachedToken = Amana.getSessionToken(email);
+  if(cachedToken){
+    buyerSession.email = email;
+    buyerSession.sessionToken = cachedToken;
+    closeModal();
+    document.getElementById('myOrdersSection').style.display = 'block';
+    loadMyOrders();
+    return;
+  }
+
+  buyerSession.email = email;
+  errEl.innerHTML = '<p style="font-size:13px; color:var(--ink-soft); margin-top:10px;">Checking…</p>';
+  try{
+    // Password first — an OTP email is only sent if this address has no
+    // password set yet, so a returning buyer isn't burning an OTP email
+    // just to see their order list.
+    var res = await fetch(API_BASE + '/auth/check-email', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email: email })
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not check that email right now.'); }
+
+    if(data.hasPassword){
+      document.getElementById('modalBody').innerHTML =
+        '<h3>Enter your password</h3>' +
+        '<p class="modal-sub">Logging in as ' + escapeHtml(email) + '</p>' +
+        '<div class="field"><label for="ordersPasswordInput">Password</label><input type="password" id="ordersPasswordInput" autofocus></div>' +
+        '<div id="ordersModalError"></div>' +
+        '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick="handleOrdersPasswordLogin()">Log in</button>' +
+        '<button type="button" class="small-link" onclick="handleOrdersForgotPassword()">Forgot password? Use email code instead</button>';
+    }else{
+      await sendOrdersOtp(email);
+    }
+  }catch(err){
+    errEl.innerHTML = '<p class="inline-error">' + err.message + '</p>';
+  }
+}
+
+async function handleOrdersPasswordLogin(){
+  var password = document.getElementById('ordersPasswordInput').value;
+  var errEl = document.getElementById('ordersModalError');
+  if(!password){
+    errEl.innerHTML = '<p class="inline-error">Enter your password.</p>';
+    return;
+  }
+  try{
+    var res = await fetch(API_BASE + '/auth/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email: buyerSession.email, password: password })
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Incorrect password.'); }
+    buyerSession.sessionToken = data.token;
+    Amana.saveSessionToken(buyerSession.email, data.token);
+    closeModal();
+    document.getElementById('myOrdersSection').style.display = 'block';
+    loadMyOrders();
+  }catch(err){
+    errEl.innerHTML = '<p class="inline-error">' + err.message + '</p>';
+  }
+}
+
+async function handleOrdersForgotPassword(){
+  var errEl = document.getElementById('ordersModalError');
+  try{
+    await sendOrdersOtp(buyerSession.email);
+  }catch(err){
+    errEl.innerHTML = '<p class="inline-error">' + err.message + '</p>';
+  }
+}
+
+async function sendOrdersOtp(email){
+  var res = await fetch(API_BASE + '/auth/request-otp', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ email: email })
+  });
+  var data = await res.json();
+  if(!res.ok){ throw new Error(data.error || 'Could not send a code right now.'); }
+  document.getElementById('modalBody').innerHTML =
+    '<h3>Enter your code</h3>' +
+    '<p class="modal-sub">We sent a code to your email. It expires in 5 minutes.</p>' +
+    '<div class="field"><label for="ordersCodeInput">Verification code</label><input type="text" id="ordersCodeInput" inputmode="numeric" autofocus></div>' +
+    '<div id="ordersModalError"></div>' +
+    '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick=\'handleOrdersViewVerify(' + JSON.stringify(email) + ')\'>Verify</button>';
+}
+
+async function handleOrdersViewVerify(email){
+  var code = document.getElementById('ordersCodeInput').value.trim();
+  var errEl = document.getElementById('ordersModalError');
+  if(!code){
+    errEl.innerHTML = '<p class="inline-error">Enter the code you received.</p>';
+    return;
+  }
+  try{
+    var res = await fetch(API_BASE + '/auth/verify-otp', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email: email, code: code })
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || "That code doesn't match — try again."); }
+    buyerSession.email = email;
+    buyerSession.sessionToken = data.token;
+
+    // Offer to set a password now so this email/OTP round-trip isn't
+    // needed again next time — mirrors status.html's post-verify step.
+    document.getElementById('modalBody').innerHTML =
+      '<h3>Set a password</h3>' +
+      '<p class="modal-sub">So you can skip the email code next time.</p>' +
+      '<div class="field"><label for="ordersNewPassword">New password</label><input type="password" id="ordersNewPassword" autofocus></div>' +
+      '<div class="field"><label for="ordersConfirmPassword">Confirm password</label><input type="password" id="ordersConfirmPassword"></div>' +
+      '<div id="ordersModalError"></div>' +
+      '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick="handleOrdersSetPassword()">Save password</button>' +
+      '<button type="button" class="small-link" onclick="handleOrdersSkipPassword()">Skip for now</button>';
+  }catch(err){
+    errEl.innerHTML = '<p class="inline-error">' + err.message + '</p>';
+  }
+}
+
+async function handleOrdersSetPassword(){
+  var pw = document.getElementById('ordersNewPassword').value;
+  var confirm = document.getElementById('ordersConfirmPassword').value;
+  var errEl = document.getElementById('ordersModalError');
+  if(pw.length < 8){ errEl.innerHTML = '<p class="inline-error">Password must be at least 8 characters.</p>'; return; }
+  if(pw !== confirm){ errEl.innerHTML = '<p class="inline-error">Passwords don\'t match.</p>'; return; }
+  try{
+    var res = await fetch(API_BASE + '/auth/set-password', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + buyerSession.sessionToken },
+      body: JSON.stringify({ email: buyerSession.email, password: pw })
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not save that password.'); }
+    Amana.saveSessionToken(buyerSession.email, buyerSession.sessionToken);
+    closeModal();
+    document.getElementById('myOrdersSection').style.display = 'block';
+    loadMyOrders();
+  }catch(err){
+    errEl.innerHTML = '<p class="inline-error">' + err.message + '</p>';
+  }
+}
+
+function handleOrdersSkipPassword(){
+  Amana.saveSessionToken(buyerSession.email, buyerSession.sessionToken);
+  closeModal();
+  document.getElementById('myOrdersSection').style.display = 'block';
+  loadMyOrders();
+}
+
+async function loadMyOrders(){
+  var listEl = document.getElementById('myOrdersList');
+  var heading = document.getElementById('myOrdersHeading');
+  listEl.innerHTML = '<p style="font-size:13.5px; color:var(--ink-soft);">Loading…</p>';
+  try{
+    var res = await fetch(API_BASE + '/orders/mine/' + buyerSession.email, {
+      headers:{ 'Authorization':'Bearer ' + buyerSession.sessionToken }
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not load your orders.'); }
+
+    heading.textContent = 'Your orders (' + data.orders.length + ')';
+    if(!data.orders.length){
+      listEl.innerHTML = '<p style="font-size:13.5px; color:var(--ink-soft);">No orders yet — get a price for something to start your first one.</p>';
+      return;
+    }
+    listEl.innerHTML = data.orders.map(function(o){
+      return '<div class="my-listing-card" style="cursor:pointer;" onclick="location.href=\'status.html\'">' +
+        '<div><div class="name">' + escapeHtml(o.item_name || ('Order ' + o.id)) + '</div>' +
+        '<div class="price">' + fmtDate(o.created_at) + (o.total_ngn ? ' · ' + formatNGN(o.total_ngn) : '') + '</div></div>' +
+        '<span class="review-pill">' + String(o.status || '').replace(/_/g,' ') + '</span>' +
+        '</div>';
+    }).join('');
+  }catch(err){
+    listEl.innerHTML = '<p class="inline-error">' + err.message + '</p>';
+  }
 }
 
 function toggleSavedItems(){
@@ -1209,7 +1397,9 @@ async function loadSavedItems(){
     listEl.innerHTML = data.listings.map(function(l){
       return '<div class="my-listing-card">' +
         '<div><div class="name">' + escapeHtml(l.item_name) + '</div>' +
-        '<div class="price">' + categoryLabel(l.category) + ' · ' + formatNGN(l.price_ngn) + '</div></div>' +
+        '<div class="price">' + categoryLabel(l.category) + ' · ' + formatNGN(l.price_ngn) + '</div>' +
+        (l.seller_email ? '<button type="button" class="small-link" style="margin-top:4px; display:inline-block;" onclick="viewSellerProfile(\'' + l.seller_email + '\')">View seller →</button>' : '') +
+        '</div>' +
         '<button class="btn btn-ink" onclick="openMarketOrder(\'' + l.id + '\')">Buy this</button>' +
         '</div>';
     }).join('');
@@ -1286,6 +1476,12 @@ function renderSellerApplication(app){
     '<div class="field"><label for="sellerAppAccountNumber">Account number</label><input type="text" id="sellerAppAccountNumber" inputmode="numeric" value="' + escapeHtml(app.accountNumber || '') + '"></div>' +
     '<div class="field"><label for="sellerAppAccountName">Account name</label><input type="text" id="sellerAppAccountName" placeholder="Name on the account" value="' + escapeHtml(app.accountName || '') + '"></div>' +
     '<div id="sellerAppError"></div>' +
+    '<div class="field" style="margin-bottom:14px;">' +
+      '<label style="display:flex; align-items:flex-start; gap:8px; font-weight:normal; font-size:12.5px; color:var(--ink-soft);">' +
+        '<input type="checkbox" id="sellerAppAgreeTerms" style="width:auto; margin-top:2px;">' +
+        '<span>I agree to Amana\'s <a href="terms.html" target="_blank" rel="noopener" style="color:var(--ochre-dark);">Terms &amp; Conditions</a>, including the 5% platform fee on each sale.</span>' +
+      '</label>' +
+    '</div>' +
     '<button class="btn btn-ink" style="width:100%; justify-content:center;" onclick="handleSellerApplicationSubmit()">Submit application</button>';
 }
 
@@ -1303,6 +1499,11 @@ async function handleSellerApplicationSubmit(){
   }
   if(!bankName || !accountNumber || !accountName){
     errEl.innerHTML = '<p class="inline-error">Bank name, account number, and account name are all required — that\'s where payouts get sent.</p>';
+    return;
+  }
+  var agreedTerms = document.getElementById('sellerAppAgreeTerms').checked;
+  if(!agreedTerms){
+    errEl.innerHTML = '<p class="inline-error">You need to agree to the Terms &amp; Conditions to become a seller.</p>';
     return;
   }
 
@@ -1415,8 +1616,7 @@ async function viewSellerProfile(email){
               '<h3>' + escapeHtml(l.item_name) + '</h3>' +
               '<p class="desc">' + escapeHtml(l.description) + '</p>' +
               '<div class="price">' + formatNGN(l.price_ngn) + '</div>' +
-              '<span class="cond" style="text-transform:none;">' + (l.delivery_area === 'nationwide' ? 'Ships nationwide' : 'Katsina delivery only') + '</span>' +
-              '<button class="btn btn-ink" style="margin-top:6px;" onclick="openMarketOrder(\'' + l.id + '\')">Buy this</button>' +
+                    '<button class="btn btn-ink" style="margin-top:6px;" onclick="openMarketOrder(\'' + l.id + '\')">Buy this</button>' +
             '</div>' +
           '</div>';
         }).join('')
@@ -1616,6 +1816,11 @@ function handleAlwaysInStockToggle(){
   qtyField.style.display = checked ? 'none' : '';
 }
 
+function handleDeliveryAreaChange(){
+  var area = document.getElementById('sellDeliveryArea').value;
+  document.getElementById('sellDeliveryZoneField').style.display = (area === 'katsina_only') ? '' : 'none';
+}
+
 async function handleSellSubmit(){
   var errEl = document.getElementById('sellFormError');
   errEl.innerHTML = '';
@@ -1630,6 +1835,7 @@ async function handleSellSubmit(){
   var alwaysInStock = document.getElementById('sellAlwaysInStock').checked;
   var stockQty = alwaysInStock ? 0 : Number(document.getElementById('sellStockQty').value);
   var deliveryArea = document.getElementById('sellDeliveryArea').value;
+  var deliveryZone = document.getElementById('sellDeliveryZone').value;
 
   if(!/\S+@\S+\.\S+/.test(email) || !itemName || !description || !priceNgn || priceNgn <= 0){
     errEl.innerHTML = '<p class="inline-error">Fill in email, item name, description, and a valid price.</p>';
@@ -1654,7 +1860,7 @@ async function handleSellSubmit(){
   }
   if(!API_BASE){
     sellSession.email = email;
-    renderSellVerifyStepDemo({ itemName:itemName, description:description, category:category, condition:condition, priceNgn:priceNgn, photoUrls:photoUrls, stockQty:stockQty, alwaysInStock:alwaysInStock, deliveryArea:deliveryArea });
+    renderSellVerifyStepDemo({ itemName:itemName, description:description, category:category, condition:condition, priceNgn:priceNgn, photoUrls:photoUrls, stockQty:stockQty, alwaysInStock:alwaysInStock, deliveryArea:deliveryArea, deliveryZone:deliveryZone });
     return;
   }
 
@@ -1666,7 +1872,7 @@ async function handleSellSubmit(){
   if(cachedToken){
     sellSession.sessionToken = cachedToken;
     errEl.innerHTML = '<p style="font-size:13px; color:var(--ink-soft);">Submitting…</p>';
-    await submitListing(cachedToken, { itemName:itemName, description:description, category:category, condition:condition, priceNgn:priceNgn, photoUrls:photoUrls, stockQty:stockQty, alwaysInStock:alwaysInStock, deliveryArea:deliveryArea }, errEl);
+    await submitListing(cachedToken, { itemName:itemName, description:description, category:category, condition:condition, priceNgn:priceNgn, photoUrls:photoUrls, stockQty:stockQty, alwaysInStock:alwaysInStock, deliveryArea:deliveryArea, deliveryZone:deliveryZone }, errEl);
     return;
   }
 
@@ -1680,7 +1886,7 @@ async function handleSellSubmit(){
     var data = await res.json();
     if(!res.ok){ throw new Error(data.error || 'Could not send code.'); }
 
-    renderSellVerifyStep({ itemName:itemName, description:description, category:category, condition:condition, priceNgn:priceNgn, photoUrls:photoUrls, stockQty:stockQty, alwaysInStock:alwaysInStock, deliveryArea:deliveryArea });
+    renderSellVerifyStep({ itemName:itemName, description:description, category:category, condition:condition, priceNgn:priceNgn, photoUrls:photoUrls, stockQty:stockQty, alwaysInStock:alwaysInStock, deliveryArea:deliveryArea, deliveryZone:deliveryZone });
   }catch(err){
     errEl.innerHTML = '<p class="inline-error">' + err.message + '</p>';
   }
@@ -1724,7 +1930,8 @@ async function submitListing(token, pendingListing, errEl){
         photoUrls: pendingListing.photoUrls,
         stockQty: pendingListing.stockQty,
         alwaysInStock: pendingListing.alwaysInStock,
-        deliveryArea: pendingListing.deliveryArea
+        deliveryArea: pendingListing.deliveryArea,
+        deliveryZone: pendingListing.deliveryZone
       })
     });
     if(listingRes.status === 401 || listingRes.status === 403){
@@ -1804,6 +2011,7 @@ async function handleSellVerifyDemo(pendingListing){
     always_in_stock: pendingListing.alwaysInStock,
     in_stock: pendingListing.alwaysInStock || pendingListing.stockQty > 0,
     delivery_area: pendingListing.deliveryArea || 'katsina_only',
+    delivery_zone: pendingListing.deliveryZone || 'katsina_metro',
     review_status: 'pending_review',
     created_at: new Date().toISOString()
   };
@@ -1844,10 +2052,14 @@ function stockPillHtml(l, isDemo){
   return '<div class="stock-row"><span class="stock-pill' + (low ? ' low' : '') + '">' + l.stock_qty + ' in stock</span>' + restockBtn + '</div>';
 }
 
-function deliveryAreaPillHtml(l, isDemo){
+// Price-edit action for a My Listings card. Lets a seller reprice their
+// own listing; a price drop notifies anyone who saved it (see backend
+// PATCH /listings/:id/price). isDemo controls which handler the modal
+// wires up to, same pattern as stockPillHtml/openRestock.
+function priceEditPillHtml(l, isDemo){
   var editBtn = '<button type="button" class="restock-link" onclick="' +
-    (isDemo ? 'openDeliveryAreaDemo' : 'openDeliveryArea') + '(\'' + l.id + '\')">Edit</button>';
-  return '<div class="stock-row"><span class="stock-pill">' + deliveryAreaLabel(l.delivery_area) + '</span>' + editBtn + '</div>';
+    (isDemo ? 'openPriceEditDemo' : 'openPriceEdit') + '(\'' + l.id + '\')">Edit price</button>';
+  return '<div class="stock-row"><span class="stock-pill">' + formatNGN(l.price_ngn) + '</span>' + editBtn + '</div>';
 }
 
 async function loadMyListingsDemo(email){
@@ -1866,7 +2078,7 @@ async function loadMyListingsDemo(email){
       '<div><div class="name">' + escapeHtml(l.item_name) + '</div>' +
       '<div class="price">' + categoryLabel(l.category) + ' · ' + formatNGN(l.price_ngn) + '</div>' +
       stockPillHtml(l, true) +
-      deliveryAreaPillHtml(l, true) +
+      priceEditPillHtml(l, true) +
       '</div>' +
       '<span class="review-pill ' + l.review_status + '">' + l.review_status.replace('_',' ') + '</span>' +
       '</div>';
@@ -1997,7 +2209,7 @@ async function loadMyListings(email, token){
         '<div><div class="name">' + escapeHtml(l.item_name) + '</div>' +
         '<div class="price">' + categoryLabel(l.category) + ' · ' + formatNGN(l.price_ngn) + '</div>' +
         stockPillHtml(l, false) +
-        deliveryAreaPillHtml(l, false) +
+        priceEditPillHtml(l, false) +
         '</div>' +
         '<span class="review-pill ' + l.review_status + '">' + l.review_status.replace('_',' ') + '</span>' +
         '</div>';
@@ -2105,38 +2317,41 @@ async function submitRestockDemo(listingId){
   loadMyListingsDemo(email);
 }
 
-// Delivery-area edit modal, mirroring openRestock's shape and auth.
-function openDeliveryArea(listingId){
+// Price-edit modal, mirroring openRestock's shape and auth. A price drop
+// on an approved listing notifies anyone who saved it (backend handles
+// the email; this just calls the endpoint).
+function openPriceEdit(listingId){
   var email = sellSession.email;
   var token = Amana.getSessionToken(email);
   if(!token){ alert('Your session expired — please verify your email again.'); return; }
   document.getElementById('orderOverlay').classList.add('open');
   document.getElementById('modalBody').innerHTML =
-    '<h3>Delivery area</h3>' +
-    '<p class="modal-sub">Where can this item be delivered?</p>' +
-    '<div class="field"><label for="deliveryAreaSelect">Delivery area</label>' +
-    '<select id="deliveryAreaSelect">' +
-    '<option value="katsina_only">Katsina only</option>' +
-    '<option value="nationwide">Nationwide</option>' +
-    '</select></div>' +
-    '<div id="deliveryAreaError"></div>' +
-    '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick=\'submitDeliveryArea(' + JSON.stringify(listingId) + ')\'>Save</button>';
+    '<h3>Edit price</h3>' +
+    '<p class="modal-sub">Lowering the price notifies anyone who saved this item.</p>' +
+    '<div class="field"><label for="priceEditInput">New price (NGN)</label><input type="number" id="priceEditInput" min="1"></div>' +
+    '<div id="priceEditError"></div>' +
+    '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick=\'submitPriceEdit(' + JSON.stringify(listingId) + ')\'>Save</button>';
 }
 
-async function submitDeliveryArea(listingId){
+async function submitPriceEdit(listingId){
   var email = sellSession.email;
   var token = Amana.getSessionToken(email);
-  var errEl = document.getElementById('deliveryAreaError');
-  var deliveryArea = document.getElementById('deliveryAreaSelect').value;
+  var errEl = document.getElementById('priceEditError');
+  var priceNgn = Number(document.getElementById('priceEditInput').value);
+
+  if(!Number.isFinite(priceNgn) || priceNgn <= 0){
+    errEl.innerHTML = '<p class="inline-error">Enter a valid price.</p>';
+    return;
+  }
 
   try{
-    var res = await fetch(API_BASE + '/listings/' + listingId + '/delivery-area', {
+    var res = await fetch(API_BASE + '/listings/' + listingId + '/price', {
       method:'PATCH',
       headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + token },
-      body: JSON.stringify({ email: email, deliveryArea: deliveryArea })
+      body: JSON.stringify({ email: email, priceNgn: priceNgn })
     });
     var data = await res.json();
-    if(!res.ok){ throw new Error(data.error || 'Could not update delivery area.'); }
+    if(!res.ok){ throw new Error(data.error || 'Could not update price.'); }
     closeModal();
     loadMyListings(email, token);
   }catch(err){
@@ -2144,39 +2359,74 @@ async function submitDeliveryArea(listingId){
   }
 }
 
-// Demo-mode delivery-area edit: rewrites local demo storage only.
-function openDeliveryAreaDemo(listingId){
+// Demo-mode price edit: rewrites local demo storage only.
+function openPriceEditDemo(listingId){
   document.getElementById('orderOverlay').classList.add('open');
   document.getElementById('modalBody').innerHTML =
-    '<h3>Delivery area</h3>' +
+    '<h3>Edit price</h3>' +
     '<div class="demo-banner">Demo preview — this updates local demo storage only.</div>' +
-    '<div class="field"><label for="deliveryAreaSelect">Delivery area</label>' +
-    '<select id="deliveryAreaSelect">' +
-    '<option value="katsina_only">Katsina only</option>' +
-    '<option value="nationwide">Nationwide</option>' +
-    '</select></div>' +
-    '<div id="deliveryAreaError"></div>' +
-    '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick=\'submitDeliveryAreaDemo(' + JSON.stringify(listingId) + ')\'>Save</button>';
+    '<div class="field"><label for="priceEditInput">New price (NGN)</label><input type="number" id="priceEditInput" min="1"></div>' +
+    '<div id="priceEditError"></div>' +
+    '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick=\'submitPriceEditDemo(' + JSON.stringify(listingId) + ')\'>Save</button>';
 }
 
-async function submitDeliveryAreaDemo(listingId){
+async function submitPriceEditDemo(listingId){
   var email = sellSession.email;
-  var deliveryArea = document.getElementById('deliveryAreaSelect').value;
+  var errEl = document.getElementById('priceEditError');
+  var priceNgn = Number(document.getElementById('priceEditInput').value);
+
+  if(!Number.isFinite(priceNgn) || priceNgn <= 0){
+    errEl.innerHTML = '<p class="inline-error">Enter a valid price.</p>';
+    return;
+  }
 
   var listings = await getDemoListings(email);
   var updated = listings.map(function(l){
     if(l.id !== listingId) return l;
-    l.delivery_area = deliveryArea;
+    l.price_ngn = priceNgn;
     return l;
   });
   try{ await window.storage.set('demo_listings:' + email, JSON.stringify(updated), false); }
-  catch(e){ console.error('Storage error saving delivery area', e); }
+  catch(e){ console.error('Storage error saving price', e); }
 
   closeModal();
   loadMyListingsDemo(email);
 }
 
 function payoutLabel(status){ return Amana.payoutLabel(status); }
+
+async function handleMarkShipped(orderId, btnEl){
+  var errEl = document.getElementById('shipError-' + orderId);
+  errEl.textContent = '';
+  var codeInput = document.getElementById('shipCode-' + orderId);
+  var code = codeInput ? codeInput.value.trim() : undefined;
+  if(codeInput && !code){
+    errEl.textContent = 'Ask the buyer for the handoff code and enter it here.';
+    return;
+  }
+  var token = Amana.getSessionToken(sellSession.email);
+  if(!token){
+    errEl.textContent = 'Your session expired — log in again to continue.';
+    return;
+  }
+  btnEl.disabled = true;
+  var original = btnEl.textContent;
+  btnEl.textContent = 'Marking…';
+  try{
+    var res = await fetch(API_BASE + '/orders/' + orderId + '/ship', {
+      method:'PATCH',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + token },
+      body: JSON.stringify(code ? { code: code } : {})
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not mark this order as handed over.'); }
+    loadMySales(sellSession.email, token);
+  }catch(err){
+    errEl.textContent = err.message;
+    btnEl.disabled = false;
+    btnEl.textContent = original;
+  }
+}
 
 async function loadMySales(email, token){
   var section = document.getElementById('mySalesSection');
@@ -2213,9 +2463,28 @@ async function loadMySales(email, token){
       '</div>';
 
     listEl.innerHTML = orders.map(function(o){
+      var canShip = o.payment_status === 'paid' && (o.status === 'ordered' || o.status === 'pending');
+      var shipBlock = '';
+      if(canShip){
+        var codeField = o.delivery_zone
+          ? '<input type="text" id="shipCode-' + o.id + '" placeholder="Code from buyer" inputmode="numeric" style="width:110px; margin-right:8px;">'
+          : '';
+        shipBlock =
+          '<div style="margin-top:8px; display:flex; align-items:center; gap:8px;">' +
+            codeField +
+            '<button class="small-link ship-btn" id="shipBtn-' + o.id + '" onclick="handleMarkShipped(\'' + o.id + '\', this)">Mark as handed over</button>' +
+          '</div>' +
+          '<div class="inline-error" id="shipError-' + o.id + '"></div>';
+      }
+      var riderInfo = o.delivery_zone
+        ? '<div class="price" style="margin-top:2px;">' + Amana.deliveryZoneLabel(o.delivery_zone) + (o.rider_name ? ' · rider: ' + escapeHtml(o.rider_name) : ' · rider not assigned yet') + '</div>'
+        : '';
       return '<div class="my-listing-card">' +
-        '<div><div class="name">' + escapeHtml(o.item_name) + '</div>' +
-        '<div class="price">Your payout: ' + formatNGN(o.payout_amount_ngn || o.total_ngn) + ' · order ' + o.status + '</div></div>' +
+        '<div style="flex:1;"><div class="name">' + escapeHtml(o.item_name) + '</div>' +
+        '<div class="price">Your payout: ' + formatNGN(o.payout_amount_ngn || o.total_ngn) + ' · order ' + o.status + '</div>' +
+        riderInfo +
+        shipBlock +
+        '</div>' +
         '<span class="payout-pill ' + o.payout_status + '">' + payoutLabel(o.payout_status) + '</span>' +
         '</div>';
     }).join('');
@@ -2225,93 +2494,6 @@ async function loadMySales(email, token){
 }
 
 /* ================= pasted links ================= */
-function hashString(s){
-  var h = 0;
-  for(var i=0;i<s.length;i++){ h = (h*31 + s.charCodeAt(i)) >>> 0; }
-  return h;
-}
-
-async function handleLinkSubmit(){
-  var url = document.getElementById('linkInput').value.trim();
-  var resultEl = document.getElementById('linkResult');
-  if(!url){ resultEl.innerHTML = '<p class="inline-error">Paste a link first.</p>'; return; }
-
-  if(API_BASE){
-    resultEl.innerHTML = '<p style="font-size:13.5px; color:var(--ink-soft);">Looking up that link...</p>';
-    try{
-      var res = await fetch(API_BASE + '/preview', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ url: url })
-      });
-      var data = await res.json();
-
-      if(!data.ok){
-        resultEl.innerHTML =
-          '<p class="link-result failed">' + data.message + '</p>' +
-          '<a class="btn btn-ochre" style="margin-top:10px;" target="_blank" rel="noopener" href="' + waLink('Hi Amana, can you quote me for this: ' + url) + '">Send link on WhatsApp</a>';
-        return;
-      }
-
-      renderLinkPreviewCard(data, url);
-    }catch(err){
-      resultEl.innerHTML =
-        '<p class="link-result failed">Couldn\'t reach Amana right now — send the link on WhatsApp instead.</p>' +
-        '<a class="btn btn-ochre" style="margin-top:10px;" target="_blank" rel="noopener" href="' + waLink('Hi Amana, can you quote me for this: ' + url) + '">Send link on WhatsApp</a>';
-    }
-    return;
-  }
-
-  // No backend configured yet — demo-only simulation.
-  var h = hashString(url);
-  if(h % 5 === 0){
-    resultEl.innerHTML =
-      '<p class="link-result failed">Couldn\'t read that page automatically — send it to Amana directly and you\'ll get a price shortly.</p>' +
-      '<a class="btn btn-ochre" style="margin-top:10px;" target="_blank" rel="noopener" href="' + waLink('Hi Amana, can you quote me for this: ' + url) + '">Send link on WhatsApp</a>';
-    return;
-  }
-  var priceUSD = 15 + (h % 280);
-  window._pendingLinkItem = { id:'link', name:'Item from your link', note:url, priceUSD:priceUSD, mono:'LK', fromLink:true, url:url };
-  var p = calcPricing(priceUSD);
-  resultEl.innerHTML =
-    '<p class="link-result estimated">Estimated price: ' + formatNGN(p.totalNGN) + '<span class="tag tag-est">estimated</span></p>' +
-    '<p style="font-size:13px; color:var(--ink-soft); margin-top:6px;">Amana confirms the exact number before anything ships.</p>' +
-    '<button class="btn btn-ochre" style="margin-top:12px;" onclick="openOrder(\'link\')">Continue with this</button>';
-}
-
-function renderLinkPreviewCard(data, url){
-  var resultEl = document.getElementById('linkResult');
-  var name = data.title || 'Item from your link';
-  var hasPrice = typeof data.priceUSD === 'number';
-
-  window._pendingLinkItem = {
-    id:'link', name:name, note:url, image:data.image || null,
-    priceUSD: hasPrice ? data.priceUSD : 0,
-    mono:'LK', fromLink:true, url:url,
-    priceConfidence: data.priceConfidence || 'none'
-  };
-
-  var priceHTML;
-  if(hasPrice){
-    var p = calcPricing(data.priceUSD);
-    var tagText = data.priceConfidence === 'structured' ? 'from the page' : 'estimated';
-    priceHTML = '<p class="link-result estimated">' + formatNGN(p.totalNGN) + '<span class="tag tag-est">' + tagText + '</span></p>';
-  } else {
-    priceHTML = '<p class="link-result failed">Couldn\'t read a price from the page — Amana will confirm one with you directly.</p>';
-  }
-
-  resultEl.innerHTML =
-    '<div class="preview-card">' +
-      (data.image ? '<img class="preview-img" src="' + data.image + '" alt="" onerror="this.style.display=\'none\'">' : '') +
-      '<div class="preview-body">' +
-        '<h3 class="preview-title">' + name + '</h3>' +
-        (data.description ? '<p class="preview-desc">' + data.description + '</p>' : '') +
-        priceHTML +
-        '<p style="font-size:12.5px; color:var(--ink-soft); margin-top:6px;">Amana confirms the exact price before anything ships.</p>' +
-      '</div>' +
-    '</div>' +
-    '<button class="btn btn-ochre" style="margin-top:12px;" onclick="openOrder(\'link\')">Continue with this</button>';
-}
-
 /* ================= pricing ================= */
 function calcPricing(priceUSD){ return Amana.calcPricing(priceUSD); }
 function formatNGN(n){ return Amana.formatNGN(n); }
@@ -2322,313 +2504,7 @@ function formatRateDate(){ return Amana.formatRateDate(); }
 /* ================= order modal / state machine ================= */
 var currentOrder = null;
 
-function openOrder(itemId){
-  var item = itemId === 'link' ? window._pendingLinkItem : CATALOG.filter(function(i){ return i.id === itemId; })[0];
-  if(!item) return;
-  currentOrder = { item:item, pricing:calcPricing(item.priceUSD), email:null, customer:null, tempCode:null, sessionToken:null };
-  document.getElementById('orderOverlay').classList.add('open');
-  renderStepEmail();
-}
 function closeModal(){ document.getElementById('orderOverlay').classList.remove('open'); }
-
-function pricingSummaryHTML(){
-  var p = currentOrder.pricing;
-  var item = currentOrder.item;
-  if(item.fromLink && (!item.priceUSD || item.priceUSD <= 0)){
-    return '<div style="margin-bottom:18px;">' +
-      '<p style="font-size:13.5px; color:var(--ink-soft);">Amana couldn\'t read a price from this link automatically — you\'ll get the exact total on WhatsApp before anything is ordered.</p>' +
-      '</div>';
-  }
-  var est = item.fromLink ? ' (estimated)' : '';
-  return '<div style="margin-bottom:18px;">' +
-    '<div class="price-line"><span>Item cost' + est + '</span><span>' + formatUSD(p.priceUSD) + '</span></div>' +
-    '<div class="price-line"><span>Shipping estimate</span><span>' + formatUSD(p.shipping) + '</span></div>' +
-    '<div class="price-line"><span>Amana fee (5%)</span><span>' + formatUSD(p.fee) + '</span></div>' +
-    '<div class="price-line total"><span>Total</span><span>' + formatNGN(p.totalNGN) + '</span></div>' +
-    '<p class="rate-note">Exchange rate as of ' + formatRateDate() + ' — ₦' + USD_TO_NGN + '/$1</p>' +
-    '</div>';
-}
-
-function renderStepEmail(){
-  document.getElementById('modalBody').innerHTML =
-    '<h3>' + currentOrder.item.name + '</h3>' +
-    '<p class="modal-sub">Item selected — next, who\'s this order for?</p>' +
-    pricingSummaryHTML() +
-    '<div class="field"><label for="emailInput">Your email address</label>' +
-    '<input type="email" id="emailInput" placeholder="you@example.com" autofocus></div>' +
-    '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick="handleEmailSubmit()">Continue</button>';
-}
-
-async function handleEmailSubmit(){
-  var email = document.getElementById('emailInput').value.trim();
-  if(!/\S+@\S+\.\S+/.test(email)){
-    document.getElementById('modalBody').insertAdjacentHTML('beforeend', '<p class="inline-error">Enter a valid email address.</p>');
-    return;
-  }
-  currentOrder.email = email;
-
-  if(API_BASE){
-    // One OTP per session: if this browser already verified this exact
-    // email recently (token still valid), skip straight past the OTP
-    // step instead of sending another code. Only falls back to a fresh
-    // OTP once that cached token is gone or expired.
-    var cachedToken = Amana.getSessionToken(email);
-    if(cachedToken){
-      currentOrder.sessionToken = cachedToken;
-      document.getElementById('modalBody').insertAdjacentHTML('beforeend', '<p style="font-size:13px; color:var(--ink-soft); margin-top:10px;">Continuing as ' + email + '...</p>');
-      try{
-        var lookupRes = await fetch(API_BASE + '/customers/' + encodeURIComponent(email), {
-          headers:{ 'Authorization':'Bearer ' + cachedToken }
-        });
-        if(lookupRes.status === 401 || lookupRes.status === 403){
-          Amana.clearSessionToken(email); // token no longer accepted server-side — fall through to a fresh OTP below
-        } else if(lookupRes.ok){
-          var lookupData = await lookupRes.json();
-          currentOrder.customer = lookupData.customer;
-          renderStepConfirmAddress();
-          return;
-        } else if(lookupRes.status === 404){
-          renderStepChooseRole();
-          return;
-        }
-      }catch(err){
-        // network hiccup — fall through and try the normal OTP path
-      }
-    }
-
-    // Real backend: send an OTP because there's no valid cached session
-    // for this email in this browser yet.
-    document.getElementById('modalBody').insertAdjacentHTML('beforeend', '<p style="font-size:13px; color:var(--ink-soft); margin-top:10px;">Sending code by email...</p>');
-    try{
-      var res = await fetch(API_BASE + '/auth/request-otp', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ email: email })
-      });
-      var data = await res.json();
-      if(!res.ok){ throw new Error(data.error || 'Could not send code.'); }
-      renderStepVerify();
-    }catch(err){
-      document.getElementById('modalBody').insertAdjacentHTML('beforeend', '<p class="inline-error">' + err.message + '</p>');
-    }
-    return;
-  }
-
-  // No backend configured yet — fall back to the demo storage simulation.
-  document.getElementById('modalBody').insertAdjacentHTML('beforeend', '<p style="font-size:13px; color:var(--ink-soft); margin-top:10px;">Checking...</p>');
-  var existing = await lookupCustomer(email);
-  if(existing){
-    currentOrder.customer = existing;
-    renderStepVerifyDemo();
-  } else {
-    renderStepChooseRole();
-  }
-}
-
-// Shown the first time anyone verifies an email anywhere that leads into
-// checkout — before any buyer-specific form (name/address) is shown.
-// "I'm buying" continues the existing flow unchanged; "I'm selling
-// instead" bails out of checkout entirely and drops them into the Sell
-// tab's application flow, reusing the session token we already have so
-// they don't have to verify a second time.
-function renderStepChooseRole(){
-  document.getElementById('modalBody').innerHTML =
-    '<h3>Welcome to Amana</h3>' +
-    '<p class="modal-sub">First time here — are you buying or selling?</p>' +
-    '<button class="btn btn-ochre" style="width:100%; justify-content:center; margin-bottom:10px;" onclick="renderStepNewCustomer()">I\'m buying</button>' +
-    '<button class="btn btn-ghost" style="width:100%; justify-content:center;" onclick="handleChooseSellingInstead()">I\'m selling instead</button>';
-}
-
-function handleChooseSellingInstead(){
-  closeModal();
-  switchTab('sell');
-  var emailField = document.getElementById('sellEmail');
-  if(emailField && currentOrder.email) emailField.value = currentOrder.email;
-
-  // Reuse the token from the OTP we just verified — same email, same
-  // browser, no reason to ask for a second code just because they
-  // changed their mind about buying vs. selling mid-flow.
-  if(currentOrder.email && currentOrder.sessionToken){
-    sellSession.email = currentOrder.email;
-    sellSession.sessionToken = currentOrder.sessionToken;
-    Amana.saveSessionToken(currentOrder.email, currentOrder.sessionToken);
-    fetchSellerApplication(currentOrder.email, currentOrder.sessionToken).then(renderSellerApplication);
-  }
-  document.getElementById('order').scrollIntoView({ behavior:'smooth' });
-}
-
-function renderStepNewCustomer(){
-  document.getElementById('modalBody').innerHTML =
-    '<h3>First time ordering</h3>' +
-    '<p class="modal-sub">Save your details once — next order takes a lot less typing.</p>' +
-    '<div class="field"><label for="nameInput">Full name</label><input type="text" id="nameInput"></div>' +
-    '<div class="field"><label for="deliveryPhoneInput">Delivery phone number</label><input type="tel" id="deliveryPhoneInput" placeholder="080..."></div>' +
-    '<div class="field"><label for="addrInput">Delivery address</label><input type="text" id="addrInput" placeholder="Street, area, city"></div>' +
-    '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick="handleNewCustomerSubmit()">Save and continue</button>';
-}
-
-async function handleNewCustomerSubmit(){
-  var name = document.getElementById('nameInput').value.trim();
-  var deliveryPhone = document.getElementById('deliveryPhoneInput').value.trim();
-  var addr = document.getElementById('addrInput').value.trim();
-  if(!name || !deliveryPhone || !addr){
-    document.getElementById('modalBody').insertAdjacentHTML('beforeend', '<p class="inline-error">Fill in all three fields.</p>');
-    return;
-  }
-  currentOrder.customer = { name:name, phone:deliveryPhone, address:addr };
-
-  if(API_BASE){
-    try{
-      await fetch(API_BASE + '/customers', {
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          'Authorization': 'Bearer ' + currentOrder.sessionToken
-        },
-        body: JSON.stringify({ email: currentOrder.email, name: name, phone: deliveryPhone, address: addr })
-      });
-    }catch(err){
-      document.getElementById('modalBody').insertAdjacentHTML('beforeend', '<p class="inline-error">Couldn\'t save your details — you can still continue this order.</p>');
-    }
-  } else {
-    await saveCustomer(currentOrder.email, currentOrder.customer);
-  }
-  renderStepSummary();
-}
-
-// ---- Real-backend OTP verify (email-delivered code) ----
-function renderStepVerify(){
-  document.getElementById('modalBody').innerHTML =
-    '<h3>Enter your code</h3>' +
-    '<p class="modal-sub">We sent a code to your email. It expires in 5 minutes.</p>' +
-    '<div class="field"><label for="codeInput">Verification code</label><input type="text" id="codeInput" inputmode="numeric" autofocus></div>' +
-    '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick="handleVerifySubmit()">Verify</button>' +
-    '<button class="small-link" onclick="handleResendCode()">Didn\'t get it? Resend</button>';
-}
-
-async function handleVerifySubmit(){
-  var code = document.getElementById('codeInput').value.trim();
-  if(!code){
-    document.getElementById('modalBody').insertAdjacentHTML('beforeend', '<p class="inline-error">Enter the code you received.</p>');
-    return;
-  }
-  try{
-    var res = await fetch(API_BASE + '/auth/verify-otp', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ email: currentOrder.email, code: code })
-    });
-    var data = await res.json();
-    if(!res.ok){ throw new Error(data.error || 'That code doesn\'t match — try again.'); }
-    currentOrder.sessionToken = data.token;
-    Amana.saveSessionToken(currentOrder.email, data.token);
-    if(data.isNewCustomer){
-      renderStepChooseRole();
-    } else {
-      currentOrder.customer = data.customer;
-      renderStepConfirmAddress();
-    }
-  }catch(err){
-    document.getElementById('modalBody').insertAdjacentHTML('beforeend', '<p class="inline-error">' + err.message + '</p>');
-  }
-}
-
-async function handleResendCode(){
-  document.getElementById('modalBody').insertAdjacentHTML('beforeend', '<p style="font-size:13px; color:var(--ink-soft); margin-top:10px;">Resending...</p>');
-  try{
-    var res = await fetch(API_BASE + '/auth/request-otp', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ email: currentOrder.email })
-    });
-    var data = await res.json();
-    if(!res.ok){ throw new Error(data.error || 'Could not resend code.'); }
-    renderStepVerify();
-  }catch(err){
-    document.getElementById('modalBody').insertAdjacentHTML('beforeend', '<p class="inline-error">' + err.message + '</p>');
-  }
-}
-
-// ---- Demo-only fallback verify (used when API_BASE is empty) ----
-function renderStepVerifyDemo(){
-  var code = String(Math.floor(1000 + Math.random()*9000));
-  currentOrder.tempCode = code;
-  document.getElementById('modalBody').innerHTML =
-    '<h3>Welcome back</h3>' +
-    '<p class="modal-sub">We recognize this email — enter the code to load your saved details.</p>' +
-    '<div class="demo-banner">Demo preview — your code is ' + code + '. Once the real backend is connected, this arrives by email instead.</div>' +
-    '<div class="field"><label for="codeInput">Verification code</label><input type="text" id="codeInput" inputmode="numeric"></div>' +
-    '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick="handleVerifySubmitDemo()">Verify</button>' +
-    '<button class="small-link" onclick="handleClearSaved()">Not you? Clear saved info for this email</button>';
-}
-
-function handleVerifySubmitDemo(){
-  var code = document.getElementById('codeInput').value.trim();
-  if(code !== currentOrder.tempCode){
-    document.getElementById('modalBody').insertAdjacentHTML('beforeend', '<p class="inline-error">That code doesn\'t match — try again.</p>');
-    return;
-  }
-  renderStepConfirmAddress();
-}
-
-async function handleClearSaved(){
-  await deleteCustomer(currentOrder.email);
-  renderStepNewCustomer();
-}
-
-function renderStepConfirmAddress(){
-  var c = currentOrder.customer;
-  document.getElementById('modalBody').innerHTML =
-    '<h3>Deliver here?</h3>' +
-    '<p class="modal-sub"><strong>' + c.name + '</strong><br>' + (c.phone ? c.phone + '<br>' : '') + c.address + '</p>' +
-    '<button class="btn btn-ochre" style="width:100%; justify-content:center; margin-bottom:10px;" onclick="renderStepSummary()">Yes, this is right</button>' +
-    '<button class="btn btn-ghost" style="width:100%; justify-content:center;" onclick="renderStepNewCustomer()">Edit address</button>';
-}
-
-function renderStepSummary(){
-  document.getElementById('modalBody').innerHTML =
-    '<h3>Confirm your order</h3>' +
-    '<p class="modal-sub">' + currentOrder.item.name + '</p>' +
-    pricingSummaryHTML() +
-    '<p style="font-size:13.5px; margin-bottom:18px;"><strong>Deliver to:</strong><br>' + currentOrder.customer.name + '<br>' + currentOrder.customer.address + '</p>' +
-    '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick="handleConfirmWhatsapp()">Confirm on WhatsApp</button>';
-}
-
-function handleConfirmWhatsapp(){
-  var item = currentOrder.item;
-  var p = currentOrder.pricing;
-  var link = item.fromLink ? '\nLink: ' + item.url : '';
-  var totalLine, est;
-
-  if(item.fromLink && (!item.priceUSD || item.priceUSD <= 0)){
-    totalLine = 'Total: to be confirmed by Amana';
-    est = '';
-  } else {
-    totalLine = 'Total: ' + formatNGN(p.totalNGN);
-    est = item.fromLink ? '\n\n(Estimated from a pasted link — please confirm the final price.)' : '';
-  }
-
-  var msg = "Hi Amana! I'd like to order:\n\n" +
-    item.name + link + "\n\n" +
-    totalLine + est + "\n\n" +
-    "Deliver to: " + currentOrder.customer.name + ', ' + currentOrder.customer.address + "\n" +
-    "Phone: " + (currentOrder.customer.phone || '');
-  window.open(waLink(msg), '_blank');
-  closeModal();
-}
-
-/* ================= storage helpers ================= */
-async function lookupCustomer(email){
-  try{
-    var result = await window.storage.get('customer:' + email, false);
-    return result ? JSON.parse(result.value) : null;
-  }catch(e){ return null; }
-}
-async function saveCustomer(email, data){
-  try{ await window.storage.set('customer:' + email, JSON.stringify(data), false); }
-  catch(e){ console.error('Storage error saving customer', e); }
-}
-async function deleteCustomer(email){
-  try{ await window.storage.delete('customer:' + email, false); }
-  catch(e){ console.error('Storage error clearing customer', e); }
-}
 
 /* ================= bot panel ================= */
 function toggleBot(){ document.getElementById('botPanel').classList.toggle('open'); }
@@ -2653,9 +2529,10 @@ function renderFAQ(){
 function toggleFAQ(idx){ document.getElementById('faq' + idx).classList.toggle('open'); }
 
 /* ================= init ================= */
-renderCatalog();
 renderFAQ();
 populateMarketCategoryFilter();
+loadMarketplace();
+window._marketLoaded = true;
 </script>
 </body>
 </html>

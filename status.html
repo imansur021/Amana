@@ -126,7 +126,35 @@
     padding:10px 12px; margin-top:14px;
   }
   .escrow-note--done{ background:#E4EEDD; color:var(--olive); }
+  .escrow-note--disputed{ background:#F6E7E5; color:var(--red); }
+  .rider-ping-note{
+    font-size:13px; color:var(--ochre-dark); background:#FBF0DE; border-radius:8px;
+    padding:8px 12px; margin-top:8px;
+  }
+  .rider-ping-time{ color:var(--ink-soft); }
   .confirm-arrival-btn{ width:100%; justify-content:center; margin-top:14px; }
+  .dispute-link{ width:100%; text-align:center; margin-top:6px; }
+  .dispute-form{ margin-top:14px; }
+  .dispute-form textarea{
+    width:100%; box-sizing:border-box; font-family:var(--font-body); font-size:13.5px;
+    border:1px solid #E1D6BA; border-radius:8px; padding:10px 12px; resize:vertical; min-height:70px;
+  }
+  .dispute-form-actions{ display:flex; gap:8px; margin-top:8px; }
+  .dispute-form-actions .btn{ flex:1; justify-content:center; }
+  .review-form{ margin-top:14px; }
+  .star-row{ display:flex; gap:6px; margin-bottom:10px; }
+  .star-btn{
+    background:none; border:none; font-size:26px; line-height:1; cursor:pointer; padding:0;
+    color:#D8CDAE; transition:color .1s;
+  }
+  .star-btn.selected, .star-btn:hover{ color:var(--ochre-dark); }
+  .review-form textarea{
+    width:100%; box-sizing:border-box; font-family:var(--font-body); font-size:13.5px;
+    border:1px solid #E1D6BA; border-radius:8px; padding:10px 12px; resize:vertical; min-height:60px; margin-bottom:8px;
+  }
+  .review-submitted-note{
+    font-size:13px; color:var(--olive); background:#E4EEDD; border-radius:8px; padding:10px 12px; margin-top:14px;
+  }
 
   /* stamp tracker, reused from main site */
   .tracker-wrap{ position:relative; padding-top:22px; }
@@ -592,8 +620,10 @@ function stampsHTML(status){
 function payoutNote(order){
   var text = Amana.escrowNote(order);
   if(!text) return '';
+  var isDisputed = !!(order.disputed_at && order.payout_status === 'held');
   var isDone = order.payout_status === 'released' || order.payout_status === 'refunded';
-  return '<div class="escrow-note' + (isDone ? ' escrow-note--done' : '') + '">' + text + '</div>';
+  var cls = 'escrow-note' + (isDisputed ? ' escrow-note--disputed' : (isDone ? ' escrow-note--done' : ''));
+  return '<div class="' + cls + '">' + text + '</div>';
 }
 
 async function handleConfirmArrival(orderId, btnEl){
@@ -649,6 +679,96 @@ async function handleClaimPaid(orderId, file, clickedEl){
   }
 }
 
+// Toggles the dispute textarea open for one order card. Only one open at a
+// time in practice since the button disappears once the form is shown.
+function showDisputeForm(orderId){
+  var el = document.getElementById('disputeForm-' + orderId);
+  if(el) el.style.display = 'block';
+  var btn = document.getElementById('disputeLink-' + orderId);
+  if(btn) btn.style.display = 'none';
+}
+
+function hideDisputeForm(orderId){
+  var el = document.getElementById('disputeForm-' + orderId);
+  if(el) el.style.display = 'none';
+  var btn = document.getElementById('disputeLink-' + orderId);
+  if(btn) btn.style.display = 'block';
+}
+
+async function handleSubmitDispute(orderId, btnEl){
+  var textarea = document.getElementById('disputeReason-' + orderId);
+  var reason = textarea ? textarea.value.trim() : '';
+  var errEl = document.getElementById('disputeError-' + orderId);
+  if(errEl) errEl.textContent = '';
+
+  if(!reason){
+    if(errEl) errEl.textContent = 'Tell us briefly what was wrong with the item.';
+    return;
+  }
+
+  btnEl.disabled = true;
+  btnEl.textContent = 'Sending...';
+  try{
+    var res = await fetch(API_BASE + '/orders/' + orderId + '/dispute', {
+      method:'POST',
+      headers:{ 'Authorization':'Bearer ' + session.token, 'Content-Type':'application/json' },
+      body: JSON.stringify({ reason: reason })
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not send that right now.'); }
+    fetchAndRenderOrders();
+  }catch(err){
+    if(errEl) errEl.textContent = err.message;
+    btnEl.disabled = false;
+    btnEl.textContent = 'Send to Amana';
+  }
+}
+
+// ---- Review widget (arrived orders, marketplace only) ----
+var pendingRatings = {}; // orderId -> selected star count, kept across re-renders within one session
+
+function selectStar(orderId, n){
+  pendingRatings[orderId] = n;
+  var wrap = document.getElementById('starRow-' + orderId);
+  if(!wrap) return;
+  wrap.querySelectorAll('.star-btn').forEach(function(b){
+    var v = Number(b.getAttribute('data-val'));
+    b.classList.toggle('selected', v <= n);
+  });
+}
+
+async function handleSubmitReview(orderId, btnEl){
+  var rating = pendingRatings[orderId] || 0;
+  var commentEl = document.getElementById('reviewComment-' + orderId);
+  var comment = commentEl ? commentEl.value.trim() : '';
+  var errEl = document.getElementById('reviewError-' + orderId);
+  if(errEl) errEl.textContent = '';
+
+  if(!rating){
+    if(errEl) errEl.textContent = 'Tap a star to rate the seller.';
+    return;
+  }
+
+  btnEl.disabled = true;
+  btnEl.textContent = 'Submitting...';
+  try{
+    var res = await fetch(API_BASE + '/orders/' + orderId + '/review', {
+      method:'POST',
+      headers:{ 'Authorization':'Bearer ' + session.token, 'Content-Type':'application/json' },
+      body: JSON.stringify({ rating: rating, comment: comment || undefined })
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not submit that review.'); }
+    fetchAndRenderOrders();
+  }catch(err){
+    if(errEl) errEl.textContent = err.message;
+    btnEl.disabled = false;
+    btnEl.textContent = 'Submit review';
+  }
+}
+
+
+
 function renderOrders(orders, isDemo){
   var listEl = document.getElementById('orderList');
   listEl.innerHTML = '';
@@ -671,6 +791,48 @@ function renderOrders(orders, isDemo){
     var confirmBtn = (!isDemo && o.status === 'shipped')
       ? '<button class="btn btn-ochre confirm-arrival-btn" onclick="handleConfirmArrival(\'' + o.id + '\', this)">Confirm it arrived</button>'
       : '';
+
+    // Dispute + review only apply to marketplace orders that have reached
+    // 'arrived' — same trust checkpoint the backend gates both on. Once
+    // payout has moved past 'held' (released/refunded), disputing no
+    // longer does anything through this route, so the button is hidden.
+    var disputeBlock = '';
+    if(!isDemo && isMarketplace && o.status === 'arrived'){
+      if(o.disputed_at){
+        disputeBlock = ''; // escrowNote already covers this via payoutNote()
+      }else if(o.payout_status === 'held'){
+        disputeBlock =
+          '<button class="small-link dispute-link" id="disputeLink-' + o.id + '" onclick="showDisputeForm(\'' + o.id + '\')">This isn\'t as described</button>' +
+          '<div class="dispute-form" id="disputeForm-' + o.id + '" style="display:none;">' +
+            '<textarea id="disputeReason-' + o.id + '" placeholder="What was wrong with the item?" maxlength="1000"></textarea>' +
+            '<div class="inline-error" id="disputeError-' + o.id + '"></div>' +
+            '<div class="dispute-form-actions">' +
+              '<button class="btn btn-ochre" onclick="handleSubmitDispute(\'' + o.id + '\', this)">Send to Amana</button>' +
+              '<button class="btn" onclick="hideDisputeForm(\'' + o.id + '\')">Cancel</button>' +
+            '</div>' +
+          '</div>';
+      }
+    }
+
+    var reviewBlock = '';
+    if(!isDemo && isMarketplace && o.status === 'arrived'){
+      if(o.review_id){
+        reviewBlock = '<div class="review-submitted-note">You rated this seller ' + o.review_rating + ' / 5. Thanks for the feedback.</div>';
+      }else{
+        reviewBlock =
+          '<div class="review-form">' +
+            '<div class="order-meta" style="margin-bottom:8px;">Rate this seller</div>' +
+            '<div class="star-row" id="starRow-' + o.id + '">' +
+              [1,2,3,4,5].map(function(n){
+                return '<button type="button" class="star-btn" data-val="' + n + '" onclick="selectStar(\'' + o.id + '\', ' + n + ')">&#9733;</button>';
+              }).join('') +
+            '</div>' +
+            '<textarea id="reviewComment-' + o.id + '" placeholder="Optional comment" maxlength="500"></textarea>' +
+            '<div class="inline-error" id="reviewError-' + o.id + '"></div>' +
+            '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick="handleSubmitReview(\'' + o.id + '\', this)">Submit review</button>' +
+          '</div>';
+      }
+    }
 
     var paymentLabel, claimBtn, receiptNote;
     receiptNote = '';
@@ -699,17 +861,59 @@ function renderOrders(orders, isDemo){
         : '';
     }
 
+    var deliveryBlock = '';
+    if(!isDemo && o.delivery_zone){
+      var zoneLabel = Amana.deliveryZoneLabel(o.delivery_zone);
+      var etaLabel = Amana.deliveryZoneEtaLabel(o.delivery_zone);
+      var riderLine = o.rider_name
+        ? '<div>Rider: ' + o.rider_name + (o.rider_phone ? ' · ' + o.rider_phone : '') + '</div>'
+        : '<div>Rider not assigned yet.</div>';
+      var codeLine = (o.handoff_code && o.status !== 'arrived')
+        ? '<div style="margin-top:8px; padding:10px 12px; background:var(--sand,#F3EEE3); border-radius:8px;">' +
+            '<div style="font-size:11.5px; color:var(--ink-soft);">Your handoff code</div>' +
+            '<div style="font-size:19px; font-weight:700; letter-spacing:2px;">' + o.handoff_code + '</div>' +
+            '<div style="font-size:11.5px; color:var(--ink-soft); margin-top:4px;">Only share this with the rider once you\'ve checked the item.</div>' +
+          '</div>'
+        : '';
+
+      // Rider self-report pings (see rider.html) — purely informational,
+      // narrower/finer-grained than the real order status. Only shown
+      // once a rider's actually assigned and has tapped at least one step,
+      // and only while the order hasn't reached 'arrived' yet — once the
+      // buyer's confirmed arrival there's nothing left for this to add.
+      var riderStatusLine = '';
+      if(o.rider_status && o.status !== 'arrived'){
+        var RIDER_STATUS_LABELS = { picked_up: 'Rider has picked up the item', en_route: 'Rider is on the way', delivered: 'Rider marked this as delivered' };
+        riderStatusLine =
+          '<div class="rider-ping-note">' +
+            (RIDER_STATUS_LABELS[o.rider_status] || o.rider_status) +
+            (o.rider_status_updated_at ? '<span class="rider-ping-time"> · ' + fmtDate(o.rider_status_updated_at) + '</span>' : '') +
+          '</div>';
+      }
+
+      deliveryBlock =
+        '<div class="order-meta" style="margin-top:6px;">' +
+          '<div>Delivery: ' + zoneLabel + (etaLabel ? ' · ' + etaLabel : '') + (o.delivery_fee_ngn ? ' · ' + formatNGN(o.delivery_fee_ngn) + ' rider fee' : '') + '</div>' +
+          riderLine +
+        '</div>' +
+        riderStatusLine +
+        codeLine;
+    }
+
     return '<div class="order-card">' +
       sourceTag +
       '<h3>' + o.item_name + '</h3>' +
       '<div class="order-meta">Placed ' + fmtDate(o.created_at) + '</div>' +
       '<div class="order-price">' + priceLine + '</div>' +
+      deliveryBlock +
       '<span class="payment-pill ' + o.payment_status + (o.claimed_paid_at && o.payment_status === 'unpaid' ? ' claimed' : '') + '">' + paymentLabel + '</span>' +
       receiptNote +
       claimBtn +
       stampsHTML(o.status) +
       payoutNote(o) +
       confirmBtn +
+      disputeBlock +
+      reviewBlock +
       '</div>';
   }).join('');
 }

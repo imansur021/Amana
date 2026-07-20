@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amana — Delivery</title>
+<meta name="description" content="Rider delivery status.">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;600;700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Same design tokens as status.html / index.html — this page is meant
+     to look like it belongs to Amana even though a rider never logs in. */
+  :root{
+    --indigo-950:#141B33;
+    --parchment:#F1E9D8;
+    --parchment-dim:#E7DCC3;
+    --cream:#F6F1E4;
+    --ink:#1B2033;
+    --ink-soft:#585C6E;
+    --ochre:#AB5B2E;
+    --ochre-dark:#8A481F;
+    --olive:#5C7A4E;
+    --red:#A3372E;
+    --font-display:'Zilla Slab', Georgia, serif;
+    --font-body:'Work Sans', -apple-system, sans-serif;
+    --font-mono:'IBM Plex Mono', 'Courier New', monospace;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; font-family:var(--font-body); background:var(--parchment); color:var(--ink);
+    line-height:1.55; -webkit-font-smoothing:antialiased; min-height:100vh;
+  }
+  h1,h2,h3{ font-family:var(--font-display); margin:0; }
+  p{ margin:0; }
+  button{ font-family:inherit; cursor:pointer; }
+  .wrap{ max-width:480px; margin:0 auto; padding:0 20px 60px; }
+  .site-header{
+    display:flex; align-items:center; justify-content:center;
+    padding:18px 20px; background:var(--indigo-950);
+  }
+  .logo{ font-family:var(--font-display); font-weight:700; font-size:20px; color:var(--cream); }
+  .logo em{ font-style:normal; color:#C97A45; }
+
+  .card{
+    background:var(--cream); border:1px solid #E1D6BA; border-radius:12px;
+    padding:24px; margin-top:24px;
+  }
+  .item-name{ font-size:19px; font-weight:600; margin-bottom:6px; }
+  .meta-row{ font-size:14px; color:var(--ink-soft); margin-bottom:4px; }
+  .fee{ font-family:var(--font-mono); font-size:15px; margin-top:10px; color:var(--ochre-dark); font-weight:600; }
+
+  .steps{ margin-top:28px; display:flex; flex-direction:column; gap:10px; }
+  .step-btn{
+    display:flex; align-items:center; gap:12px; width:100%; text-align:left;
+    padding:16px 18px; border-radius:10px; border:1.5px solid #C9BFA4;
+    background:#fff; font-size:15.5px; font-weight:600; color:var(--ink);
+  }
+  .step-btn:disabled{ opacity:.55; cursor:default; }
+  .step-btn.done{ background:#E4EEDD; border-color:var(--olive); color:var(--olive); }
+  .step-btn.current{ border-color:var(--ochre); }
+  .step-dot{ width:22px; height:22px; border-radius:50%; border:2px solid currentColor; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:12px; }
+
+  .status-line{ font-size:13.5px; color:var(--ink-soft); margin-top:16px; text-align:center; }
+  .error-box{
+    background:#F6E7E5; color:var(--red); border-radius:10px; padding:16px 18px;
+    margin-top:24px; font-size:14.5px;
+  }
+  .loading{ text-align:center; padding:60px 0; color:var(--ink-soft); }
+</style>
+</head>
+<body>
+
+<div class="site-header"><div class="logo">Amana<em>.</em></div></div>
+
+<div class="wrap">
+  <div id="loadingState" class="loading">Loading delivery…</div>
+  <div id="errorState" class="error-box" style="display:none;"></div>
+  <div id="content" style="display:none;">
+    <div class="card">
+      <div class="item-name" id="itemName"></div>
+      <div class="meta-row" id="zoneLine"></div>
+      <div class="meta-row" id="orderIdLine"></div>
+      <div class="fee" id="feeLine"></div>
+    </div>
+
+    <div class="steps" id="stepsWrap"></div>
+    <div class="status-line" id="statusLine"></div>
+  </div>
+</div>
+
+<script src="amana-shared.js"></script>
+<script>
+  const API_BASE = window.API_BASE || 'https://amana-backend-ln2p.onrender.com';
+
+  // The link a rider gets looks like /rider.html?order=ord_xxx&phone=0801...
+  // Both params are required — phone is checked against orders.rider_phone
+  // server-side on every request, so this link only ever does anything for
+  // whichever rider it was actually sent to.
+  const params = new URLSearchParams(window.location.search);
+  const orderId = params.get('order');
+  const phone = params.get('phone');
+
+  const STEPS = [
+    { key: 'picked_up', label: 'Picked up item' },
+    { key: 'en_route', label: 'On the way' },
+    { key: 'delivered', label: 'Delivered' },
+  ];
+
+  const el = {
+    loading: document.getElementById('loadingState'),
+    error: document.getElementById('errorState'),
+    content: document.getElementById('content'),
+    itemName: document.getElementById('itemName'),
+    zoneLine: document.getElementById('zoneLine'),
+    orderIdLine: document.getElementById('orderIdLine'),
+    feeLine: document.getElementById('feeLine'),
+    stepsWrap: document.getElementById('stepsWrap'),
+    statusLine: document.getElementById('statusLine'),
+  };
+
+  function showError(message) {
+    el.loading.style.display = 'none';
+    el.content.style.display = 'none';
+    el.error.style.display = 'block';
+    el.error.textContent = message;
+  }
+
+  function stepIndex(riderStatus) {
+    if (!riderStatus) return -1;
+    return STEPS.findIndex(s => s.key === riderStatus);
+  }
+
+  function renderSteps(order) {
+    const currentIdx = stepIndex(order.riderStatus);
+    el.stepsWrap.innerHTML = '';
+
+    STEPS.forEach((step, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'step-btn';
+      const isDone = idx <= currentIdx;
+      const isNext = idx === currentIdx + 1;
+      if (isDone) btn.classList.add('done');
+      if (isNext) btn.classList.add('current');
+
+      // Only the immediate next step is tappable — steps are meant to be
+      // gone through in order on a basic phone, not jumped around, and a
+      // completed step re-tapped would be a confusing no-op anyway.
+      btn.disabled = !isNext;
+
+      const dot = document.createElement('span');
+      dot.className = 'step-dot';
+      dot.textContent = isDone ? '✓' : (idx + 1);
+
+      const label = document.createElement('span');
+      label.textContent = step.label;
+
+      btn.appendChild(dot);
+      btn.appendChild(label);
+
+      btn.onclick = () => submitStatus(step.key, btn);
+      el.stepsWrap.appendChild(btn);
+    });
+
+    el.statusLine.textContent = order.riderStatusUpdatedAt
+      ? `Last updated ${new Date(order.riderStatusUpdatedAt.replace(' ', 'T') + 'Z').toLocaleString()}`
+      : 'Tap a step below as you go.';
+  }
+
+  async function submitStatus(riderStatus, btnEl) {
+    btnEl.disabled = true;
+    btnEl.textContent = 'Saving…';
+    try {
+      const res = await fetch(`${API_BASE}/orders/${orderId}/rider-status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, riderStatus }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not update status.');
+      renderSteps({ riderStatus: data.order.riderStatus, riderStatusUpdatedAt: data.order.riderStatusUpdatedAt });
+    } catch (err) {
+      alert(err.message);
+      renderSteps(lastOrder);
+    }
+  }
+
+  let lastOrder = null;
+
+  async function load() {
+    if (!orderId || !phone) {
+      showError('This link is missing information. Ask Amana to resend your delivery link.');
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/orders/${encodeURIComponent(orderId)}/rider-view?phone=${encodeURIComponent(phone)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not load this delivery.');
+
+      const order = data.order;
+      lastOrder = order;
+
+      el.itemName.textContent = order.itemName;
+      el.zoneLine.textContent = order.deliveryZone ? Amana.deliveryZoneLabel(order.deliveryZone) : 'Delivery';
+      el.orderIdLine.textContent = 'Order ' + order.id;
+      el.feeLine.textContent = order.deliveryFeeNgn ? 'Delivery fee: ₦' + Number(order.deliveryFeeNgn).toLocaleString() : '';
+
+      renderSteps(order);
+
+      el.loading.style.display = 'none';
+      el.content.style.display = 'block';
+    } catch (err) {
+      showError(err.message);
+    }
+  }
+
+  load();
+</script>
+
+</body>
+</html>

@@ -243,6 +243,7 @@
     <button class="tab active" id="tabOrders">Orders</button>
     <button class="tab" id="tabListings">Listings <span class="tab-count" id="pendingCount" style="display:none;"></span></button>
     <button class="tab" id="tabSellers">Sellers <span class="tab-count" id="pendingSellerCount" style="display:none;"></span></button>
+    <button class="tab" id="tabRiders">Riders</button>
   </div>
 
   <div class="toolbar">
@@ -259,6 +260,19 @@
   <div id="ordersPanel"><div id="list"></div></div>
   <div id="listingsPanel" style="display:none;"><div id="listingsList"></div></div>
   <div id="sellersPanel" style="display:none;"><div id="sellersList"></div></div>
+  <div id="ridersPanel" style="display:none;">
+    <div class="listing" style="margin-bottom:16px;">
+      <div class="info" style="width:100%;">
+        <div class="item" style="margin-bottom:8px;">Add a rider</div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <input id="newRiderName" type="text" placeholder="Rider name" style="padding:8px 10px; flex:1; min-width:140px;">
+          <input id="newRiderPhone" type="text" placeholder="Rider phone" style="padding:8px 10px; flex:1; min-width:140px;">
+          <button id="addRiderBtn">Add rider</button>
+        </div>
+      </div>
+    </div>
+    <div id="ridersList"></div>
+  </div>
 </div>
 
 <script src="amana-shared.js"></script>
@@ -274,7 +288,8 @@
   const REVIEW_STATUSES = ['pending_review', 'approved', 'rejected'];
   const APPLICATION_STATUSES = ['pending', 'approved', 'rejected'];
   let adminKey = sessionStorage.getItem('amana_admin_key') || '';
-  let currentTab = 'orders'; // 'orders' | 'listings' | 'sellers'
+  let currentTab = 'orders'; // 'orders' | 'listings' | 'sellers' | 'riders'
+  let activeRiders = []; // cached for the per-order rider-assignment dropdown
   let currentFilter = null; // order status filter
   let claimedPaidOnly = false; // independent toggle, combinable with status filter
   let currentReviewFilter = 'pending_review'; // listings review-status filter
@@ -294,10 +309,16 @@
     tabOrders: document.getElementById('tabOrders'),
     tabListings: document.getElementById('tabListings'),
     tabSellers: document.getElementById('tabSellers'),
+    tabRiders: document.getElementById('tabRiders'),
     pendingCount: document.getElementById('pendingCount'),
     pendingSellerCount: document.getElementById('pendingSellerCount'),
     ordersPanel: document.getElementById('ordersPanel'),
     listingsPanel: document.getElementById('listingsPanel'),
+    ridersPanel: document.getElementById('ridersPanel'),
+    ridersList: document.getElementById('ridersList'),
+    newRiderName: document.getElementById('newRiderName'),
+    newRiderPhone: document.getElementById('newRiderPhone'),
+    addRiderBtn: document.getElementById('addRiderBtn'),
     listingsList: document.getElementById('listingsList'),
     sellersPanel: document.getElementById('sellersPanel'),
     sellersList: document.getElementById('sellersList'),
@@ -375,17 +396,22 @@
     el.tabOrders.classList.toggle('active', tab === 'orders');
     el.tabListings.classList.toggle('active', tab === 'listings');
     el.tabSellers.classList.toggle('active', tab === 'sellers');
+    el.tabRiders.classList.toggle('active', tab === 'riders');
     el.ordersPanel.style.display = tab === 'orders' ? 'block' : 'none';
     el.listingsPanel.style.display = tab === 'listings' ? 'block' : 'none';
     el.sellersPanel.style.display = tab === 'sellers' ? 'block' : 'none';
-    el.panelTitle.textContent = tab === 'orders' ? 'Orders' : tab === 'listings' ? 'Listings' : 'Sellers';
+    el.ridersPanel.style.display = tab === 'riders' ? 'block' : 'none';
+    el.filters.innerHTML = tab === 'riders' ? '' : el.filters.innerHTML;
+    el.panelTitle.textContent = tab === 'orders' ? 'Orders' : tab === 'listings' ? 'Listings' : tab === 'sellers' ? 'Sellers' : 'Riders';
     if (tab === 'orders') loadOrders();
     else if (tab === 'listings') loadListings();
-    else loadSellers();
+    else if (tab === 'sellers') loadSellers();
+    else loadRiders();
   }
   el.tabOrders.onclick = () => switchTab('orders');
   el.tabListings.onclick = () => switchTab('listings');
   el.tabSellers.onclick = () => switchTab('sellers');
+  el.tabRiders.onclick = () => switchTab('riders');
 
   function renderOrders(orders) {
     el.list.innerHTML = '';
@@ -403,11 +429,15 @@
       const isMarketplace = order.order_type === 'marketplace';
       const card = document.createElement('div');
       card.className = 'order' + (isClaimedUnpaid ? ' claimed-paid' : '');
+      const deliveryLine = order.delivery_zone
+        ? `<div class="meta">Delivery: ${escapeHtml(Amana.deliveryZoneLabel(order.delivery_zone))}${order.delivery_fee_ngn ? ' · ' + fmtNaira(order.delivery_fee_ngn) + ' rider fee' : ''}${order.rider_name ? ' · rider: ' + escapeHtml(order.rider_name) + (order.rider_phone ? ' (' + escapeHtml(order.rider_phone) + ')' : '') : ' · no rider assigned'}${order.handoff_verified_at ? ' · handoff code verified' : ''}</div>`
+        : '';
       card.innerHTML = `
         <div class="info">
           <div class="item">${escapeHtml(order.item_name)}${isMarketplace ? ' <span class="source-tag">Marketplace</span>' : ''}</div>
           <div class="meta">${order.email} · ${fmtDate(order.created_at)}${isMarketplace ? ' · seller ' + escapeHtml(order.seller_email || '—') : ''}</div>
           <div class="price">$${order.price_usd} → ${fmtNaira(order.total_ngn)}</div>
+          ${deliveryLine}
         </div>
       `;
 
@@ -505,6 +535,113 @@
       controls.appendChild(badge);
       controls.appendChild(select);
 
+      if (order.delivery_zone) {
+        const riderWrap = document.createElement('div');
+        riderWrap.style.display = 'flex';
+        riderWrap.style.alignItems = 'center';
+        riderWrap.style.gap = '6px';
+
+        const riderSelect = document.createElement('select');
+        riderSelect.style.padding = '5px 8px';
+        riderSelect.style.fontSize = '13px';
+
+        const blankOpt = document.createElement('option');
+        blankOpt.value = '';
+        blankOpt.textContent = order.rider_name ? 'Reassign to…' : 'Choose a rider…';
+        riderSelect.appendChild(blankOpt);
+
+        activeRiders.forEach(r => {
+          const opt = document.createElement('option');
+          opt.value = r.id;
+          opt.textContent = `${r.name} (${r.phone})${r.currentLoad ? ' · ' + r.currentLoad + ' active' : ''}`;
+          riderSelect.appendChild(opt);
+        });
+
+        const assignBtn = document.createElement('button');
+        assignBtn.className = 'ghost';
+        assignBtn.style.padding = '6px 12px';
+        assignBtn.style.fontSize = '13px';
+        assignBtn.textContent = order.rider_name ? 'Update rider' : 'Assign rider';
+        assignBtn.onclick = async () => {
+          const riderId = riderSelect.value;
+          if (!riderId) { alert('Choose a rider from the dropdown first.'); return; }
+          assignBtn.disabled = true;
+          try {
+            await api(`/orders/${order.id}/rider`, {
+              method: 'PATCH',
+              body: JSON.stringify({ riderId }),
+            });
+            loadOrders();
+          } catch (err) {
+            alert(err.message);
+            assignBtn.disabled = false;
+          }
+        };
+
+        const currentLabel = document.createElement('span');
+        currentLabel.style.fontSize = '12px';
+        currentLabel.style.color = '#7A6F58';
+        currentLabel.textContent = order.rider_name
+          ? `Current: ${order.rider_name} (${order.rider_phone || '—'})`
+          : 'No rider assigned';
+
+        riderWrap.appendChild(currentLabel);
+        riderWrap.appendChild(riderSelect);
+        riderWrap.appendChild(assignBtn);
+
+        // Once a rider's assigned, admin can copy their no-login status
+        // link straight to WhatsApp instead of the rider needing an
+        // account — see rider.html, authenticated by order id + this
+        // exact phone number.
+        if (order.rider_name && order.rider_phone) {
+          const linkBtn = document.createElement('button');
+          linkBtn.className = 'ghost';
+          linkBtn.style.padding = '6px 12px';
+          linkBtn.style.fontSize = '13px';
+          linkBtn.textContent = 'Copy rider link';
+          linkBtn.onclick = () => {
+            const riderLink = `${window.location.origin}/rider.html?order=${order.id}&phone=${encodeURIComponent(order.rider_phone)}`;
+            navigator.clipboard.writeText(riderLink)
+              .then(() => { linkBtn.textContent = 'Copied!'; setTimeout(() => { linkBtn.textContent = 'Copy rider link'; }, 1500); })
+              .catch(() => alert(riderLink));
+          };
+          riderWrap.appendChild(linkBtn);
+        }
+
+        controls.appendChild(riderWrap);
+
+        if (order.rider_payout_status && order.rider_payout_status !== 'not_applicable') {
+          const riderPayoutBadge = document.createElement('span');
+          riderPayoutBadge.className = 'badge ' + order.rider_payout_status;
+          riderPayoutBadge.title = order.delivery_fee_ngn ? fmtNaira(order.delivery_fee_ngn) + ' owed to rider' : '';
+          riderPayoutBadge.textContent = 'Rider payout: ' + order.rider_payout_status;
+          controls.appendChild(riderPayoutBadge);
+
+          if (order.rider_payout_status === 'held') {
+            const payRiderBtn = document.createElement('button');
+            payRiderBtn.className = 'ghost';
+            payRiderBtn.style.padding = '6px 12px';
+            payRiderBtn.style.fontSize = '13px';
+            payRiderBtn.textContent = 'Pay rider';
+            payRiderBtn.onclick = async () => {
+              if (!confirm(`Release ${fmtNaira(order.delivery_fee_ngn || 0)} to rider ${order.rider_name || '—'}?`)) return;
+              payRiderBtn.disabled = true;
+              try {
+                await api(`/orders/${order.id}/rider-payout`, {
+                  method: 'PATCH',
+                  body: JSON.stringify({ riderPayoutStatus: 'released' }),
+                });
+                loadOrders();
+              } catch (err) {
+                alert(err.message);
+                payRiderBtn.disabled = false;
+              }
+            };
+            controls.appendChild(payRiderBtn);
+          }
+        }
+      }
+
       if (isMarketplace && order.payout_status !== 'not_applicable') {
         const payoutBadge = document.createElement('span');
         payoutBadge.className = 'badge ' + order.payout_status;
@@ -581,7 +718,11 @@
       if (currentFilter) params.set('status', currentFilter);
       if (claimedPaidOnly) params.set('claimedPaid', 'true');
       const query = params.toString() ? `?${params.toString()}` : '';
-      const { orders } = await api('/orders' + query);
+      const [{ orders }, ridersResp] = await Promise.all([
+        api('/orders' + query),
+        api('/riders?active=true').catch(() => ({ riders: [] })),
+      ]);
+      activeRiders = ridersResp.riders || [];
       renderOrders(orders);
     } catch (err) {
       el.list.innerHTML = `<div class="empty">${escapeHtml(err.message)}</div>`;
@@ -621,10 +762,14 @@
 
       const info = document.createElement('div');
       info.className = 'info';
+      const deliveryMeta = listing.delivery_area === 'katsina_only'
+        ? `${Amana.deliveryAreaLabel(listing.delivery_area)} · ${Amana.deliveryZoneLabel(listing.delivery_zone)} (${fmtNaira(listing.delivery_fee_ngn || 0)} rider fee)`
+        : Amana.deliveryAreaLabel(listing.delivery_area);
       info.innerHTML = `
         <div class="item">${escapeHtml(listing.item_name)}</div>
         <div class="desc">${escapeHtml(listing.description)}</div>
         <div class="meta">${escapeHtml(listing.seller_email)} · ${categoryLabel(listing.category)} · ${conditionLabel(listing.condition)} · ${fmtDate(listing.created_at)}</div>
+        <div class="meta">${deliveryMeta}</div>
         <div class="price">${fmtNaira(listing.price_ngn)}</div>
         ${listing.review_note ? `<div class="meta">Note: ${escapeHtml(listing.review_note)}</div>` : ''}
       `;
@@ -817,6 +962,92 @@
     }
     checkPendingSellerCount();
   }
+
+  function renderRiders(riders) {
+    el.ridersList.innerHTML = '';
+    el.countLabel.textContent = riders.length
+      ? `${riders.length} rider${riders.length === 1 ? '' : 's'}`
+      : 'No riders yet.';
+
+    if (!riders.length) {
+      el.ridersList.innerHTML = '<div class="empty">Add your first rider above.</div>';
+      return;
+    }
+
+    riders.forEach(rider => {
+      const card = document.createElement('div');
+      card.className = 'listing';
+
+      const info = document.createElement('div');
+      info.className = 'info';
+      info.innerHTML = `
+        <div class="item">${escapeHtml(rider.name)}</div>
+        <div class="meta">${escapeHtml(rider.phone)} · ${rider.currentLoad} active ${rider.currentLoad === 1 ? 'delivery' : 'deliveries'} · ${fmtNaira(rider.owedNgn || 0)} owed</div>
+      `;
+
+      const controls = document.createElement('div');
+      controls.className = 'controls';
+
+      const badge = document.createElement('span');
+      badge.className = 'badge ' + (rider.active ? 'approved' : 'rejected');
+      badge.textContent = rider.active ? 'active' : 'inactive';
+      controls.appendChild(badge);
+
+      const toggleBtn = document.createElement('button');
+      toggleBtn.className = 'ghost small';
+      toggleBtn.textContent = rider.active ? 'Deactivate' : 'Reactivate';
+      toggleBtn.onclick = async () => {
+        toggleBtn.disabled = true;
+        try {
+          await api(`/riders/${rider.id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ active: !rider.active }),
+          });
+          loadRiders();
+        } catch (err) {
+          alert(err.message);
+          toggleBtn.disabled = false;
+        }
+      };
+      controls.appendChild(toggleBtn);
+
+      card.appendChild(info);
+      card.appendChild(controls);
+      el.ridersList.appendChild(card);
+    });
+  }
+
+  async function loadRiders() {
+    el.filters.innerHTML = '';
+    el.countLabel.textContent = 'Loading…';
+    try {
+      const { riders } = await api('/riders');
+      renderRiders(riders);
+    } catch (err) {
+      el.ridersList.innerHTML = `<div class="empty">${escapeHtml(err.message)}</div>`;
+      el.countLabel.textContent = '';
+    }
+  }
+
+  el.addRiderBtn.onclick = async () => {
+    const name = el.newRiderName.value.trim();
+    const phone = el.newRiderPhone.value.trim();
+    if (!name || !phone) { alert('Enter both a name and phone number.'); return; }
+    el.addRiderBtn.disabled = true;
+    try {
+      await api('/riders', {
+        method: 'POST',
+        body: JSON.stringify({ name, phone }),
+      });
+      el.newRiderName.value = '';
+      el.newRiderPhone.value = '';
+      loadRiders();
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      el.addRiderBtn.disabled = false;
+    }
+  };
 
   async function checkPendingSellerCount() {
     try {
