@@ -69,6 +69,22 @@
     margin-top:24px; font-size:14.5px;
   }
   .loading{ text-align:center; padding:60px 0; color:var(--ink-soft); }
+
+  /* Dashboard (list of all deliveries for this rider phone) */
+  .dash-title{ font-size:14px; color:var(--ink-soft); margin:24px 0 12px; }
+  .dash-list{ display:flex; flex-direction:column; gap:12px; }
+  .dash-card{
+    display:block; background:var(--cream); border:1px solid #E1D6BA; border-radius:12px;
+    padding:16px 18px; text-decoration:none; color:var(--ink);
+  }
+  .dash-card .item-name{ font-size:16px; margin-bottom:4px; }
+  .dash-card .meta-row{ margin-bottom:2px; }
+  .dash-badge{
+    display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase;
+    letter-spacing:.03em; padding:3px 9px; border-radius:100px; margin-top:8px;
+  }
+  .dash-badge.active{ background:#E4EEDD; color:var(--olive); }
+  .dash-badge.delivered{ background:var(--parchment-dim); color:var(--ink-soft); }
 </style>
 </head>
 <body>
@@ -88,6 +104,10 @@
 
     <div class="steps" id="stepsWrap"></div>
     <div class="status-line" id="statusLine"></div>
+  </div>
+  <div id="dashContent" style="display:none;">
+    <div class="dash-title">Your deliveries</div>
+    <div class="dash-list" id="dashList"></div>
   </div>
 </div>
 
@@ -189,11 +209,65 @@
 
   let lastOrder = null;
 
-  async function load() {
-    if (!orderId || !phone) {
-      showError('This link is missing information. Ask Amana to resend your delivery link.');
-      return;
+  const el2 = {
+    dashContent: document.getElementById('dashContent'),
+    dashList: document.getElementById('dashList'),
+  };
+
+  function renderDashboard(orders) {
+    el2.dashList.innerHTML = '';
+    orders.forEach(order => {
+      const a = document.createElement('a');
+      a.className = 'dash-card';
+      a.href = `rider.html?order=${encodeURIComponent(order.id)}&phone=${encodeURIComponent(phone)}`;
+
+      const name = document.createElement('div');
+      name.className = 'item-name';
+      name.textContent = order.itemName;
+
+      const zone = document.createElement('div');
+      zone.className = 'meta-row';
+      zone.textContent = order.deliveryZone ? Amana.deliveryZoneLabel(order.deliveryZone) : 'Delivery';
+
+      const idLine = document.createElement('div');
+      idLine.className = 'meta-row';
+      idLine.textContent = 'Order ' + order.id;
+
+      const badge = document.createElement('span');
+      badge.className = 'dash-badge ' + (order.active ? 'active' : 'delivered');
+      badge.textContent = order.riderStatus
+        ? order.riderStatus.replace('_', ' ')
+        : 'not started';
+
+      a.appendChild(name);
+      a.appendChild(zone);
+      a.appendChild(idLine);
+      a.appendChild(badge);
+      el2.dashList.appendChild(a);
+    });
+  }
+
+  // Dashboard mode: only ?phone=... given (no specific order) — show every
+  // delivery assigned to this phone number, most recent first, each
+  // linking through to the existing single-order ping page below.
+  async function loadDashboard() {
+    try {
+      const res = await fetch(`${API_BASE}/orders/rider-deliveries?phone=${encodeURIComponent(phone)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not load your deliveries.');
+
+      renderDashboard(data.orders);
+
+      el.loading.style.display = 'none';
+      el2.dashContent.style.display = 'block';
+    } catch (err) {
+      showError(err.message);
     }
+  }
+
+  // Single-order mode: ?order=...&phone=... — the original per-delivery
+  // ping page, unchanged.
+  async function loadOrder() {
     try {
       const res = await fetch(`${API_BASE}/orders/${encodeURIComponent(orderId)}/rider-view?phone=${encodeURIComponent(phone)}`);
       const data = await res.json();
@@ -213,6 +287,18 @@
       el.content.style.display = 'block';
     } catch (err) {
       showError(err.message);
+    }
+  }
+
+  function load() {
+    if (!phone) {
+      showError('This link is missing information. Ask Amana to resend your delivery link.');
+      return;
+    }
+    if (orderId) {
+      loadOrder();
+    } else {
+      loadDashboard();
     }
   }
 

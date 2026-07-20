@@ -432,12 +432,29 @@
       const deliveryLine = order.delivery_zone
         ? `<div class="meta">Delivery: ${escapeHtml(Amana.deliveryZoneLabel(order.delivery_zone))}${order.delivery_fee_ngn ? ' · ' + fmtNaira(order.delivery_fee_ngn) + ' rider fee' : ''}${order.rider_name ? ' · rider: ' + escapeHtml(order.rider_name) + (order.rider_phone ? ' (' + escapeHtml(order.rider_phone) + ')' : '') : ' · no rider assigned'}${order.handoff_verified_at ? ' · handoff code verified' : ''}</div>`
         : '';
+      // Delivery-contact snapshots taken at order creation (see
+      // amana-backend routes/orders.js) — shown here so admin/rider
+      // coordination never has to fall back to WhatsApp just to get a
+      // phone number or address. Only marketplace orders have these.
+      const contactLine = isMarketplace && (order.buyer_name || order.seller_name)
+        ? `<div class="meta">${order.buyer_name ? 'Buyer: ' + escapeHtml(order.buyer_name) + (order.buyer_phone ? ' (' + escapeHtml(order.buyer_phone) + ')' : '') + (order.buyer_address ? ' — ' + escapeHtml(order.buyer_address) : '') : ''}</div>
+           ${order.seller_name ? `<div class="meta">Seller: ${escapeHtml(order.seller_name)}${order.seller_phone ? ' (' + escapeHtml(order.seller_phone) + ')' : ''}${order.seller_address ? ' — ' + escapeHtml(order.seller_address) : ''}</div>` : ''}`
+        : '';
+      // Tracking status, sourced orders only — see amana-backend
+      // lib/trackingSync.js. Shows what the last carrier poll saw so admin
+      // doesn't have to check a tracking site separately to know whether
+      // it's working.
+      const trackingLine = !isMarketplace && order.tracking_number
+        ? `<div class="meta">Tracking: ${escapeHtml(order.tracking_number)}${order.tracking_checked_at ? ' · last checked ' + fmtDate(order.tracking_checked_at) : ' · not yet checked'}</div>`
+        : '';
       card.innerHTML = `
         <div class="info">
           <div class="item">${escapeHtml(order.item_name)}${isMarketplace ? ' <span class="source-tag">Marketplace</span>' : ''}</div>
           <div class="meta">${order.email} · ${fmtDate(order.created_at)}${isMarketplace ? ' · seller ' + escapeHtml(order.seller_email || '—') : ''}</div>
           <div class="price">$${order.price_usd} → ${fmtNaira(order.total_ngn)}</div>
           ${deliveryLine}
+          ${contactLine}
+          ${trackingLine}
         </div>
       `;
 
@@ -534,6 +551,51 @@
       controls.appendChild(paymentBtn);
       controls.appendChild(badge);
       controls.appendChild(select);
+
+      // Tracking-number entry, sourced orders only. This is the one
+      // manual step left in the pending → arrived pipeline for these —
+      // admin still has to actually place the order on AliExpress/Amazon
+      // and get a tracking number, but once it's saved here,
+      // lib/trackingSync.js takes over moving status to shipped/arrived
+      // on its own. Hidden once arrived/cancelled since there's nothing
+      // left to track at that point.
+      if (!isMarketplace && !['arrived', 'cancelled'].includes(order.status)) {
+        const trackingWrap = document.createElement('div');
+        trackingWrap.style.display = 'flex';
+        trackingWrap.style.alignItems = 'center';
+        trackingWrap.style.gap = '6px';
+
+        const trackingInput = document.createElement('input');
+        trackingInput.type = 'text';
+        trackingInput.placeholder = 'Tracking number';
+        trackingInput.value = order.tracking_number || '';
+        trackingInput.style.padding = '5px 8px';
+        trackingInput.style.fontSize = '13px';
+        trackingInput.style.width = '140px';
+
+        const trackingBtn = document.createElement('button');
+        trackingBtn.className = 'ghost small';
+        trackingBtn.textContent = order.tracking_number ? 'Update tracking' : 'Save tracking';
+        trackingBtn.onclick = async () => {
+          const trackingNumber = trackingInput.value.trim();
+          if (!trackingNumber) { alert('Enter a tracking number first.'); return; }
+          trackingBtn.disabled = true;
+          try {
+            await api(`/orders/${order.id}/tracking`, {
+              method: 'PATCH',
+              body: JSON.stringify({ trackingNumber }),
+            });
+            loadOrders();
+          } catch (err) {
+            alert(err.message);
+            trackingBtn.disabled = false;
+          }
+        };
+
+        trackingWrap.appendChild(trackingInput);
+        trackingWrap.appendChild(trackingBtn);
+        controls.appendChild(trackingWrap);
+      }
 
       if (order.delivery_zone) {
         const riderWrap = document.createElement('div');
@@ -1010,6 +1072,27 @@
         }
       };
       controls.appendChild(toggleBtn);
+
+      // Riders have no login/account (see routes/riders.js) — this is the
+      // one link that shows ALL of a rider's assigned deliveries in one
+      // place (frontend/rider.html in dashboard mode), rather than the
+      // single-order link sent per delivery. Admin copies it once and
+      // sends it to the rider over WhatsApp/SMS; it works the same every
+      // time since it's keyed only on this phone number.
+      const copyLinkBtn = document.createElement('button');
+      copyLinkBtn.className = 'ghost small';
+      copyLinkBtn.textContent = 'Copy delivery link';
+      copyLinkBtn.onclick = async () => {
+        const url = `${window.location.origin}/rider.html?phone=${encodeURIComponent(rider.phone)}`;
+        try {
+          await navigator.clipboard.writeText(url);
+          copyLinkBtn.textContent = 'Copied!';
+        } catch (err) {
+          window.prompt('Copy this link to send to the rider:', url);
+        }
+        setTimeout(() => { copyLinkBtn.textContent = 'Copy delivery link'; }, 1500);
+      };
+      controls.appendChild(copyLinkBtn);
 
       card.appendChild(info);
       card.appendChild(controls);

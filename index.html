@@ -246,14 +246,22 @@
   .fab-bot{ background:var(--ochre); color:#fff; }
 
   .bot-panel{
-    display:none; width:280px; background:var(--cream); border-radius:12px; border:1px solid #E1D6BA;
-    padding:16px; box-shadow:0 8px 24px rgba(0,0,0,.2); margin-bottom:6px;
+    display:none; width:300px; max-height:70vh; background:var(--cream); border-radius:12px; border:1px solid #E1D6BA;
+    padding:16px; box-shadow:0 8px 24px rgba(0,0,0,.2); margin-bottom:6px; flex-direction:column;
   }
-  .bot-panel.open{ display:block; }
+  .bot-panel.open{ display:flex; }
   .bot-panel h3{ font-size:14px; margin-bottom:10px; }
   .bot-btn{ width:100%; text-align:left; background:transparent; border:none; border-top:1px solid #E1D6BA; padding:10px 2px; font-size:13.5px; color:var(--ink); }
   .bot-btn:first-of-type{ border-top:none; }
   .bot-answer{ background:var(--parchment-dim); border-radius:8px; padding:10px 12px; font-size:13px; margin-top:8px; color:var(--ink-soft); }
+  .bot-thread{ flex:1; overflow-y:auto; margin:10px 0; display:flex; flex-direction:column; gap:8px; min-height:40px; }
+  .bot-msg{ font-size:13px; line-height:1.4; padding:8px 10px; border-radius:10px; max-width:88%; white-space:pre-wrap; }
+  .bot-msg-user{ align-self:flex-end; background:var(--ochre); color:#fff; }
+  .bot-msg-assistant{ align-self:flex-start; background:var(--parchment-dim); color:var(--ink); }
+  .bot-msg-pending{ align-self:flex-start; background:var(--parchment-dim); color:var(--ink-soft); font-style:italic; }
+  .bot-input-row{ display:flex; gap:6px; }
+  .bot-input-row input{ flex:1; border:1px solid #E1D6BA; border-radius:8px; padding:8px 10px; font-size:13px; }
+  .bot-input-row button{ background:var(--ochre); color:#fff; border:none; border-radius:8px; padding:0 12px; font-size:13px; }
 
   /* ============ MODAL ============ */
   .overlay{
@@ -524,12 +532,16 @@
 <!-- ============ FLOATING BUTTONS ============ -->
 <div class="float-stack">
   <div class="bot-panel" id="botPanel">
-    <h3>Quick answers</h3>
-    <button class="bot-btn" onclick="showBotAnswer('delivery')">How does delivery work?</button>
-    <button class="bot-btn" onclick="showBotAnswer('safety')">Is my money safe?</button>
-    <button class="bot-btn" onclick="showBotAnswer('mismatch')">What if my item doesn't match?</button>
-    <button class="bot-btn" onclick="closeBotAndGo('market')">Browse the marketplace</button>
-    <div id="botAnswer"></div>
+    <h3>Ask Amana</h3>
+    <button class="bot-btn" onclick="askBot('How does delivery work?')">How does delivery work?</button>
+    <button class="bot-btn" onclick="askBot('Is my money safe?')">Is my money safe?</button>
+    <button class="bot-btn" onclick="askBot(&quot;What if my item doesn't match?&quot;)">What if my item doesn't match?</button>
+    <button class="bot-btn" onclick="askBot('What is the status of my order?')">What's the status of my order?</button>
+    <div class="bot-thread" id="botThread"></div>
+    <div class="bot-input-row">
+      <input type="text" id="botInput" placeholder="Ask a question..." onkeydown="if(event.key==='Enter'){handleBotInputSubmit();}">
+      <button onclick="handleBotInputSubmit()">Send</button>
+    </div>
   </div>
   <button class="fab fab-bot" onclick="toggleBot()" aria-label="Open quick answers">?</button>
   <a class="fab fab-whatsapp" id="floatWhatsapp" href="#" target="_blank" rel="noopener" aria-label="Message on WhatsApp">&#9993;</a>
@@ -569,12 +581,6 @@ var FAQ = [
   { q:"What if my item doesn't match?", a:"Send a photo or video within 24 hours of receiving it. If it genuinely doesn't match what you ordered, the item cost is refunded. No proof, no claim." },
   { q:'How does the price get calculated?', a:'You pay exactly the price the seller listed — nothing added on top at checkout.' }
 ];
-
-var BOT_ANSWERS = {
-  delivery: FAQ[0].a,
-  safety: FAQ[1].a,
-  mismatch: FAQ[2].a
-};
 
 /* ================= header / footer wiring ================= */
 function waLink(text){
@@ -765,7 +771,7 @@ async function handleMarketPasswordSubmit(){
     var data = await res.json();
     if(!res.ok){ throw new Error(data.error || 'Incorrect password.'); }
     currentOrder.sessionToken = data.token;
-    await finalizeMarketOrder();
+    await proceedToCheckoutProfile();
   }catch(err){
     document.getElementById('modalBody').insertAdjacentHTML('beforeend', '<p class="inline-error">' + err.message + '</p>');
   }
@@ -817,7 +823,7 @@ async function handleMarketVerifySubmit(){
 function showMarketSetPasswordStep(){
   var isReset = currentOrder.otpPurpose === 'reset';
   var skipBtn = isReset ? '' :
-    '<button class="small-link" style="width:100%; margin-top:10px;" onclick="finalizeMarketOrder()">Skip for now</button>';
+    '<button class="small-link" style="width:100%; margin-top:10px;" onclick="proceedToCheckoutProfile()">Skip for now</button>';
   document.getElementById('modalBody').innerHTML =
     '<h3>' + (isReset ? 'Set a new password' : 'Set a password') + '</h3>' +
     '<p class="modal-sub">So you can skip the email code next time.</p>' +
@@ -848,9 +854,62 @@ async function handleMarketSetPassword(){
     });
     var data = await res.json();
     if(!res.ok){ throw new Error(data.error || 'Could not save that password.'); }
-    await finalizeMarketOrder();
+    await proceedToCheckoutProfile();
   }catch(err){
     document.getElementById('modalBody').insertAdjacentHTML('beforeend', '<p class="inline-error">' + err.message + '</p>');
+  }
+}
+
+// Checks whether the buyer already has a delivery-contact profile saved
+// (GET /customers requires a session token, so this can only run once
+// currentOrder.sessionToken is set). If complete, skips straight to
+// placing the order; otherwise shows a short form to collect it first —
+// POST /orders/marketplace requires this to be on file (see backend).
+async function proceedToCheckoutProfile(){
+  document.getElementById('modalBody').innerHTML = '<p style="font-size:13px; color:var(--ink-soft);">Checking your profile...</p>';
+  var profile = await fetchCustomerProfile(currentOrder.email, currentOrder.sessionToken);
+  if(profile && profile.name && profile.phone && profile.address){
+    currentOrder.customer = profile;
+    await finalizeMarketOrder();
+    return;
+  }
+  showCheckoutProfileStep(profile);
+}
+
+function showCheckoutProfileStep(profile){
+  profile = profile || {};
+  document.getElementById('modalBody').innerHTML =
+    '<h3>Delivery details</h3>' +
+    '<p class="modal-sub">So the seller and rider know where to send this.</p>' +
+    '<div class="field"><label for="checkoutNameInput">Your name</label><input type="text" id="checkoutNameInput" value="' + escapeHtml(profile.name || '') + '" autofocus></div>' +
+    '<div class="field"><label for="checkoutPhoneInput">Phone number</label><input type="tel" id="checkoutPhoneInput" value="' + escapeHtml(profile.phone || '') + '"></div>' +
+    '<div class="field"><label for="checkoutAddressInput">Delivery address</label><input type="text" id="checkoutAddressInput" value="' + escapeHtml(profile.address || '') + '"></div>' +
+    '<div id="checkoutProfileError"></div>' +
+    '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick="handleCheckoutProfileSubmit()">Continue</button>';
+}
+
+async function handleCheckoutProfileSubmit(){
+  var errEl = document.getElementById('checkoutProfileError');
+  errEl.innerHTML = '';
+  var name = document.getElementById('checkoutNameInput').value.trim();
+  var phone = document.getElementById('checkoutPhoneInput').value.trim();
+  var address = document.getElementById('checkoutAddressInput').value.trim();
+  if(!name || !phone || !address){
+    errEl.innerHTML = '<p class="inline-error">Name, phone number, and address are all required.</p>';
+    return;
+  }
+  try{
+    var res = await fetch(API_BASE + '/customers', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + currentOrder.sessionToken },
+      body: JSON.stringify({ email: currentOrder.email, name:name, phone:phone, address:address })
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not save your details.'); }
+    currentOrder.customer = data.customer;
+    await finalizeMarketOrder();
+  }catch(err){
+    errEl.innerHTML = '<p class="inline-error">' + err.message + '</p>';
   }
 }
 
@@ -1422,21 +1481,42 @@ async function loadCurrentStoreName(email){
   }
 }
 
+// Fetches the caller's own delivery-contact profile (name/phone/address).
+// Returns null on any network/parse failure or if nothing's saved yet —
+// callers treat that as "show a blank field," never as an error.
+async function fetchCustomerProfile(email, token){
+  try{
+    var res = await fetch(API_BASE + '/customers/' + email, {
+      headers:{ 'Authorization':'Bearer ' + token }
+    });
+    if(!res.ok){ return null; }
+    var data = await res.json();
+    return data.customer || null;
+  }catch(err){
+    return null;
+  }
+}
+
 // Fetches the caller's own seller-application status. Returns 'none' on
 // any network/parse failure rather than throwing — callers treat that the
 // same as "hasn't applied yet," which is the safe direction to fail in
 // (worst case someone re-sees the apply form; it never lets a fetch
-// hiccup masquerade as approval).
+// hiccup masquerade as approval). Also fetches the delivery-contact
+// profile alongside it and attaches it as `contact`, since the apply form
+// collects both — keeping this in one place means every caller (initial
+// page load, the post-listing gate) gets prefilled fields for free.
 async function fetchSellerApplication(email, token){
+  var contact = await fetchCustomerProfile(email, token);
   try{
     var res = await fetch(API_BASE + '/sellers/' + email + '/application', {
       headers:{ 'Authorization':'Bearer ' + token }
     });
     var data = await res.json();
-    if(!res.ok){ return { applicationStatus:'none' }; }
+    if(!res.ok){ return { applicationStatus:'none', contact:contact }; }
+    data.contact = contact;
     return data;
   }catch(err){
-    return { applicationStatus:'none' };
+    return { applicationStatus:'none', contact:contact };
   }
 }
 
@@ -1452,6 +1532,18 @@ function renderSellerApplication(app){
   section.style.display = 'block';
 
   if(app.applicationStatus === 'approved'){
+    var c0 = app.contact || {};
+    if(!c0.name || !c0.phone || !c0.address){
+      heading.textContent = 'One more thing before you can list';
+      sub.textContent = 'Add your delivery contact details — buyers and riders need a way to reach you.';
+      body.innerHTML =
+        '<div class="field"><label for="sellerAppName">Your name</label><input type="text" id="sellerAppName" value="' + escapeHtml(c0.name || '') + '"></div>' +
+        '<div class="field"><label for="sellerAppPhone">Phone number</label><input type="tel" id="sellerAppPhone" value="' + escapeHtml(c0.phone || '') + '"></div>' +
+        '<div class="field"><label for="sellerAppAddress">Address</label><input type="text" id="sellerAppAddress" placeholder="Where riders pick up from / your return address" value="' + escapeHtml(c0.address || '') + '"></div>' +
+        '<div id="sellerAppError"></div>' +
+        '<button class="btn btn-ink" style="width:100%; justify-content:center;" onclick="handleSellerContactOnlySubmit()">Save</button>';
+      return;
+    }
     heading.textContent = 'You\'re an approved seller';
     sub.textContent = 'You can post listings below.';
     body.innerHTML = '';
@@ -1468,10 +1560,14 @@ function renderSellerApplication(app){
   heading.textContent = app.applicationStatus === 'rejected' ? 'Application not approved' : 'Become a seller';
   sub.textContent = app.applicationStatus === 'rejected'
     ? (app.note ? 'Note from Amana: ' + app.note + ' You\'re welcome to fix this and re-apply below.' : 'You\'re welcome to re-apply below.')
-    : 'Selling on Amana needs a quick one-time application — a store name and the bank account we\'ll pay you out to. Amana reviews every application before you can list anything.';
+    : 'Selling on Amana needs a quick one-time application — a store name, your delivery contact details, and the bank account we\'ll pay you out to. Amana reviews every application before you can list anything.';
 
+  var c = app.contact || {};
   body.innerHTML =
     '<div class="field"><label for="sellerAppDisplayName">Store name</label><input type="text" id="sellerAppDisplayName" maxlength="40" value="' + escapeHtml(app.displayName || '') + '"></div>' +
+    '<div class="field"><label for="sellerAppName">Your name</label><input type="text" id="sellerAppName" value="' + escapeHtml(c.name || '') + '"></div>' +
+    '<div class="field"><label for="sellerAppPhone">Phone number</label><input type="tel" id="sellerAppPhone" value="' + escapeHtml(c.phone || '') + '"></div>' +
+    '<div class="field"><label for="sellerAppAddress">Address</label><input type="text" id="sellerAppAddress" placeholder="Where riders pick up from / your return address" value="' + escapeHtml(c.address || '') + '"></div>' +
     '<div class="field"><label for="sellerAppBankName">Bank name</label><input type="text" id="sellerAppBankName" placeholder="e.g. GTBank" value="' + escapeHtml(app.bankName || '') + '"></div>' +
     '<div class="field"><label for="sellerAppAccountNumber">Account number</label><input type="text" id="sellerAppAccountNumber" inputmode="numeric" value="' + escapeHtml(app.accountNumber || '') + '"></div>' +
     '<div class="field"><label for="sellerAppAccountName">Account name</label><input type="text" id="sellerAppAccountName" placeholder="Name on the account" value="' + escapeHtml(app.accountName || '') + '"></div>' +
@@ -1485,16 +1581,47 @@ function renderSellerApplication(app){
     '<button class="btn btn-ink" style="width:100%; justify-content:center;" onclick="handleSellerApplicationSubmit()">Submit application</button>';
 }
 
+async function handleSellerContactOnlySubmit(){
+  var errEl = document.getElementById('sellerAppError');
+  errEl.innerHTML = '';
+  var name = document.getElementById('sellerAppName').value.trim();
+  var phone = document.getElementById('sellerAppPhone').value.trim();
+  var address = document.getElementById('sellerAppAddress').value.trim();
+  if(!name || !phone || !address){
+    errEl.innerHTML = '<p class="inline-error">Your name, phone number, and address are all required.</p>';
+    return;
+  }
+  try{
+    var res = await fetch(API_BASE + '/customers', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + sellSession.sessionToken },
+      body: JSON.stringify({ email: sellSession.email, name:name, phone:phone, address:address })
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not save your delivery contact details.'); }
+    renderSellerApplication({ applicationStatus:'approved', contact:{ name:name, phone:phone, address:address } });
+  }catch(err){
+    errEl.innerHTML = '<p class="inline-error">' + err.message + '</p>';
+  }
+}
+
 async function handleSellerApplicationSubmit(){
   var errEl = document.getElementById('sellerAppError');
   errEl.innerHTML = '';
   var displayName = document.getElementById('sellerAppDisplayName').value.trim();
+  var name = document.getElementById('sellerAppName').value.trim();
+  var phone = document.getElementById('sellerAppPhone').value.trim();
+  var address = document.getElementById('sellerAppAddress').value.trim();
   var bankName = document.getElementById('sellerAppBankName').value.trim();
   var accountNumber = document.getElementById('sellerAppAccountNumber').value.trim();
   var accountName = document.getElementById('sellerAppAccountName').value.trim();
 
   if(displayName.length < 2 || displayName.length > 40){
     errEl.innerHTML = '<p class="inline-error">Store name must be 2–40 characters.</p>';
+    return;
+  }
+  if(!name || !phone || !address){
+    errEl.innerHTML = '<p class="inline-error">Your name, phone number, and address are required — buyers and riders need a way to reach you.</p>';
     return;
   }
   if(!bankName || !accountNumber || !accountName){
@@ -1508,6 +1635,18 @@ async function handleSellerApplicationSubmit(){
   }
 
   try{
+    // Delivery-contact profile and the seller application are two separate
+    // records on the backend (customers vs sellers) — both are required
+    // before POST /listings will accept anything, so both are saved here
+    // together as one "become a seller" step from the user's perspective.
+    var profileRes = await fetch(API_BASE + '/customers', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + sellSession.sessionToken },
+      body: JSON.stringify({ email: sellSession.email, name:name, phone:phone, address:address })
+    });
+    var profileData = await profileRes.json();
+    if(!profileRes.ok){ throw new Error(profileData.error || 'Could not save your delivery contact details.'); }
+
     var res = await fetch(API_BASE + '/sellers/' + sellSession.email + '/application', {
       method:'POST',
       headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + sellSession.sessionToken },
@@ -1910,7 +2049,9 @@ async function submitListing(token, pendingListing, errEl){
     // form's contents are left in place; the seller can submit again
     // once they're approved.
     var app = await fetchSellerApplication(sellSession.email, token);
-    if(app.applicationStatus !== 'approved'){
+    var c = app.contact || {};
+    var contactComplete = !!(c.name && c.phone && c.address);
+    if(app.applicationStatus !== 'approved' || !contactComplete){
       renderSellerApplication(app);
       document.getElementById('sellerApplicationSection').scrollIntoView({ behavior:'smooth' });
       errEl.innerHTML = '';
@@ -2506,15 +2647,64 @@ var currentOrder = null;
 
 function closeModal(){ document.getElementById('orderOverlay').classList.remove('open'); }
 
-/* ================= bot panel ================= */
+/* ================= bot panel — real chat, backed by POST /chat/message =========== */
 function toggleBot(){ document.getElementById('botPanel').classList.toggle('open'); }
-function showBotAnswer(key){
-  document.getElementById('botAnswer').innerHTML = '<div class="bot-answer">' + BOT_ANSWERS[key] + '</div>';
+
+var botHistory = []; // [{ role: 'user'|'assistant', content: string }, ...] — sent back each turn, same pattern as the Anthropic API itself expects
+
+function appendBotMessage(role, text){
+  var thread = document.getElementById('botThread');
+  var div = document.createElement('div');
+  div.className = 'bot-msg bot-msg-' + role;
+  div.textContent = text;
+  thread.appendChild(div);
+  thread.scrollTop = thread.scrollHeight;
+  return div;
 }
-function closeBotAndGo(tab){
-  document.getElementById('botPanel').classList.remove('open');
-  scrollToId('order');
-  switchTab(tab);
+
+function handleBotInputSubmit(){
+  var input = document.getElementById('botInput');
+  var text = input.value.trim();
+  if(!text) return;
+  input.value = '';
+  askBot(text);
+}
+
+// Shared by both the quick-answer shortcut buttons and the free-text
+// input — a shortcut button is just a pre-filled question through the
+// same real chat, not a separate canned-answer path anymore.
+async function askBot(text){
+  if(!API_BASE){
+    appendBotMessage('assistant', 'The chat assistant needs the real backend connected.');
+    return;
+  }
+  appendBotMessage('user', text);
+  botHistory.push({ role:'user', content:text });
+  var pending = appendBotMessage('pending', 'Thinking...');
+
+  // Reuses whichever session (buyer or seller) is already logged in on
+  // this page, if any — so "what's the status of my order" can actually
+  // look it up. Logged-out visitors still get general answers (see
+  // lib/chat.js system prompt), just no personal lookups.
+  var authEmail = buyerSession.sessionToken ? buyerSession.email : (sellSession.sessionToken ? sellSession.email : null);
+  var authToken = buyerSession.sessionToken || sellSession.sessionToken || null;
+
+  try{
+    var headers = { 'Content-Type':'application/json' };
+    if(authToken) headers['Authorization'] = 'Bearer ' + authToken;
+    var res = await fetch(API_BASE + '/chat/message', {
+      method:'POST', headers:headers,
+      body: JSON.stringify({ messages: botHistory })
+    });
+    var data = await res.json();
+    pending.remove();
+    if(!res.ok){ throw new Error(data.error || 'Could not reach the assistant.'); }
+    appendBotMessage('assistant', data.reply);
+    botHistory.push({ role:'assistant', content:data.reply });
+  }catch(err){
+    pending.remove();
+    appendBotMessage('assistant', err.message);
+  }
 }
 
 /* ================= faq ================= */
