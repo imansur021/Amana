@@ -267,7 +267,7 @@
   // works if this file is served by the backend itself; override if hosted
   // separately (e.g. static file host) — set window.API_BASE before this
   // script runs, or just hardcode it below.
-  const API_BASE = window.API_BASE || 'http://localhost:3000';
+  const API_BASE = window.API_BASE || 'https://amana-backend-ln2p.onrender.com';
 
   const STATUSES = ['pending', 'ordered', 'shipped', 'arrived', 'cancelled'];
   const PAYMENT_STATUSES = ['unpaid', 'paid'];
