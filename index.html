@@ -13,7 +13,7 @@
   /* ============ DESIGN TOKENS ============ */
   :root{
     --indigo-950:#141B33;
-    --indigo-900:#1B2340;
+    --indigo-900:#20244A;
     --indigo-800:#232C52;
     --indigo-700:#303E6E;
     --parchment:#F1E9D8;
@@ -57,6 +57,24 @@
   .section-title{ font-size:30px; font-weight:700; margin:0 0 12px; }
   .section-sub{ color:var(--ink-soft); max-width:560px; margin:0 0 40px; font-size:16px; }
   .section--dark .section-sub{ color:#C9CEE0; }
+
+  /* ============ MOTIF DIVIDER ============
+     A small recurring signature element — a repeating triangle band in the
+     spirit of geometric weave patterns common in northern Nigerian textile
+     traditions (indigo-dye cloth, woven trims). Used sparingly, only at
+     the handful of section transitions that matter most (into/out of the
+     dark trust section), rather than on every boundary — the goal is one
+     quiet, consistent detail that reads as *this site's*, not decoration
+     sprinkled everywhere. Built as a tiled CSS background (not an image
+     asset) so it's just a color swap between the two variants below. */
+  .motif-divider{
+    height:14px; width:100%;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='14' viewBox='0 0 40 14'%3E%3Cpath d='M0 14 L10 0 L20 14 L30 0 L40 14 Z' fill='%23AB5B2E'/%3E%3C/svg%3E");
+    background-repeat:repeat-x; background-size:40px 14px; background-position:center;
+  }
+  .motif-divider--light{
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='14' viewBox='0 0 40 14'%3E%3Cpath d='M0 14 L10 0 L20 14 L30 0 L40 14 Z' fill='%23F1E9D8'/%3E%3C/svg%3E");
+  }
   .btn{ display:inline-flex; align-items:center; gap:8px; padding:13px 22px; border-radius:8px; border:1px solid transparent; font-size:15px; font-weight:600; text-decoration:none; }
   .btn-ochre{ background:var(--ochre); color:var(--cream); }
   .btn-ochre:hover{ background:var(--ochre-dark); }
@@ -71,13 +89,26 @@
   /* ============ HEADER ============ */
   .site-header{
     position:sticky; top:0; z-index:60; display:flex; align-items:center; justify-content:space-between;
-    padding:10px 24px; background:var(--indigo-950); border-bottom:1px solid var(--indigo-800);
+    padding:12px 24px; background:var(--indigo-950); border-bottom:1px solid var(--indigo-800);
+    flex-wrap:wrap; gap:8px 16px;
   }
-  .logo{ display:flex; align-items:center; gap:6px; font-family:var(--font-display); font-weight:700; font-size:17px; color:var(--cream); letter-spacing:.2px; }
+  .logo{ display:flex; align-items:center; gap:7px; font-family:var(--font-display); font-weight:700; font-size:18px; color:var(--cream); letter-spacing:.2px; }
   .logo em{ font-style:normal; color:var(--ochre-light); }
-  .logo-mark{ width:19px; height:19px; flex-shrink:0; }
-  .site-header .btn{ padding:8px 14px; font-size:13px; }
-  .site-header a{ font-size:12.5px !important; }
+  .logo-mark{ width:20px; height:20px; flex-shrink:0; }
+  .site-header .btn{ padding:9px 16px; font-size:13px; gap:6px; }
+  .header-links{ display:flex; align-items:center; gap:2px 6px; flex-wrap:wrap; }
+  .header-link{
+    font-size:13.5px !important; color:#C9CEE0; text-decoration:none; padding:10px 12px;
+    display:inline-flex; align-items:center; min-height:40px; border-radius:6px;
+    transition:color .12s ease, background .12s ease;
+  }
+  .header-link:hover{ color:var(--cream); background:rgba(255,255,255,.06); }
+  .header-divider{ width:1px; height:22px; background:var(--indigo-700); margin:0 4px; }
+  @media (max-width:480px){
+    .header-links{ order:3; width:100%; justify-content:space-between; gap:2px; }
+    .header-link{ font-size:12.5px !important; padding:8px 6px; }
+    .header-divider{ display:none; }
+  }
 
   /* ============ HERO ============ */
   .hero{ background:var(--indigo-900); color:var(--cream); padding:64px 24px 90px; text-align:center; }
@@ -112,9 +143,21 @@
   }
 
   /* ============ HOW IT WORKS ============ */
-  .steps{ display:grid; grid-template-columns:repeat(4,1fr); gap:24px; }
+  .steps{ display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
   @media (max-width:800px){ .steps{ grid-template-columns:repeat(2,1fr); } }
   @media (max-width:480px){ .steps{ grid-template-columns:1fr; } }
+  .step{
+    background:var(--cream); border:1px solid #E1D6BA; border-radius:12px; padding:22px 20px;
+    transition:box-shadow .15s ease, transform .15s ease;
+  }
+  .step:hover{ box-shadow:0 6px 18px rgba(27,32,51,.07); transform:translateY(-2px); }
+  .skip-ahead{
+    display:inline-flex; align-items:center; gap:6px; margin-top:26px; padding:9px 16px;
+    background:transparent; border:1px solid var(--ink-soft); border-radius:100px;
+    font-size:13.5px; font-weight:600; color:var(--ink); cursor:pointer;
+    transition:background .12s ease, border-color .12s ease;
+  }
+  .skip-ahead:hover{ background:rgba(0,0,0,.04); border-color:var(--ochre); color:var(--ochre-dark); }
   .step-num{
     width:34px; height:34px; border-radius:50%; background:var(--ochre); color:var(--cream);
     display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-weight:500; margin-bottom:14px;
@@ -125,8 +168,8 @@
   /* ============ ORDER SECTION ============ */
   .order-tabs{ display:flex; gap:8px; margin-bottom:28px; flex-wrap:wrap; }
   .tab-btn{
-    padding:10px 18px; border-radius:8px; border:1px solid var(--ink-soft); background:transparent;
-    font-size:14.5px; font-weight:600; color:var(--ink);
+    padding:12px 18px; border-radius:8px; border:1px solid var(--ink-soft); background:transparent;
+    font-size:14.5px; font-weight:600; color:var(--ink); min-height:44px;
   }
   .tab-btn.active{ background:var(--indigo-900); border-color:var(--indigo-900); color:var(--cream); }
   .tab-panel{ display:none; }
@@ -150,16 +193,75 @@
   .no-results{ color:var(--ink-soft); font-size:14.5px; padding:20px 0; }
 
   /* ============ MARKETPLACE ============ */
-  .market-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
-  @media (max-width:640px){ .market-grid{ grid-template-columns:1fr; } }
-  .market-card{ background:var(--cream); border:1px solid #E1D6BA; border-radius:12px; overflow:hidden; display:flex; flex-direction:column; position:relative; }
-  .market-card img{ width:100%; height:150px; object-fit:cover; background:var(--parchment-dim); display:block; }
-  .market-card .body{ padding:16px; display:flex; flex-direction:column; gap:8px; flex:1; }
-  .market-card h3{ font-size:15.5px; font-weight:600; font-family:var(--font-body); margin:0; }
-  .market-card .cond{ font-family:var(--font-mono); font-size:11px; color:var(--olive); text-transform:uppercase; letter-spacing:.04em; }
-  .market-card .desc{ font-size:13px; color:var(--ink-soft); line-height:1.4; }
+  .market-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:16px; }
+  @media (max-width:640px){ .market-grid{ grid-template-columns:repeat(2, 1fr); gap:10px; } }
+  @media (max-width:420px){ .market-grid{ grid-template-columns:1fr; } }
+  .market-card{ background:var(--cream); border:1px solid #E1D6BA; border-radius:12px; overflow:hidden; display:flex; flex-direction:column; position:relative; transition:box-shadow .15s ease, transform .15s ease; }
+  .market-card:hover{ box-shadow:0 6px 18px rgba(27,32,51,.08); transform:translateY(-1px); }
+  .market-card .photo-wrap{ width:100%; aspect-ratio:4/3; background:var(--parchment-dim); display:block; overflow:hidden; }
+  .market-card img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .market-card .photo-placeholder{ width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#C9BFA4; }
+  .market-card .photo-placeholder svg{ width:36px; height:36px; }
+  .market-card .body{ padding:14px 16px; display:flex; flex-direction:column; gap:6px; flex:1; }
+  .market-card h3{ font-size:15px; font-weight:600; font-family:var(--font-body); margin:0; line-height:1.3; }
+  .market-card .cond{ font-family:var(--font-mono); font-size:10.5px; color:var(--olive); text-transform:uppercase; letter-spacing:.04em; }
+  .market-card .desc{ font-size:12.5px; color:var(--ink-soft); line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
   .market-card .price{ font-family:var(--font-mono); font-size:16px; font-weight:600; margin-top:auto; }
+  .seller-chip{ display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--ink-soft); }
+  .seller-chip .avatar{ width:16px; height:16px; border-radius:50%; background:var(--indigo-700); color:#fff; font-family:var(--font-mono); font-size:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .seller-chip .name{ font-weight:600; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .seller-chip .rating{ font-family:var(--font-mono); color:var(--ochre-dark); flex-shrink:0; }
+  .seller-chip .verified{ color:var(--olive); font-size:13px; line-height:1; flex-shrink:0; }
   .market-empty{ color:var(--ink-soft); font-size:14.5px; padding:20px 0; }
+
+  /* Sticky filter bar — stays in view while scrolling a long grid, styled
+     to match the rest of the storefront instead of default browser inputs. */
+  .market-filters{
+    position:sticky; top:0; z-index:5; background:var(--parchment); padding:12px 0;
+    display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; border-bottom:1px solid #E1D6BA;
+  }
+  .market-filters input, .market-filters select{
+    font-family:var(--font-body); font-size:14px; padding:9px 12px; border-radius:8px;
+    border:1px solid #C9BFA4; background:#fff; color:var(--ink);
+  }
+  .market-filters input:focus, .market-filters select:focus{ border-color:var(--ochre); }
+  .market-filters input[type="text"]{ flex:2; min-width:160px; }
+  .market-filters select{ flex:1; min-width:130px; }
+  .market-filters input[type="number"]{ width:92px; }
+
+  /* Category pills — one tap to filter, no dropdown-open-scroll-select
+     round trip. Horizontal scroll on narrow screens rather than wrapping,
+     since wrapping pills push the grid down unpredictably as filters
+     change; a scroll row keeps the layout height stable. */
+  .category-pills{
+    display:flex; gap:8px; overflow-x:auto; padding:2px 0 14px; margin-top:-4px;
+    scrollbar-width:none;
+  }
+  .category-pills::-webkit-scrollbar{ display:none; }
+  .category-pill{
+    flex-shrink:0; font-family:var(--font-body); font-size:13px; font-weight:600;
+    padding:8px 16px; border-radius:999px; border:1px solid #C9BFA4; background:#fff;
+    color:var(--ink-soft); cursor:pointer; white-space:nowrap; transition:background .12s ease, color .12s ease, border-color .12s ease;
+  }
+  .category-pill:hover{ border-color:var(--ochre-light); }
+  .category-pill.active{ background:var(--ochre); border-color:var(--ochre); color:var(--cream); }
+
+  /* Skeleton loading cards — shown while a fetch is in flight instead of
+     a blank/plain-text page, so the layout doesn't jump once results
+     arrive. */
+  .skeleton-card{ background:var(--cream); border:1px solid #E1D6BA; border-radius:12px; overflow:hidden; }
+  .skeleton-card .skeleton-photo{ width:100%; aspect-ratio:4/3; background:var(--parchment-dim); }
+  .skeleton-card .skeleton-line{ height:11px; border-radius:4px; background:var(--parchment-dim); margin:14px 16px; }
+  .skeleton-card .skeleton-line.w60{ width:60%; }
+  .skeleton-card .skeleton-line.w40{ width:40%; margin-top:8px; }
+  .skeleton-card, .skeleton-photo, .skeleton-line{ position:relative; }
+  .skeleton-card::after{
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(90deg, transparent, rgba(255,255,255,.5), transparent);
+    animation:skeleton-shimmer 1.3s infinite;
+  }
+  @keyframes skeleton-shimmer{ 0%{ transform:translateX(-100%); } 100%{ transform:translateX(100%); } }
+
   .save-heart{
     position:absolute; top:10px; right:10px; width:32px; height:32px; border-radius:100px;
     background:rgba(255,255,255,.9); border:1px solid #E1D6BA; font-size:16px; line-height:1;
@@ -187,6 +289,10 @@
   .my-listing-card{ background:#fff; border:1px solid #E1D6BA; border-radius:10px; padding:14px 16px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
   .my-listing-card .name{ font-weight:600; font-size:14.5px; }
   .my-listing-card .price{ font-family:var(--font-mono); font-size:13px; color:var(--ink-soft); }
+  .mini-progress{ display:flex; align-items:center; gap:4px; margin-top:6px; }
+  .mini-progress span{ width:14px; height:4px; border-radius:2px; background:#E1D6BA; }
+  .mini-progress span.done{ background:var(--ochre); }
+  .mini-progress--cancelled span{ background:#E3BFBA; }
   .review-pill{ display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.03em; padding:3px 9px; border-radius:100px; }
   .review-pill.pending_review{ background:var(--parchment-dim); color:var(--ink-soft); }
   .review-pill.approved{ background:#E4EEDD; color:var(--olive); }
@@ -237,10 +343,15 @@
   footer .foot-note{ margin-top:10px; color:#8A90AC; }
 
   /* ============ FLOATING BUTTONS ============ */
-  .float-stack{ position:fixed; right:20px; bottom:20px; display:flex; flex-direction:column; align-items:flex-end; gap:12px; z-index:70; }
+  .float-stack{
+    position:fixed; right:20px; bottom:20px; display:flex; flex-direction:column; align-items:flex-end; gap:12px; z-index:70;
+    /* Keeps clear of the home-indicator/gesture bar on notched phones
+       instead of sitting flush against the very edge of the screen. */
+    padding-bottom:env(safe-area-inset-bottom, 0px);
+  }
   .fab{
     width:54px; height:54px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-    font-size:22px; border:none; box-shadow:0 3px 10px rgba(0,0,0,.25);
+    font-size:22px; border:none; box-shadow:0 3px 10px rgba(0,0,0,.25); flex-shrink:0; align-self:flex-end;
   }
   .fab-whatsapp{ background:var(--olive); color:#fff; text-decoration:none; }
   .fab-bot{ background:var(--ochre); color:#fff; }
@@ -248,6 +359,13 @@
   .bot-panel{
     display:none; width:300px; max-height:70vh; background:var(--cream); border-radius:12px; border:1px solid #E1D6BA;
     padding:16px; box-shadow:0 8px 24px rgba(0,0,0,.2); margin-bottom:6px; flex-direction:column;
+  }
+  @media (max-width:420px){
+    /* Fixed 300px would overflow or crowd a small phone screen — go
+       near-full-width instead, same bottom-sheet-adjacent treatment as
+       the rest of the floating stack on mobile. */
+    .float-stack{ right:12px; left:12px; align-items:stretch; }
+    .bot-panel{ width:100%; }
   }
   .bot-panel.open{ display:flex; }
   .bot-panel h3{ font-size:14px; margin-bottom:10px; }
@@ -291,7 +409,16 @@
   .field input{ width:100%; padding:11px 13px; border-radius:8px; border:1px solid #C9BFA4; background:#fff; font-size:15px; }
   .demo-banner{ background:#E4EEDD; color:var(--olive); border-radius:8px; padding:10px 12px; font-size:12.5px; margin-bottom:16px; font-family:var(--font-mono); }
   .inline-error{ color:var(--red); font-size:13px; margin-top:6px; }
-  .small-link{ background:none; border:none; font-size:12.5px; color:var(--ink-soft); text-decoration:underline; padding:0; margin-top:12px; }
+  .small-link{ background:none; border:none; font-size:12.5px; color:var(--ink-soft); text-decoration:underline; padding:8px 0; margin-top:4px; min-height:36px; display:inline-flex; align-items:center; }
+  .sell-step-track{ display:flex; align-items:center; gap:8px; margin-bottom:20px; }
+  .sell-step-dot{ display:flex; align-items:center; gap:8px; font-family:var(--font-mono); font-size:12px; color:var(--ink-soft); white-space:nowrap; }
+  .sell-step-dot .circ{ width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; border:1.5px solid var(--ink-soft); flex-shrink:0; }
+  .sell-step-dot.active{ color:var(--ink); font-weight:600; }
+  .sell-step-dot.active .circ{ background:var(--ochre); border-color:var(--ochre); color:var(--cream); }
+  .sell-step-dot.done .circ{ background:var(--olive); border-color:var(--olive); color:var(--cream); }
+  .sell-step-line{ flex:1; height:1px; background:#D9CCA9; }
+  .sell-step-panel{ display:none; }
+  .sell-step-panel.active{ display:block; }
 </style>
 </head>
 <body>
@@ -307,14 +434,59 @@
     </svg>
     Am<em>a</em>na
   </div>
-  <div style="display:flex; align-items:center; gap:16px;">
-    <a href="status.html" style="font-size:13.5px; color:#C9CEE0; text-decoration:none;">Track your order</a>
-    <a href="#order" style="font-size:13.5px; color:#C9CEE0; text-decoration:none;" onclick="switchTab('sell'); openViewMyListings();">My store</a>
-    <a class="btn btn-ochre" id="headerWhatsapp" href="#" target="_blank" rel="noopener">Message on WhatsApp</a>
+  <div class="header-links">
+    <a href="status.html" class="header-link">Track your order</a>
+    <a href="#order" class="header-link" onclick="switchTab('sell'); openViewMyListings();">My store</a>
+    <span class="header-divider" aria-hidden="true"></span>
+    <a class="btn btn-ochre" id="headerWhatsapp" href="#" target="_blank" rel="noopener">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.01 2C6.48 2 2 6.48 2 12c0 1.85.5 3.58 1.36 5.07L2 22l5.06-1.33A9.94 9.94 0 0012 22c5.52 0 10-4.48 10-10S17.53 2 12.01 2zm0 18.15c-1.63 0-3.14-.44-4.44-1.2l-.32-.19-3.3.87.88-3.22-.21-.33A8.14 8.14 0 013.85 12c0-4.5 3.66-8.15 8.16-8.15S20.16 7.5 20.16 12s-3.65 8.15-8.15 8.15zm4.47-6.1c-.24-.12-1.44-.71-1.66-.79-.22-.08-.38-.12-.55.12-.16.24-.63.79-.77.95-.14.16-.28.18-.53.06-.24-.12-1.02-.38-1.94-1.2-.72-.64-1.2-1.43-1.34-1.67-.14-.24-.02-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.33-.76-1.82-.2-.48-.4-.42-.55-.42h-.47c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.18 1.11.16 1.53.1.47-.07 1.44-.59 1.64-1.16.2-.57.2-1.06.14-1.16-.06-.1-.22-.16-.46-.28z"/></svg>
+      Message on WhatsApp
+    </a>
   </div>
 </header>
 
 <main>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <h1>Buy and sell,<br>with Amana in between.</h1>
+    <p class="sub">A marketplace where people in Katsina buy and sell directly — Amana holds your payment until you confirm the item arrived as described.</p>
+    <div class="hero-ctas">
+      <button class="btn btn-ochre" onclick="scrollToId('order'); switchTab('market')">Browse the marketplace</button>
+      <button class="btn btn-outline" onclick="scrollToId('order'); switchTab('sell')">Sell an item</button>
+    </div>
+
+    <div class="tracker-wrap" aria-hidden="true">
+      <div class="tracker-line"></div>
+      <div class="tracker">
+        <div class="stamp done"><div class="stamp-circle">1</div><div class="stamp-label">Ordered</div></div>
+        <div class="stamp done"><div class="stamp-circle">2</div><div class="stamp-label">Paid</div></div>
+        <div class="stamp pending"><div class="stamp-circle">3</div><div class="stamp-label">Handed over</div></div>
+        <div class="stamp pending"><div class="stamp-circle">4</div><div class="stamp-label">Confirmed</div></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="motif-divider" aria-hidden="true"></div>
+
+  <!-- ============ HOW IT WORKS ============ -->
+  <section class="section">
+    <div class="wrap">
+      <p class="eyebrow">How it works</p>
+      <h2 class="section-title">Four steps, start to finish</h2>
+      <p class="section-sub">The same shape every time.</p>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><h3>Browse the marketplace</h3><p>Find what other people in Katsina are selling, reviewed by Amana before it's listed.</p></div>
+        <div class="step"><div class="step-num">2</div><h3>See the price</h3><p>The price is exactly what the seller listed — nothing added at checkout.</p></div>
+        <div class="step"><div class="step-num">3</div><h3>Pay to confirm</h3><p>Full payment upfront secures your order. First time? Start with something small.</p></div>
+        <div class="step"><div class="step-num">4</div><h3>Confirm you got it</h3><p>Payment stays in escrow until you confirm the item matches what you ordered.</p></div>
+      </div>
+      <!-- For anyone who scrolled this far without tapping a hero button —
+           still a one-tap shortcut straight to the marketplace instead of
+           more scrolling. -->
+      <button type="button" class="skip-ahead" onclick="scrollToId('order'); switchTab('market')">Skip ahead to the marketplace →</button>
+    </div>
+  </section>
 
   <!-- ============ ORDER ============ -->
   <section class="section section--dim" id="order">
@@ -354,73 +526,88 @@
           <button type="button" class="small-link" style="margin-bottom:12px; display:inline-block;" onclick="closeSellerProfile()">← Back</button>
           <div id="sellerProfileContent"></div>
         </div>
-        <div class="search-row" style="flex-wrap:wrap; gap:10px;">
-          <input type="text" id="marketSearchInput" placeholder="Search marketplace…" oninput="handleMarketFilterChange()" aria-label="Search marketplace" style="flex:2; min-width:160px;">
-          <select id="marketCategoryFilter" onchange="handleMarketFilterChange()" aria-label="Filter by category">
-            <option value="">All categories</option>
-          </select>
-          <input type="number" id="marketMinPrice" placeholder="Min ₦" min="0" oninput="handleMarketFilterChange()" aria-label="Minimum price" style="width:100px;">
-          <input type="number" id="marketMaxPrice" placeholder="Max ₦" min="0" oninput="handleMarketFilterChange()" aria-label="Maximum price" style="width:100px;">
+        <div class="market-filters">
+          <input type="text" id="marketSearchInput" placeholder="Search marketplace…" oninput="handleMarketFilterChange()" aria-label="Search marketplace">
+          <input type="number" id="marketMinPrice" placeholder="Min ₦" min="0" oninput="handleMarketFilterChange()" aria-label="Minimum price">
+          <input type="number" id="marketMaxPrice" placeholder="Max ₦" min="0" oninput="handleMarketFilterChange()" aria-label="Maximum price">
         </div>
-        <div class="market-grid" id="marketGrid"><p class="market-empty">Loading marketplace…</p></div>
+        <div class="category-pills" id="marketCategoryPills" role="group" aria-label="Filter by category"></div>
+        <div class="market-grid" id="marketGrid"></div>
       </div>
 
       <div class="tab-panel" id="panelSell">
         <div class="sell-panel">
           <p class="section-sub" style="margin-bottom:20px; max-width:none;">Post something you'd like to sell. Amana reviews every listing before it goes live — usually within a day.</p>
           <button type="button" class="small-link" style="margin:-10px 0 20px; display:inline-block;" onclick="openViewMyListings()">Already sell here? View your listings</button>
-          <div class="field"><label for="sellEmail">Your email address</label><input type="email" id="sellEmail" placeholder="you@example.com"></div>
-          <div class="field"><label for="sellItemName">Item name</label><input type="text" id="sellItemName" placeholder="e.g. Samsung A14, or any item you're selling"></div>
-          <div class="field"><label for="sellDescription">Description</label><textarea id="sellDescription" placeholder="Condition details, what's included, why you're selling…"></textarea></div>
-          <div class="field"><label for="sellCategory">Category</label>
-            <select id="sellCategory">
-              <option value="" disabled selected>Select a category</option>
-            </select>
+
+          <div class="sell-step-track">
+            <div class="sell-step-dot active" id="sellStepDot1"><span class="circ">1</span>What you're selling</div>
+            <div class="sell-step-line"></div>
+            <div class="sell-step-dot" id="sellStepDot2"><span class="circ">2</span>Price &amp; delivery</div>
           </div>
-          <div class="field"><label for="sellCondition">Condition</label>
-            <select id="sellCondition">
-              <option value="new">New</option>
-              <option value="like_new">Like new</option>
-              <option value="good" selected>Good</option>
-              <option value="fair">Fair</option>
-            </select>
+
+          <div class="sell-step-panel active" id="sellStepPanel1">
+            <div class="field"><label for="sellEmail">Your email address</label><input type="email" id="sellEmail" placeholder="you@example.com"></div>
+            <div class="field"><label for="sellItemName">Item name</label><input type="text" id="sellItemName" placeholder="e.g. Samsung A14, or any item you're selling"></div>
+            <div class="field"><label for="sellDescription">Description</label><textarea id="sellDescription" placeholder="Condition details, what's included, why you're selling…"></textarea></div>
+            <div class="field"><label for="sellCategory">Category</label>
+              <select id="sellCategory" onchange="handleSellCategoryChange()">
+                <option value="" disabled selected>Select a category</option>
+              </select>
+            </div>
+            <div class="field"><label for="sellCondition">Condition</label>
+              <select id="sellCondition">
+                <option value="new">New</option>
+                <option value="like_new">Like new</option>
+                <option value="good" selected>Good</option>
+                <option value="fair">Fair</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Photos</label>
+              <div id="photoThumbs" class="photo-thumbs"></div>
+              <input type="file" id="photoFileInput" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple style="display:none;" onchange="handlePhotoFilesSelected(this.files)">
+              <button type="button" class="add-photo-link" onclick="document.getElementById('photoFileInput').click()">+ Add photos</button>
+              <p style="font-size:12px; color:var(--ink-soft); margin-top:6px;">Take or choose photos of the actual item — up to 8MB each. The first photo is what buyers see on the marketplace grid.</p>
+            </div>
+            <div id="sellStep1Error"></div>
+            <button type="button" class="btn btn-ochre" style="width:100%; justify-content:center; margin-top:6px;" onclick="goToSellStep(2)">Continue →</button>
           </div>
-          <div class="field"><label for="sellPrice">Your price (NGN)</label><input type="number" id="sellPrice" placeholder="e.g. 180000" min="1"></div>
-          <p style="font-size:12px; color:var(--ink-soft); margin:-10px 0 16px;">Buyers pay this price exactly — Amana deducts a 5% fee from your payout once the sale is confirmed.</p>
-          <div class="field">
-            <label style="display:flex; align-items:center; gap:8px; font-weight:normal;">
-              <input type="checkbox" id="sellAlwaysInStock" style="width:auto;" onchange="handleAlwaysInStockToggle()">
-              I always have more — don't need to track quantity
-            </label>
+
+          <div class="sell-step-panel" id="sellStepPanel2">
+            <div class="field"><label for="sellPrice">Your price (NGN)</label><input type="number" id="sellPrice" placeholder="e.g. 180000" min="1000"></div>
+            <p style="font-size:12px; color:var(--ink-soft); margin:-10px 0 16px;">Buyers pay this price exactly — Amana deducts a 5% fee from your payout once the sale is confirmed. Minimum ₦1,000, since delivery alone costs at least that much.</p>
+            <div class="field">
+              <label style="display:flex; align-items:center; gap:8px; font-weight:normal;">
+                <input type="checkbox" id="sellAlwaysInStock" style="width:auto;" onchange="handleAlwaysInStockToggle()">
+                I always have more — don't need to track quantity
+              </label>
+            </div>
+            <div class="field" id="sellStockQtyField">
+              <label for="sellStockQty">How many do you have?</label>
+              <input type="number" id="sellStockQty" placeholder="e.g. 1" min="1" step="1" value="1">
+            </div>
+            <div class="field"><label for="sellDeliveryArea">Delivery area</label>
+              <select id="sellDeliveryArea" onchange="handleDeliveryAreaChange()">
+                <option value="katsina_only" selected>Katsina only</option>
+                <option value="nationwide">Nationwide</option>
+              </select>
+            </div>
+            <div class="field" id="sellDeliveryZoneField">
+              <label for="sellDeliveryZone">Katsina delivery zone</label>
+              <select id="sellDeliveryZone">
+                <option value="katsina_metro" selected>Katsina metro (same city) — ₦1,000 rider fee, same day</option>
+                <option value="katsina_other_lga">Other Katsina LGA (Daura, Funtua, Malumfashi, etc.) — ₦2,500 rider fee, 1–2 days</option>
+              </select>
+              <p style="font-size:12px; color:var(--ink-soft); margin-top:6px;">This fee is added to what the buyer pays and goes to the rider who delivers it — it's separate from your payout.</p>
+            </div>
+            <div id="sellFormError"></div>
+            <p style="font-size:11.5px; color:var(--ink-soft); margin:10px 0 8px;">Listing this item is covered by the <a href="terms.html" target="_blank" rel="noopener" style="color:var(--ochre-dark);">Terms &amp; Conditions</a> you agreed to as a seller, including the 5% fee on completed sales.</p>
+            <div style="display:flex; gap:10px;">
+              <button type="button" class="btn btn-ghost" onclick="goToSellStep(1)">← Back</button>
+              <button class="btn btn-ochre" style="flex:1; justify-content:center;" onclick="handleSellSubmit()">Submit for review</button>
+            </div>
           </div>
-          <div class="field" id="sellStockQtyField">
-            <label for="sellStockQty">How many do you have?</label>
-            <input type="number" id="sellStockQty" placeholder="e.g. 1" min="1" step="1" value="1">
-          </div>
-          <div class="field"><label for="sellDeliveryArea">Delivery area</label>
-            <select id="sellDeliveryArea" onchange="handleDeliveryAreaChange()">
-              <option value="katsina_only" selected>Katsina only</option>
-              <option value="nationwide">Nationwide</option>
-            </select>
-          </div>
-          <div class="field" id="sellDeliveryZoneField">
-            <label for="sellDeliveryZone">Katsina delivery zone</label>
-            <select id="sellDeliveryZone">
-              <option value="katsina_metro" selected>Katsina metro (same city) — ₦1,000 rider fee, same day</option>
-              <option value="katsina_other_lga">Other Katsina LGA (Daura, Funtua, Malumfashi, etc.) — ₦2,500 rider fee, 1–2 days</option>
-            </select>
-            <p style="font-size:12px; color:var(--ink-soft); margin-top:6px;">This fee is added to what the buyer pays and goes to the rider who delivers it — it's separate from your payout.</p>
-          </div>
-          <div class="field">
-            <label>Photos</label>
-            <div id="photoThumbs" class="photo-thumbs"></div>
-            <input type="file" id="photoFileInput" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple style="display:none;" onchange="handlePhotoFilesSelected(this.files)">
-            <button type="button" class="add-photo-link" onclick="document.getElementById('photoFileInput').click()">+ Add photos</button>
-            <p style="font-size:12px; color:var(--ink-soft); margin-top:6px;">Take or choose photos of the actual item — up to 8MB each.</p>
-          </div>
-          <div id="sellFormError"></div>
-          <p style="font-size:11.5px; color:var(--ink-soft); margin:10px 0 8px;">Listing this item is covered by the <a href="terms.html" target="_blank" rel="noopener" style="color:var(--ochre-dark);">Terms &amp; Conditions</a> you agreed to as a seller, including the 5% fee on completed sales.</p>
-          <button class="btn btn-ochre" style="width:100%; justify-content:center; margin-top:6px;" onclick="handleSellSubmit()">Submit for review</button>
         </div>
 
         <div class="my-listings" id="sellerApplicationSection" style="display:none;">
@@ -438,6 +625,21 @@
           </div>
           <div id="storeNameError"></div>
           <div id="storeNameSaved" style="display:none; font-size:13px; color:var(--olive); margin-top:8px;">Saved. <a href="#" onclick="event.preventDefault(); viewSellerProfile(sellSession.email);" style="color:inherit; text-decoration:underline;">View your public page →</a></div>
+
+          <div style="margin-top:18px; padding-top:16px; border-top:1px solid var(--line);">
+            <h3 style="font-size:16px; margin-bottom:4px;">Your shop logo</h3>
+            <p class="section-sub" style="margin:0 0 12px; max-width:none; font-size:13px;">Shown on your public seller page and next to your listings. Square images look best.</p>
+            <div style="display:flex; align-items:center; gap:14px;">
+              <img id="storeLogoPreview" src="" alt="" style="width:64px; height:64px; border-radius:10px; object-fit:cover; background:var(--paper-dim); display:none; border:1px solid var(--line);">
+              <div id="storeLogoPlaceholder" style="width:64px; height:64px; border-radius:10px; background:var(--paper-dim); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--ink-soft); text-align:center;">No logo</div>
+              <div style="display:flex; flex-direction:column; gap:6px;">
+                <input type="file" id="storeLogoFileInput" accept="image/jpeg,image/png,image/webp,image/heic" style="display:none;" onchange="handleStoreLogoSelected(this.files)">
+                <button type="button" class="btn btn-ghost" style="font-size:13px;" onclick="document.getElementById('storeLogoFileInput').click()">Upload logo</button>
+                <button type="button" class="small-link" id="storeLogoRemoveBtn" style="display:none; text-align:left;" onclick="handleRemoveStoreLogo()">Remove logo</button>
+              </div>
+            </div>
+            <div id="storeLogoError"></div>
+          </div>
         </div>
 
         <div class="my-listings" id="myListingsSection" style="display:none;">
@@ -455,44 +657,10 @@
     </div>
   </section>
 
-  <!-- ============ HERO ============ -->
-  <section class="hero">
-    <h1>Buy and sell,<br>with Amana in between.</h1>
-    <p class="sub">A marketplace where people in Katsina buy and sell directly — Amana holds your payment until you confirm the item arrived as described.</p>
-    <div class="hero-ctas">
-      <button class="btn btn-ochre" onclick="scrollToId('order'); switchTab('market')">Browse the marketplace</button>
-      <button class="btn btn-outline" onclick="scrollToId('order'); switchTab('sell')">Sell an item</button>
-    </div>
-
-    <div class="tracker-wrap" aria-hidden="true">
-      <div class="tracker-line"></div>
-      <div class="tracker">
-        <div class="stamp done"><div class="stamp-circle">1</div><div class="stamp-label">Ordered</div></div>
-        <div class="stamp done"><div class="stamp-circle">2</div><div class="stamp-label">Paid</div></div>
-        <div class="stamp pending"><div class="stamp-circle">3</div><div class="stamp-label">Handed over</div></div>
-        <div class="stamp pending"><div class="stamp-circle">4</div><div class="stamp-label">Confirmed</div></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ HOW IT WORKS ============ -->
-  <section class="section">
-    <div class="wrap">
-      <p class="eyebrow">How it works</p>
-      <h2 class="section-title">Four steps, start to finish</h2>
-      <p class="section-sub">The same shape every time.</p>
-      <div class="steps">
-        <div class="step"><div class="step-num">1</div><h3>Browse the marketplace</h3><p>Find what other people in Katsina are selling, reviewed by Amana before it's listed.</p></div>
-        <div class="step"><div class="step-num">2</div><h3>See the price</h3><p>The price is exactly what the seller listed — nothing added at checkout.</p></div>
-        <div class="step"><div class="step-num">3</div><h3>Pay to confirm</h3><p>Full payment upfront secures your order. First time? Start with something small.</p></div>
-        <div class="step"><div class="step-num">4</div><h3>Confirm you got it</h3><p>Payment stays in escrow until you confirm the item matches what you ordered.</p></div>
-      </div>
-    </div>
-  </section>
-
 
   <!-- ============ TRUST ============ -->
   <section class="section section--dark">
+    <div class="motif-divider motif-divider--light" aria-hidden="true"></div>
     <div class="wrap">
       <p class="eyebrow">Why people trust Amana</p>
       <h2 class="section-title">A person you can call, not just a website</h2>
@@ -507,6 +675,7 @@
         <div class="testimonial"><p>"[Add a real quote once you have one]"</p><span>— [Customer name], Katsina</span></div>
       </div>
     </div>
+    <div class="motif-divider motif-divider--light" aria-hidden="true"></div>
   </section>
 
   <!-- ============ FAQ ============ -->
@@ -572,6 +741,11 @@ var FEE_PERCENT = Amana.FEE_PERCENT;
 // the demo-only storage simulation instead of real WhatsApp OTP.
 var API_BASE = 'https://amana-backend-ln2p.onrender.com';
 
+/* Shown in the photo slot for any listing with no image, and swapped in
+   if a photo URL 404s — keeps every card the same height instead of
+   photo-less cards looking shorter/different than the rest of the grid. */
+var PHOTO_PLACEHOLDER_SVG = '<div class="photo-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg></div>';
+
 /* ================= catalog — empty for now, add real stock here when ready ================= */
 var CATEGORIES = Amana.CATEGORIES;
 
@@ -625,17 +799,51 @@ function populateSellCategoryOptions(){
     select.appendChild(opt);
   });
 }
-function populateMarketCategoryFilter(){
-  var select = document.getElementById('marketCategoryFilter');
-  CATEGORIES.forEach(function(cat){
-    var opt = document.createElement('option');
-    opt.value = cat.value;
-    opt.textContent = cat.label;
-    select.appendChild(opt);
-  });
+// The active category filter lives here now instead of on a <select> —
+// pills need somewhere to keep "which one is selected" since there's no
+// native form control doing it for us. '' means "All categories".
+var selectedMarketCategory = '';
+
+function renderMarketCategoryPills(){
+  var wrap = document.getElementById('marketCategoryPills');
+  var all = [{ value:'', label:'All categories' }].concat(CATEGORIES);
+  wrap.innerHTML = all.map(function(cat){
+    var active = cat.value === selectedMarketCategory;
+    return '<button type="button" class="category-pill' + (active ? ' active' : '') + '" data-category="' + cat.value + '" aria-pressed="' + active + '">' + cat.label + '</button>';
+  }).join('');
 }
 
+function handleCategoryPillClick(value){
+  selectedMarketCategory = value;
+  renderMarketCategoryPills();
+  handleMarketFilterChange();
+}
+
+// Event delegation on the wrapper — pills are re-rendered (innerHTML
+// replaced) on every selection change, so binding to the wrapper once
+// here survives that instead of needing rebinding after each render.
+// Attached directly (not via DOMContentLoaded) since this script tag
+// sits at the end of <body>, after that event has already fired.
+(function(){
+  var wrap = document.getElementById('marketCategoryPills');
+  if(wrap){
+    wrap.addEventListener('click', function(e){
+      var btn = e.target.closest('.category-pill');
+      if(btn) handleCategoryPillClick(btn.dataset.category);
+    });
+  }
+})();
+
 var marketFilterDebounce = null;
+
+// Renders N skeleton placeholder cards while a fetch is in flight, so the
+// grid keeps its shape instead of collapsing to a line of loading text —
+// same layout as a real card (photo block + two text lines) so nothing
+// jumps when results arrive.
+function skeletonCardsHtml(count){
+  var card = '<div class="skeleton-card"><div class="skeleton-photo"></div><div class="skeleton-line w60"></div><div class="skeleton-line w40"></div></div>';
+  return new Array(count).fill(card).join('');
+}
 
 async function loadMarketplace(){
   var grid = document.getElementById('marketGrid');
@@ -643,7 +851,7 @@ async function loadMarketplace(){
     grid.innerHTML = '<p class="market-empty">Marketplace needs the real backend connected — nothing to show in this demo preview.</p>';
     return;
   }
-  var category = document.getElementById('marketCategoryFilter').value;
+  var category = selectedMarketCategory;
   var minPrice = document.getElementById('marketMinPrice').value;
   var maxPrice = document.getElementById('marketMaxPrice').value;
   var q = document.getElementById('marketSearchInput').value.trim();
@@ -653,7 +861,7 @@ async function loadMarketplace(){
     return;
   }
 
-  grid.innerHTML = '<p class="market-empty">Loading marketplace…</p>';
+  grid.innerHTML = skeletonCardsHtml(6);
   try{
     var params = [];
     if(category) params.push('category=' + encodeURIComponent(category));
@@ -678,19 +886,37 @@ function handleMarketFilterChange(){
 function renderMarketplace(listings){
   var grid = document.getElementById('marketGrid');
   if(!listings || !listings.length){
-    grid.innerHTML = '<p class="market-empty">Nothing listed yet — check back soon, or be the first to sell something.</p>';
+    var q = document.getElementById('marketSearchInput').value.trim();
+    var minPrice = document.getElementById('marketMinPrice').value;
+    var maxPrice = document.getElementById('marketMaxPrice').value;
+    var anyFilterActive = selectedMarketCategory || q || minPrice || maxPrice;
+    var message;
+    if(selectedMarketCategory){
+      var catLabel = categoryLabel(selectedMarketCategory);
+      message = 'No ' + catLabel + ' listed yet — check back soon, or try a different category.';
+    } else if(anyFilterActive){
+      message = 'Nothing matches those filters — try widening your search or price range.';
+    } else {
+      message = 'Nothing listed yet — check back soon, or be the first to sell something.';
+    }
+    grid.innerHTML = '<p class="market-empty">' + message + '</p>';
     return;
   }
   grid.innerHTML = listings.map(function(l){
     var photo = (l.photo_urls && l.photo_urls[0]) || '';
     var saved = isSavedLocally(l.id);
     return '<div class="market-card">' +
-      (photo ? '<img src="' + photo + '" alt="" onerror="this.style.display=\'none\'">' : '') +
+      '<div class="photo-wrap">' +
+        (photo
+          ? '<img src="' + photo + '" alt="" loading="lazy" onerror="this.parentElement.innerHTML=\'' + PHOTO_PLACEHOLDER_SVG.replace(/'/g, "\\'") + '\'">'
+          : PHOTO_PLACEHOLDER_SVG) +
+      '</div>' +
       '<button type="button" class="save-heart' + (saved ? ' saved' : '') + '" data-listing-id="' + l.id + '" onclick="toggleWishlist(\'' + l.id + '\', this)" aria-label="' + (saved ? 'Remove from saved items' : 'Save this item') + '">' + (saved ? '♥' : '♡') + '</button>' +
       '<div class="body">' +
         '<span class="cond">' + categoryLabel(l.category) + ' · ' + conditionLabel(l.condition) + '</span>' +
         '<h3>' + escapeHtml(l.item_name) + '</h3>' +
         '<p class="desc">' + escapeHtml(l.description) + '</p>' +
+        Amana.sellerChipHtml(l.seller) +
         (!l.always_in_stock && l.stock_qty > 0 && l.stock_qty <= 3 ? '<div class="stock-hint">Only ' + l.stock_qty + ' left</div>' : '') +
         '<div class="price">' + formatNGN(l.price_ngn) + '</div>' +
         '<button class="btn btn-ink" style="margin-top:6px;" onclick="openMarketOrder(\'' + l.id + '\')">Buy this</button>' +
@@ -1314,6 +1540,24 @@ function handleOrdersSkipPassword(){
   loadMyOrders();
 }
 
+// A compact 4-dot preview of the ordered→shipped→arrived pipeline for the
+// "Your orders" summary list — not meant to replace the full tracker on
+// status.html, just enough for a buyer to see at a glance whether
+// something's moving without clicking through. Mirrors STAGES/stampsHTML
+// in status.html but deliberately smaller/simpler since this sits inside
+// a dense list row, not its own page.
+var MINI_PROGRESS_STAGES = ['pending', 'ordered', 'shipped', 'arrived'];
+function miniProgressHtml(status){
+  if(status === 'cancelled'){
+    return '<div class="mini-progress mini-progress--cancelled" aria-hidden="true"><span></span><span></span><span></span><span></span></div>';
+  }
+  var currentIdx = MINI_PROGRESS_STAGES.indexOf(status);
+  var dots = MINI_PROGRESS_STAGES.map(function(_, i){
+    return '<span class="' + (i <= currentIdx ? 'done' : '') + '"></span>';
+  }).join('');
+  return '<div class="mini-progress" aria-hidden="true">' + dots + '</div>';
+}
+
 async function loadMyOrders(){
   var listEl = document.getElementById('myOrdersList');
   var heading = document.getElementById('myOrdersHeading');
@@ -1331,9 +1575,12 @@ async function loadMyOrders(){
       return;
     }
     listEl.innerHTML = data.orders.map(function(o){
-      return '<div class="my-listing-card" style="cursor:pointer;" onclick="location.href=\'status.html\'">' +
+      var statusUrl = 'status.html?email=' + encodeURIComponent(buyerSession.email) + '&order=' + encodeURIComponent(o.id);
+      return '<div class="my-listing-card" style="cursor:pointer;" onclick="location.href=\'' + statusUrl + '\'">' +
         '<div><div class="name">' + escapeHtml(o.item_name || ('Order ' + o.id)) + '</div>' +
-        '<div class="price">' + fmtDate(o.created_at) + (o.total_ngn ? ' · ' + formatNGN(o.total_ngn) : '') + '</div></div>' +
+        '<div class="price">' + fmtDate(o.created_at) + (o.total_ngn ? ' · ' + formatNGN(o.total_ngn) : '') + '</div>' +
+        miniProgressHtml(o.status) +
+        '</div>' +
         '<span class="review-pill">' + String(o.status || '').replace(/_/g,' ') + '</span>' +
         '</div>';
     }).join('');
@@ -1476,8 +1723,85 @@ async function loadCurrentStoreName(email){
     if(res.ok && data.seller.hasCustomDisplayName){
       input.value = data.seller.displayName;
     }
+    if(res.ok){
+      renderStoreLogoPreview(data.seller.logoUrl);
+    }
   }catch(err){
     // Non-critical — leave the field blank rather than blocking the sell flow over this.
+  }
+}
+
+// Shows the current logo (or the "No logo" placeholder) in the store
+// settings card. Called after fetching the seller profile and again
+// right after a successful upload/removal, so the preview never needs a
+// page reload to reflect a change.
+function renderStoreLogoPreview(logoUrl){
+  var img = document.getElementById('storeLogoPreview');
+  var placeholder = document.getElementById('storeLogoPlaceholder');
+  var removeBtn = document.getElementById('storeLogoRemoveBtn');
+  if(logoUrl){
+    img.src = logoUrl;
+    img.style.display = 'block';
+    placeholder.style.display = 'none';
+    removeBtn.style.display = 'inline-block';
+  }else{
+    img.style.display = 'none';
+    img.src = '';
+    placeholder.style.display = 'flex';
+    removeBtn.style.display = 'none';
+  }
+}
+
+async function handleStoreLogoSelected(fileList){
+  var errEl = document.getElementById('storeLogoError');
+  errEl.innerHTML = '';
+  var fileInput = document.getElementById('storeLogoFileInput');
+  var file = fileList && fileList[0];
+  if(!file){ return; }
+
+  if(!sellSession.email || !sellSession.sessionToken){
+    errEl.innerHTML = '<p class="inline-error">Please verify your email first.</p>';
+    fileInput.value = '';
+    return;
+  }
+
+  var formData = new FormData();
+  formData.append('logo', file);
+
+  try{
+    var res = await fetch(API_BASE + '/sellers/' + sellSession.email + '/logo', {
+      method:'POST',
+      headers:{ 'Authorization':'Bearer ' + sellSession.sessionToken },
+      body: formData
+    });
+    if(res.status === 401 || res.status === 403){
+      Amana.clearSessionToken(sellSession.email);
+      sellSession.sessionToken = null;
+      throw new Error('Your session expired — verify again to upload a logo.');
+    }
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not upload your logo.'); }
+    renderStoreLogoPreview(data.logoUrl);
+  }catch(err){
+    errEl.innerHTML = '<p class="inline-error">' + err.message + '</p>';
+  }finally{
+    fileInput.value = ''; // allow re-picking the same file later
+  }
+}
+
+async function handleRemoveStoreLogo(){
+  var errEl = document.getElementById('storeLogoError');
+  errEl.innerHTML = '';
+  try{
+    var res = await fetch(API_BASE + '/sellers/' + sellSession.email + '/logo', {
+      method:'DELETE',
+      headers:{ 'Authorization':'Bearer ' + sellSession.sessionToken }
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not remove your logo.'); }
+    renderStoreLogoPreview(null);
+  }catch(err){
+    errEl.innerHTML = '<p class="inline-error">' + err.message + '</p>';
   }
 }
 
@@ -1722,9 +2046,13 @@ async function runSellerSearch(q){
       return;
     }
     resultsEl.innerHTML = data.sellers.map(function(s){
-      return '<div class="my-listing-card" style="cursor:pointer;" onclick="viewSellerProfile(\'' + s.email + '\')">' +
+      var avatar = s.logoUrl
+        ? '<img src="' + s.logoUrl + '" alt="" style="width:36px; height:36px; border-radius:8px; object-fit:cover; margin-right:10px;">'
+        : '<div style="width:36px; height:36px; border-radius:8px; background:var(--paper-dim); border:1px solid var(--line); margin-right:10px; flex-shrink:0;"></div>';
+      return '<div class="my-listing-card" style="cursor:pointer; display:flex; align-items:center;" onclick="viewSellerProfile(\'' + s.email + '\')">' +
+        avatar +
         '<div><div class="name">' + escapeHtml(s.displayName) + '</div></div>' +
-        '<span class="small-link">View store →</span>' +
+        '<span class="small-link" style="margin-left:auto;">View store →</span>' +
         '</div>';
     }).join('');
   }catch(err){
@@ -1748,7 +2076,11 @@ async function viewSellerProfile(email){
           var photo = (l.photo_urls && l.photo_urls[0]) || '';
           var saved = isSavedLocally(l.id);
           return '<div class="market-card">' +
-            (photo ? '<img src="' + photo + '" alt="" onerror="this.style.display=\'none\'">' : '') +
+            '<div class="photo-wrap">' +
+              (photo
+                ? '<img src="' + photo + '" alt="" loading="lazy" onerror="this.parentElement.innerHTML=\'' + PHOTO_PLACEHOLDER_SVG.replace(/'/g, "\\'") + '\'">'
+                : PHOTO_PLACEHOLDER_SVG) +
+            '</div>' +
             '<button type="button" class="save-heart' + (saved ? ' saved' : '') + '" data-listing-id="' + l.id + '" onclick="toggleWishlist(\'' + l.id + '\', this)" aria-label="' + (saved ? 'Remove from saved items' : 'Save this item') + '">' + (saved ? '♥' : '♡') + '</button>' +
             '<div class="body">' +
               '<span class="cond">' + categoryLabel(l.category) + ' · ' + conditionLabel(l.condition) + '</span>' +
@@ -1761,10 +2093,17 @@ async function viewSellerProfile(email){
         }).join('')
       : '<p class="market-empty">Nothing currently listed.</p>';
 
+    var avatarHtml = s.logoUrl
+      ? '<img src="' + s.logoUrl + '" alt="" style="width:56px; height:56px; border-radius:12px; object-fit:cover; border:1px solid var(--line);">'
+      : '<div style="width:56px; height:56px; border-radius:12px; background:var(--paper-dim); border:1px solid var(--line);"></div>';
+
     contentEl.innerHTML =
-      '<h3 style="font-size:18px; margin-bottom:4px;">' + escapeHtml(s.displayName) + '</h3>' +
-      '<p class="section-sub" style="margin:0 0 20px; max-width:none; font-size:13px;">' + s.itemsSold + ' item' + (s.itemsSold === 1 ? '' : 's') + ' sold on Amana' + (s.memberSince ? ' · Member since ' + fmtDate(s.memberSince) : '') + '</p>' +
-      '<div class="market-grid">' + itemsHtml + '</div>';
+      '<div style="display:flex; align-items:center; gap:14px; margin-bottom:4px;">' +
+        avatarHtml +
+        '<div><h3 style="font-size:18px; margin:0;">' + escapeHtml(s.displayName) + '</h3>' +
+        '<p class="section-sub" style="margin:2px 0 0; max-width:none; font-size:13px;">' + s.itemsSold + ' item' + (s.itemsSold === 1 ? '' : 's') + ' sold on Amana' + (s.memberSince ? ' · Member since ' + fmtDate(s.memberSince) : '') + '</p></div>' +
+      '</div>' +
+      '<div class="market-grid" style="margin-top:16px;">' + itemsHtml + '</div>';
   }catch(err){
     contentEl.innerHTML = '<p class="inline-error">' + err.message + '</p>';
   }
@@ -1814,7 +2153,7 @@ function removePendingPhoto(localId){
 // adding/removing photos and picking more before hitting submit; only
 // successfully-uploaded photos (status 'done') are sent with the listing.
 async function handlePhotoFilesSelected(fileList){
-  var errEl = document.getElementById('sellFormError');
+  var errEl = document.getElementById('sellStep1Error');
   errEl.innerHTML = '';
 
   var email = document.getElementById('sellEmail').value.trim();
@@ -1852,7 +2191,7 @@ async function handlePhotoFilesSelected(fileList){
 }
 
 async function uploadPhotoFiles(fileList, token){
-  var errEl = document.getElementById('sellFormError');
+  var errEl = document.getElementById('sellStep1Error');
   var files = Array.prototype.slice.call(fileList);
 
   files.forEach(function(file){
@@ -1949,6 +2288,21 @@ async function handlePhotoVerifySubmit(email){
   }
 }
 
+// Food & Snacks sellers are almost always restocking daily (a sweet-seller
+// isn't tracking "3 left"), so picking that category defaults the "always
+// in stock" checkbox on. Only nudges it on switching INTO food, and only
+// if the seller hasn't already checked it — never auto-unchecks on
+// switching away, since forcing a checked box back off would be more
+// surprising than leaving a harmless default in place.
+function handleSellCategoryChange(){
+  var category = document.getElementById('sellCategory').value;
+  var alwaysInStockEl = document.getElementById('sellAlwaysInStock');
+  if(category === 'food' && !alwaysInStockEl.checked){
+    alwaysInStockEl.checked = true;
+    handleAlwaysInStockToggle();
+  }
+}
+
 function handleAlwaysInStockToggle(){
   var checked = document.getElementById('sellAlwaysInStock').checked;
   var qtyField = document.getElementById('sellStockQtyField');
@@ -1958,6 +2312,49 @@ function handleAlwaysInStockToggle(){
 function handleDeliveryAreaChange(){
   var area = document.getElementById('sellDeliveryArea').value;
   document.getElementById('sellDeliveryZoneField').style.display = (area === 'katsina_only') ? '' : 'none';
+}
+
+// Moves between the two sell-form steps. Going forward (1 -> 2) runs a
+// lightweight validation pass first — the same checks handleSellSubmit
+// does for these particular fields — so a seller never reaches "Submit
+// for review" only to be bounced back to step 1 for something missed
+// earlier. Going backward (2 -> 1) never validates; you can always look
+// at what you already entered.
+function goToSellStep(step){
+  var step1ErrEl = document.getElementById('sellStep1Error');
+  if(step === 2){
+    var email = document.getElementById('sellEmail').value.trim();
+    var itemName = document.getElementById('sellItemName').value.trim();
+    var description = document.getElementById('sellDescription').value.trim();
+    var category = document.getElementById('sellCategory').value;
+    var stillUploading = pendingPhotos.some(function(p){ return p.status === 'uploading'; });
+
+    if(!/\S+@\S+\.\S+/.test(email) || !itemName || !description){
+      step1ErrEl.innerHTML = '<p class="inline-error">Fill in your email, item name, and description.</p>';
+      return;
+    }
+    if(!category){
+      step1ErrEl.innerHTML = '<p class="inline-error">Pick a category for the item.</p>';
+      return;
+    }
+    if(stillUploading){
+      step1ErrEl.innerHTML = '<p class="inline-error">Wait for photos to finish uploading before continuing.</p>';
+      return;
+    }
+    if(!collectPhotoUrls().length){
+      step1ErrEl.innerHTML = '<p class="inline-error">Add at least one photo of the item.</p>';
+      return;
+    }
+  }
+  step1ErrEl.innerHTML = '';
+  document.getElementById('sellStepPanel1').classList.toggle('active', step === 1);
+  document.getElementById('sellStepPanel2').classList.toggle('active', step === 2);
+  document.getElementById('sellStepDot1').classList.toggle('active', step === 1);
+  document.getElementById('sellStepDot1').classList.toggle('done', step === 2);
+  document.getElementById('sellStepDot2').classList.toggle('active', step === 2);
+  if(step === 2){
+    document.getElementById('sellStepPanel2').scrollIntoView({ behavior:'smooth', block:'start' });
+  }
 }
 
 async function handleSellSubmit(){
@@ -1976,8 +2373,12 @@ async function handleSellSubmit(){
   var deliveryArea = document.getElementById('sellDeliveryArea').value;
   var deliveryZone = document.getElementById('sellDeliveryZone').value;
 
-  if(!/\S+@\S+\.\S+/.test(email) || !itemName || !description || !priceNgn || priceNgn <= 0){
-    errEl.innerHTML = '<p class="inline-error">Fill in email, item name, description, and a valid price.</p>';
+  if(!/\S+@\S+\.\S+/.test(email) || !itemName || !description){
+    errEl.innerHTML = '<p class="inline-error">Fill in email, item name, and description.</p>';
+    return;
+  }
+  if(!priceNgn || priceNgn < Amana.MIN_LISTING_PRICE_NGN){
+    errEl.innerHTML = '<p class="inline-error">Price must be at least ' + formatNGN(Amana.MIN_LISTING_PRICE_NGN) + ' — delivery alone costs about that much.</p>';
     return;
   }
   if(!category){
@@ -2720,7 +3121,7 @@ function toggleFAQ(idx){ document.getElementById('faq' + idx).classList.toggle('
 
 /* ================= init ================= */
 renderFAQ();
-populateMarketCategoryFilter();
+renderMarketCategoryPills();
 loadMarketplace();
 window._marketLoaded = true;
 </script>

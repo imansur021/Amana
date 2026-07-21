@@ -79,6 +79,7 @@
     { value: 'beauty',          label: 'Beauty & Personal Care' },
     { value: 'baby_kids',       label: 'Baby & Kids' },
     { value: 'sports_outdoors', label: 'Sports & Outdoors' },
+    { value: 'food',            label: 'Food & Snacks' },
     { value: 'other',           label: 'Other' }
   ];
 
@@ -89,6 +90,7 @@
     beauty: 'Beauty & Personal Care',
     baby_kids: 'Baby & Kids',
     sports_outdoors: 'Sports & Outdoors',
+    food: 'Food & Snacks',
     other: 'Other'
   };
 
@@ -134,6 +136,9 @@
   var USD_TO_NGN = 1374;
   var FEE_PERCENT = 5;
   var RATE_UPDATED = '2026-07-18'; // date USD_TO_NGN was last checked — bump this whenever you update the rate
+  // keep in sync with amana-backend/routes/listings.js MIN_LISTING_PRICE_NGN —
+  // below this, the rider delivery fee alone would cost more than the item.
+  var MIN_LISTING_PRICE_NGN = 1000;
 
   function calcPricing(priceUSD) {
     var price = Number(priceUSD) || 0;
@@ -188,6 +193,48 @@
       default:
         return '';
     }
+  }
+
+  // ---- seller trust chip (marketplace card) ----
+  //
+  // GET /listings (the public marketplace query) joins sellers + a reviews
+  // rollup onto every row, so l.seller is present whenever there's a
+  // display_name to show — see routes/listings.js formatListing. This is
+  // deliberately tiny and defensive: older cached listing objects (or any
+  // internal query that doesn't join sellers) simply won't have `seller`,
+  // and this just renders nothing rather than throwing.
+  //
+  // Own escaping here (not index.html's escapeHtml) because this file has
+  // no DOM access by design — see the file header note above.
+  function escapeForChip(str) {
+    return String(str || '').replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function sellerInitials(name) {
+    var parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return '?';
+    return (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+  }
+
+  function sellerChipHtml(seller) {
+    if (!seller || !seller.display_name) return '';
+    var name = escapeForChip(seller.display_name);
+    var ratingHtml = seller.avg_rating
+      ? '<span class="rating">★' + seller.avg_rating.toFixed(1) + '</span>'
+      : '';
+    var verifiedHtml = seller.verified
+      ? '<span class="verified" title="Verified seller">✓</span>'
+      : '';
+    return (
+      '<div class="seller-chip">' +
+        '<span class="avatar">' + sellerInitials(seller.display_name) + '</span>' +
+        '<span class="name">' + name + '</span>' +
+        ratingHtml +
+        verifiedHtml +
+      '</div>'
+    );
   }
 
   // ---- one-OTP-per-session ----
@@ -287,6 +334,7 @@
     copyAccountNumber: copyAccountNumber,
     FEE_PERCENT: FEE_PERCENT,
     USD_TO_NGN: USD_TO_NGN,
+    MIN_LISTING_PRICE_NGN: MIN_LISTING_PRICE_NGN,
     RATE_UPDATED: RATE_UPDATED,
     calcPricing: calcPricing,
     categoryLabel: categoryLabel,
@@ -298,6 +346,7 @@
     DELIVERY_ZONES: DELIVERY_ZONES,
     payoutLabel: payoutLabel,
     escrowNote: escrowNote,
+    sellerChipHtml: sellerChipHtml,
     formatNGN: formatNGN,
     formatUSD: formatUSD,
     fmtDate: fmtDate,

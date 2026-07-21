@@ -5,31 +5,58 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Amana — Orders</title>
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;600;700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+  /* Same design tokens as index.html/status.html/rider.html — this used
+     to be a totally separate dark/amber theme with no relation to the
+     storefront. Since every color reference below already goes through
+     a CSS variable, remapping the :root values (plus fonts) is enough to
+     bring the whole admin panel in line without rewriting every rule. */
   :root {
-    --bg: #0f1210;
-    --panel: #171b18;
-    --border: #2a2f2b;
-    --text: #eef0ec;
-    --muted: #9aa39a;
-    --accent: #d9a441;
-    --pending: #8a8f89;
-    --ordered: #4a90d9;
-    --shipped: #d9a441;
-    --arrived: #4caf6e;
-    --cancelled: #d9534f;
+    --bg: var(--parchment);
+    --panel: var(--cream);
+    --border: #E1D6BA;
+    --text: var(--ink);
+    --muted: var(--ink-soft);
+    --accent: var(--ochre);
+    --pending: var(--ink-soft);
+    --ordered: var(--indigo-700);
+    --shipped: var(--ochre);
+    --arrived: var(--olive);
+    --cancelled: var(--red);
+
+    --indigo-950:#141B33;
+    --indigo-900:#20244A;
+    --indigo-800:#232C52;
+    --indigo-700:#303E6E;
+    --parchment:#F1E9D8;
+    --parchment-dim:#E7DCC3;
+    --cream:#F6F1E4;
+    --ink:#1B2033;
+    --ink-soft:#585C6E;
+    --ochre:#AB5B2E;
+    --ochre-dark:#8A481F;
+    --ochre-light:#C97A45;
+    --olive:#5C7A4E;
+    --red:#A3372E;
+    --font-display:'Zilla Slab', Georgia, serif;
+    --font-body:'Work Sans', -apple-system, sans-serif;
+    --font-mono:'IBM Plex Mono', 'Courier New', monospace;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
     background: var(--bg);
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: var(--font-body);
     padding: 24px;
   }
   h1 {
-    font-size: 20px;
-    font-weight: 600;
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
     margin: 0 0 4px;
   }
   .sub { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
@@ -39,35 +66,38 @@
     margin: 80px auto;
     background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 24px;
+    border-radius: 12px;
+    padding: 28px;
   }
   #login input {
     width: 100%;
-    padding: 10px 12px;
-    background: #0f1210;
-    border: 1px solid var(--border);
-    border-radius: 6px;
+    padding: 11px 13px;
+    background: #fff;
+    border: 1px solid #C9BFA4;
+    border-radius: 8px;
     color: var(--text);
-    font-size: 14px;
+    font-family: var(--font-body);
+    font-size: 15px;
     margin: 12px 0;
   }
   button {
     background: var(--accent);
-    color: #1a1a1a;
+    color: var(--cream);
     border: none;
-    border-radius: 6px;
-    padding: 10px 16px;
+    border-radius: 8px;
+    padding: 11px 18px;
+    font-family: var(--font-body);
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
   }
-  button:hover { opacity: 0.9; }
+  button:hover { background: var(--ochre-dark); }
   button.ghost {
     background: transparent;
     color: var(--muted);
     border: 1px solid var(--border);
   }
+  button.ghost:hover { background: rgba(0,0,0,.04); }
   .error { color: var(--cancelled); font-size: 13px; margin-top: 8px; min-height: 18px; }
 
   #app { display: none; max-width: 900px; margin: 0 auto; }
@@ -90,14 +120,14 @@
   }
   .filters button.active {
     background: var(--accent);
-    color: #1a1a1a;
+    color: var(--cream);
     border-color: var(--accent);
   }
 
   .order {
     background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 16px;
     margin-bottom: 10px;
     display: flex;
@@ -107,9 +137,9 @@
     flex-wrap: wrap;
   }
   .order .info { flex: 1; min-width: 220px; }
-  .order .item { font-weight: 600; font-size: 15px; }
+  .order .item { font-weight: 600; font-size: 15px; font-family: var(--font-body); }
   .order .meta { color: var(--muted); font-size: 12.5px; margin-top: 4px; line-height: 1.5; }
-  .order .price { color: var(--text); font-size: 13px; margin-top: 4px; }
+  .order .price { color: var(--text); font-family: var(--font-mono); font-size: 13px; margin-top: 4px; }
 
   .badge {
     display: inline-block;
@@ -119,24 +149,24 @@
     letter-spacing: 0.03em;
     padding: 4px 9px;
     border-radius: 100px;
-    color: #0f1210;
+    color: var(--cream);
   }
-  .badge.pending { background: var(--pending); }
-  .badge.ordered { background: var(--ordered); color: #fff; }
-  .badge.shipped { background: var(--shipped); }
-  .badge.arrived { background: var(--arrived); }
-  .badge.cancelled { background: var(--cancelled); color: #fff; }
-  .badge.paid { background: var(--arrived); }
-  .badge.unpaid { background: var(--cancelled); color: #fff; }
-  .badge.pending_review { background: var(--pending); }
-  .badge.approved { background: var(--arrived); }
-  .badge.rejected { background: var(--cancelled); color: #fff; }
-  .badge.held { background: var(--shipped); }
-  .badge.released { background: var(--arrived); }
-  .badge.refunded { background: var(--cancelled); color: #fff; }
-  .badge.not_applicable { background: var(--pending); }
-  .badge.claimed { background: #e07a3f; color: #fff; }
-  .order.claimed-paid { border-color: #e07a3f; box-shadow: 0 0 0 1px #e07a3f inset; }
+  .badge.pending { background: var(--pending); color: var(--cream); }
+  .badge.ordered { background: var(--ordered); color: var(--cream); }
+  .badge.shipped { background: var(--shipped); color: var(--cream); }
+  .badge.arrived { background: var(--arrived); color: var(--cream); }
+  .badge.cancelled { background: var(--cancelled); color: var(--cream); }
+  .badge.paid { background: var(--arrived); color: var(--cream); }
+  .badge.unpaid { background: var(--cancelled); color: var(--cream); }
+  .badge.pending_review { background: var(--pending); color: var(--cream); }
+  .badge.approved { background: var(--arrived); color: var(--cream); }
+  .badge.rejected { background: var(--cancelled); color: var(--cream); }
+  .badge.held { background: var(--shipped); color: var(--cream); }
+  .badge.released { background: var(--arrived); color: var(--cream); }
+  .badge.refunded { background: var(--cancelled); color: var(--cream); }
+  .badge.not_applicable { background: var(--pending); color: var(--cream); }
+  .badge.claimed { background: var(--ochre-light); color: var(--cream); }
+  .order.claimed-paid { border-color: var(--ochre-light); box-shadow: 0 0 0 1px var(--ochre-light) inset; }
   .source-tag {
     display: inline-block; font-size: 10px; font-weight: 600; text-transform: uppercase;
     letter-spacing: 0.03em; padding: 2px 7px; border-radius: 100px;
@@ -160,7 +190,7 @@
   .tab.active { color: var(--text); border-bottom-color: var(--accent); }
   .tab-count {
     background: var(--accent);
-    color: #1a1a1a;
+    color: var(--cream);
     font-size: 11px;
     font-weight: 700;
     border-radius: 100px;
@@ -172,7 +202,7 @@
   .listing {
     background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 16px;
     margin-bottom: 10px;
     display: flex;
@@ -182,31 +212,32 @@
   .listing .photos { display: flex; gap: 6px; flex-shrink: 0; }
   .listing .photos img {
     width: 64px; height: 64px; object-fit: cover; border-radius: 8px;
-    border: 1px solid var(--border); background: #0f1210;
+    border: 1px solid var(--border); background: var(--parchment-dim);
   }
   .listing .info { flex: 1; min-width: 200px; }
-  .listing .item { font-weight: 600; font-size: 15px; }
+  .listing .item { font-weight: 600; font-size: 15px; font-family: var(--font-body); }
   .listing .desc { color: var(--muted); font-size: 13px; margin-top: 4px; line-height: 1.5; max-width: 480px; }
   .listing .meta { color: var(--muted); font-size: 12.5px; margin-top: 6px; }
-  .listing .price { font-family: inherit; font-size: 13.5px; margin-top: 4px; font-weight: 600; }
+  .listing .price { font-family: var(--font-mono); font-size: 13.5px; margin-top: 4px; font-weight: 600; }
   .listing .controls { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; justify-content: center; }
   .listing .controls .row { display: flex; gap: 8px; }
   .reject-note { min-height: 18px; }
   textarea.note-input {
-    background: #0f1210; color: var(--text); border: 1px solid var(--border);
-    border-radius: 6px; padding: 8px 10px; font-size: 13px; width: 220px;
-    font-family: inherit; resize: vertical; min-height: 50px;
+    background: #fff; color: var(--text); border: 1px solid #C9BFA4;
+    border-radius: 8px; padding: 8px 10px; font-size: 13px; width: 220px;
+    font-family: var(--font-body); resize: vertical; min-height: 50px;
   }
-  button.approve { background: var(--arrived); color: #0f1210; }
-  button.reject { background: var(--cancelled); color: #fff; }
+  button.approve { background: var(--arrived); color: var(--cream); }
+  button.reject { background: var(--cancelled); color: var(--cream); }
   button.small { padding: 6px 12px; font-size: 13px; }
 
   select {
-    background: #0f1210;
+    background: #fff;
     color: var(--text);
-    border: 1px solid var(--border);
-    border-radius: 6px;
+    border: 1px solid #C9BFA4;
+    border-radius: 8px;
     padding: 8px 10px;
+    font-family: var(--font-body);
     font-size: 13px;
   }
 
@@ -217,20 +248,40 @@
     font-size: 14px;
   }
   .top-right { display: flex; align-items: center; gap: 10px; }
+
+  /* Same header treatment as index.html/status.html/rider.html — this
+     used to be a plain h1 sitting directly in the page body with no
+     visual relationship to the storefront at all. */
+  .site-header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 24px; background:var(--indigo-950); border-bottom:1px solid var(--indigo-800);
+    margin:-24px -24px 24px;
+  }
+  .logo{ display:flex; align-items:center; gap:8px; font-family:var(--font-display); font-weight:700; font-size:20px; color:var(--cream); letter-spacing:.2px; }
+  .logo em{ font-style:normal; color:var(--ochre-light); }
+  .logo-mark{ width:24px; height:24px; flex-shrink:0; }
+  .header-tag{ font-size:12.5px; color:#C9CEE0; font-family:var(--font-mono); }
 </style>
 </head>
 <body>
 
-<div id="login">
-  <h1 style="display:flex; align-items:center; gap:8px;">
-    <svg width="22" height="22" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0;">
+<div class="site-header">
+  <div class="logo">
+    <svg class="logo-mark" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <g transform="translate(50,52)">
         <path d="M0,-30 L26,-19.5 L26,2.5 C26,21 14,32.5 0,37.5 C-14,32.5 -26,21 -26,2.5 L-26,-19.5 Z" fill="#AB5B2E"/>
         <path d="M0,-30 L26,-19.5 L26,2.5 C26,21 14,32.5 0,37.5 Z" fill="#8A481F"/>
-        <path d="M-13,2.5 L-4,13 L15.5,-9" fill="none" stroke="#eef0ec" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M-13,2.5 L-4,13 L15.5,-9" fill="none" stroke="#F6F1E4" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
       </g>
     </svg>
-    Amana Admin
+    Aman<em>a</em>
+  </div>
+  <span class="header-tag">Admin</span>
+</div>
+
+<div id="login">
+  <h1 style="display:flex; align-items:center; gap:8px;">
+    Admin login
   </h1>
   <div class="sub">Enter your admin key to view orders.</div>
   <input id="keyInput" type="password" placeholder="Admin key" autocomplete="off">
@@ -268,6 +319,11 @@
           <input id="newRiderName" type="text" placeholder="Rider name" style="padding:8px 10px; flex:1; min-width:140px;">
           <input id="newRiderPhone" type="text" placeholder="Rider phone" style="padding:8px 10px; flex:1; min-width:140px;">
           <button id="addRiderBtn">Add rider</button>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+          <input id="newRiderBankName" type="text" placeholder="Bank name (optional, for auto-payout)" style="padding:8px 10px; flex:1; min-width:140px;">
+          <input id="newRiderAccountNumber" type="text" placeholder="Account number" style="padding:8px 10px; flex:1; min-width:140px;">
+          <input id="newRiderAccountName" type="text" placeholder="Account name" style="padding:8px 10px; flex:1; min-width:140px;">
         </div>
       </div>
     </div>
@@ -318,6 +374,9 @@
     ridersList: document.getElementById('ridersList'),
     newRiderName: document.getElementById('newRiderName'),
     newRiderPhone: document.getElementById('newRiderPhone'),
+    newRiderBankName: document.getElementById('newRiderBankName'),
+    newRiderAccountNumber: document.getElementById('newRiderAccountNumber'),
+    newRiderAccountName: document.getElementById('newRiderAccountName'),
     addRiderBtn: document.getElementById('addRiderBtn'),
     listingsList: document.getElementById('listingsList'),
     sellersPanel: document.getElementById('sellersPanel'),
@@ -1115,15 +1174,21 @@
   el.addRiderBtn.onclick = async () => {
     const name = el.newRiderName.value.trim();
     const phone = el.newRiderPhone.value.trim();
+    const bankName = el.newRiderBankName.value.trim();
+    const accountNumber = el.newRiderAccountNumber.value.trim();
+    const accountName = el.newRiderAccountName.value.trim();
     if (!name || !phone) { alert('Enter both a name and phone number.'); return; }
     el.addRiderBtn.disabled = true;
     try {
       await api('/riders', {
         method: 'POST',
-        body: JSON.stringify({ name, phone }),
+        body: JSON.stringify({ name, phone, bankName, accountNumber, accountName }),
       });
       el.newRiderName.value = '';
       el.newRiderPhone.value = '';
+      el.newRiderBankName.value = '';
+      el.newRiderAccountNumber.value = '';
+      el.newRiderAccountName.value = '';
       loadRiders();
     } catch (err) {
       alert(err.message);

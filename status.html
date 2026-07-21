@@ -13,7 +13,7 @@
   /* ============ DESIGN TOKENS (matches main site) ============ */
   :root{
     --indigo-950:#141B33;
-    --indigo-900:#1B2340;
+    --indigo-900:#20244A;
     --indigo-800:#232C52;
     --indigo-700:#303E6E;
     --parchment:#F1E9D8;
@@ -100,6 +100,10 @@
   .order-card{
     background:var(--cream); border:1px solid #E1D6BA; border-radius:12px;
     padding:22px; margin-bottom:18px; position:relative;
+    transition:box-shadow .3s ease, border-color .3s ease;
+  }
+  .order-card--highlight{
+    border-color:var(--ochre); box-shadow:0 0 0 3px rgba(171,91,46,.18);
   }
   .order-card h3{ font-size:16px; font-weight:600; font-family:var(--font-body); margin-bottom:4px; padding-right:90px; }
   .order-meta{ font-size:13px; color:var(--ink-soft); margin-bottom:6px; }
@@ -900,7 +904,7 @@ function renderOrders(orders, isDemo){
         codeLine;
     }
 
-    return '<div class="order-card">' +
+    return '<div class="order-card" id="orderCard-' + o.id + '">' +
       sourceTag +
       '<h3>' + o.item_name + '</h3>' +
       '<div class="order-meta">Placed ' + fmtDate(o.created_at) + '</div>' +
@@ -916,6 +920,8 @@ function renderOrders(orders, isDemo){
       reviewBlock +
       '</div>';
   }).join('');
+
+  scrollToDeepLinkedOrder();
 }
 
 function handleLogout(){
@@ -998,6 +1004,40 @@ async function checkPendingPaystackPayment(){
   }
 }
 checkPendingPaystackPayment();
+
+// Deep-link handoff from index.html's "Your orders" list — it links here
+// as status.html?email=...&order=..., so a buyer who already verified
+// their email once in this browser (index.html and this page share the
+// same Amana.getSessionToken cache, keyed by email) never has to retype
+// it or wait for a fresh OTP just to see a status page they already
+// unlocked minutes earlier. The order id, if present, gets scrolled to
+// and briefly highlighted once the list renders, since "Your orders"
+// links to a specific order, not just the list in general.
+var deepLinkOrderId = null;
+(function autoLoginFromQueryParams(){
+  var params = new URLSearchParams(window.location.search);
+  var email = normalizeEmailClient(params.get('email') || '');
+  deepLinkOrderId = params.get('order') || null;
+  if(!email) return;
+
+  var cachedToken = Amana.getSessionToken(email);
+  if(!cachedToken) return; // no valid cached session — fall back to the normal login panel
+
+  session.email = email;
+  session.token = cachedToken;
+  document.getElementById('emailInput').value = email;
+  loadOrders(false);
+})();
+
+function scrollToDeepLinkedOrder(){
+  if(!deepLinkOrderId) return;
+  var card = document.getElementById('orderCard-' + deepLinkOrderId);
+  if(!card) return;
+  card.scrollIntoView({ behavior:'smooth', block:'start' });
+  card.classList.add('order-card--highlight');
+  setTimeout(function(){ card.classList.remove('order-card--highlight'); }, 2200);
+  deepLinkOrderId = null; // only do this once, not on every poll refresh
+}
 
 document.getElementById('emailInput').addEventListener('keydown', function(e){ if(e.key === 'Enter') handleEmailContinue(); });
 document.getElementById('passwordInput').addEventListener('keydown', function(e){ if(e.key === 'Enter') handlePasswordLogin(); });
