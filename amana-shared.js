@@ -327,6 +327,60 @@
     writeSessionStore(store);
   }
 
+  // ---- remembering *which* email to look a session up for ----
+  //
+  // getSessionToken(email) above already handles "is this email still
+  // logged in" — but every page still made the visitor type their email
+  // in fresh, every visit, before that check could even run. This stores
+  // the last email used for each role (buyer / seller are tracked
+  // separately, since one person can be both) so a page can try silently
+  // restoring the session on load instead of waiting for the visitor to
+  // type it again.
+  var LAST_EMAIL_STORAGE_KEY = 'amana_last_email_v1';
+
+  function readLastEmailStore() {
+    try {
+      var raw = window.localStorage.getItem(LAST_EMAIL_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) { return {}; }
+  }
+
+  function writeLastEmailStore(store) {
+    try { window.localStorage.setItem(LAST_EMAIL_STORAGE_KEY, JSON.stringify(store)); }
+    catch (e) { /* storage unavailable — just won't be remembered next visit */ }
+  }
+
+  // role is 'buyer' or 'seller'. Call this anywhere an email is already
+  // being set on buyerSession/sellSession, right alongside it.
+  function rememberLastEmail(role, email) {
+    var key = normalizeEmailKey(email);
+    if (!key) return;
+    var store = readLastEmailStore();
+    store[role] = key;
+    writeLastEmailStore(store);
+  }
+
+  // Returns the last-used email for this role, or null if none saved yet.
+  // Doesn't imply the session is still valid — pair with getSessionToken
+  // to check that separately, since an email can be remembered long after
+  // its token expired.
+  function getLastEmail(role) {
+    var store = readLastEmailStore();
+    return store[role] || null;
+  }
+
+  // Called on explicit sign-out — forgets which email to silently
+  // restore next visit. Pair with clearSessionToken(email) so the old
+  // token itself is gone too; clearing only one of the two would either
+  // leave a dead pointer (this store) or leave a live token nothing
+  // points at anymore (the token store) — neither fully signs someone
+  // out on a shared device.
+  function clearLastEmail(role) {
+    var store = readLastEmailStore();
+    delete store[role];
+    writeLastEmailStore(store);
+  }
+
   var Amana = {
     CATEGORIES: CATEGORIES,
     PAYOUT_ACCOUNT: PAYOUT_ACCOUNT,
@@ -353,7 +407,10 @@
     formatRateDate: formatRateDate,
     getSessionToken: getSessionToken,
     saveSessionToken: saveSessionToken,
-    clearSessionToken: clearSessionToken
+    clearSessionToken: clearSessionToken,
+    rememberLastEmail: rememberLastEmail,
+    getLastEmail: getLastEmail,
+    clearLastEmail: clearLastEmail
   };
 
   if (typeof module !== 'undefined' && module.exports) {
