@@ -181,7 +181,14 @@
   function escrowNote(order) {
     if (!order) return '';
     if (order.disputed_at && order.payout_status === 'held') {
-      return "You've flagged this order as not as described — Amana will review and get back to you before releasing payment.";
+      // dispute_reason is the buyer's own words from when they filed this
+      // (see POST /orders/:id/dispute) — GET /orders/mine/:email returns
+      // it via SELECT o.* since it's a plain column on orders, so it's
+      // already here; just wasn't being shown back to them before.
+      var reasonNote = order.dispute_reason
+        ? ' You told us: "' + escapeForChip(order.dispute_reason) + '"'
+        : '';
+      return "You've flagged this order as not as described — Amana will review and get back to you before releasing payment." + reasonNote;
     }
     switch (order.payout_status) {
       case 'held':

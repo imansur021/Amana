@@ -278,6 +278,23 @@
     padding:0 4px; margin-left:5px; border-radius:100px; background:var(--red,#B23A2E); color:#fff;
     font-size:10.5px; font-weight:700; line-height:16px; vertical-align:middle;
   }
+  .cart-pill{
+    background:var(--indigo-900); color:var(--cream); border:1px solid var(--indigo-900); border-radius:100px; cursor:pointer;
+    font-size:13px; font-weight:600; text-decoration:none;
+    padding:7px 14px; margin-top:4px; min-height:36px; display:inline-flex; align-items:center; gap:7px;
+    white-space:nowrap; transition:opacity .12s ease;
+  }
+  .cart-pill:hover{ opacity:.88; }
+  .cart-pill .cart-pill-icon{ font-size:14px; line-height:1; flex:none; }
+  .cart-pill .cart-badge-count{ background:#fff; color:var(--indigo-900); margin-left:2px; }
+  .seller-search-link{
+    background:none; border:none; cursor:pointer; text-decoration:none;
+    font-size:12.5px; font-weight:600; color:var(--ink-soft);
+    padding:8px 0; margin-top:4px; min-height:36px; display:inline-flex; align-items:center; gap:5px;
+    transition:color .12s ease;
+  }
+  .seller-search-link:hover{ color:var(--ink); }
+  .seller-search-link .seller-search-icon{ font-size:13px; line-height:1; flex:none; }
   .cart-seller-group{ border:1px solid #E1D6BA; border-radius:10px; padding:12px 14px; margin-bottom:10px; background:#fff; }
   .cart-seller-group-header{ font-size:12.5px; font-weight:700; color:var(--ink-soft); margin-bottom:8px; text-transform:uppercase; letter-spacing:.03em; }
   .cart-item-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:6px 0; border-bottom:1px solid #F0EAD9; }
@@ -416,6 +433,39 @@
   .demo-banner{ background:#E4EEDD; color:var(--olive); border-radius:8px; padding:10px 12px; font-size:12.5px; margin-bottom:16px; font-family:var(--font-mono); }
   .inline-error{ color:var(--red); font-size:13px; margin-top:6px; }
   .small-link{ background:none; border:none; font-size:12.5px; color:var(--ink-soft); text-decoration:underline; padding:8px 0; margin-top:4px; min-height:36px; display:inline-flex; align-items:center; }
+
+  .account-menu{ position:relative; display:inline-block; }
+  .account-menu-btn{
+    background:#fff; border:1px solid var(--ink-soft); border-radius:100px; cursor:pointer;
+    font-size:13px; font-weight:600; color:var(--ink); text-decoration:none;
+    padding:7px 14px 7px 10px; margin-top:4px; min-height:36px; display:inline-flex; align-items:center; gap:6px;
+    max-width:160px; white-space:nowrap; overflow:hidden; transition:border-color .12s ease, background .12s ease;
+  }
+  .account-menu-btn:hover{ border-color:var(--ink); background:var(--parchment-dim); }
+  .account-menu-btn .account-icon{
+    width:20px; height:20px; border-radius:50%; background:var(--parchment-dim); border:1px solid var(--ink-soft);
+    display:flex; align-items:center; justify-content:center; flex:none; font-size:11px; font-weight:700; color:var(--ink-soft);
+    overflow:hidden;
+  }
+  .account-menu-btn .account-icon img{ width:100%; height:100%; object-fit:cover; }
+  .account-menu-btn .account-label{ overflow:hidden; text-overflow:ellipsis; }
+  .account-menu-btn .caret{ font-size:9px; text-decoration:none; transition:transform .12s ease; flex:none; color:var(--ink-soft); }
+  .account-menu.open .account-menu-btn .caret{ transform:rotate(180deg); }
+  .account-menu.open .account-menu-btn{ border-color:var(--ink); background:var(--parchment-dim); }
+  .account-menu-panel{
+    display:none; position:absolute; top:100%; left:0; margin-top:4px; min-width:170px;
+    background:#fff; border:1px solid var(--line); border-radius:8px; box-shadow:0 6px 18px rgba(27,32,51,0.12);
+    padding:6px; z-index:30;
+  }
+  .account-menu.open .account-menu-panel{ display:block; }
+  .account-menu-panel button{
+    display:block; width:100%; text-align:left; background:none; border:none; font-size:13.5px;
+    color:var(--ink); padding:9px 10px; border-radius:6px; cursor:pointer; text-decoration:none; min-height:auto;
+  }
+  .account-menu-panel button:hover{ background:var(--parchment-dim); }
+  .nav-row{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin:-10px 0 16px; flex-wrap:wrap; }
+  .nav-row-left{ display:flex; align-items:center; gap:16px; }
+  .nav-row-right{ display:flex; align-items:center; gap:16px; }
   .sell-step-track{ display:flex; align-items:center; gap:8px; margin-bottom:20px; }
   .sell-step-dot{ display:flex; align-items:center; gap:8px; font-family:var(--font-mono); font-size:12px; color:var(--ink-soft); white-space:nowrap; }
   .sell-step-dot .circ{ width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; border:1.5px solid var(--ink-soft); flex-shrink:0; }
@@ -472,12 +522,26 @@
 
       <div class="tab-panel active" id="panelMarket">
         <p class="section-sub" style="margin-bottom:20px;">Items posted by other people in Katsina, reviewed by Amana before they're listed. Payment is held until you confirm the item arrived as described.</p>
-        <div style="display:flex; gap:16px; margin:-10px 0 16px;">
-          <button type="button" class="small-link" onclick="toggleMyOrders()" id="myOrdersToggle">My orders</button>
-          <button type="button" class="small-link" onclick="toggleMyProfile()" id="myProfileToggle">My profile</button>
-          <button type="button" class="small-link" onclick="toggleSavedItems()" id="savedItemsToggle">Saved items</button>
-          <button type="button" class="small-link" onclick="toggleSellerSearch()" id="sellerSearchToggle">Find a seller</button>
-          <button type="button" class="small-link" onclick="toggleCart()" id="cartToggle">Cart<span class="cart-badge-count" id="cartBadgeCount" style="display:none;">0</span></button>
+        <div class="nav-row">
+          <div class="nav-row-left">
+            <button type="button" class="seller-search-link" onclick="toggleSellerSearch()" id="sellerSearchToggle"><span class="seller-search-icon">&#128269;</span>Find a seller</button>
+          </div>
+          <div class="nav-row-right">
+            <div class="account-menu" id="accountMenu">
+              <button type="button" class="account-menu-btn" id="accountMenuToggle" onclick="toggleAccountMenu()">
+                <span class="account-icon" id="accountMenuIcon">&#128100;</span>
+                <span class="account-label" id="accountMenuLabel">My account</span>
+                <span class="caret">&#9662;</span>
+              </button>
+              <div class="account-menu-panel" id="accountMenuPanel">
+                <button type="button" onclick="closeAccountMenuThen(toggleMyOrders)" id="myOrdersToggle">My orders</button>
+                <button type="button" onclick="closeAccountMenuThen(toggleMyOffers)" id="myOffersToggle">My offers</button>
+                <button type="button" onclick="closeAccountMenuThen(toggleSavedItems)" id="savedItemsToggle">Saved items</button>
+                <button type="button" onclick="closeAccountMenuThen(toggleMyProfile)" id="myProfileToggle">My profile</button>
+              </div>
+            </div>
+            <button type="button" class="cart-pill" onclick="toggleCart()" id="cartToggle"><span class="cart-pill-icon">&#128722;</span>Cart<span class="cart-badge-count" id="cartBadgeCount" style="display:none;">0</span></button>
+          </div>
         </div>
         <div class="my-listings" id="cartSection" style="display:none;">
           <h3 style="font-size:16px; margin-bottom:12px;">Your cart</h3>
@@ -487,10 +551,47 @@
           <h3 style="font-size:16px; margin-bottom:12px;" id="myOrdersHeading">Your orders</h3>
           <div id="myOrdersList"></div>
         </div>
+        <div class="my-listings" id="myOffersSection" style="display:none;">
+          <h3 style="font-size:16px; margin-bottom:12px;" id="myOffersHeading">Your offers</h3>
+          <div id="myOffersList"></div>
+        </div>
         <div class="my-listings" id="myProfileSection" style="display:none;">
           <h3 style="font-size:16px; margin-bottom:4px;">My profile</h3>
-          <p class="section-sub" style="margin:0 0 12px; max-width:none; font-size:13px;">Your delivery contact details — used so sellers and riders know where to reach you.</p>
-          <div id="myProfileBody"></div>
+          <p class="section-sub" style="margin:0 0 12px; max-width:none; font-size:13px;">Your public buyer profile and delivery contact details.</p>
+
+          <h3 style="font-size:14px; margin-bottom:4px;">Display name</h3>
+          <p class="section-sub" style="margin:0 0 12px; max-width:none; font-size:13px;">Shown to sellers on your public profile instead of your email address.</p>
+          <div class="link-row">
+            <input type="text" id="buyerNameInput" placeholder="e.g. Amina from Katsina" maxlength="40">
+            <button class="btn btn-ink" onclick="handleSaveBuyerDisplayName()">Save</button>
+          </div>
+          <div id="buyerNameError"></div>
+          <div id="buyerNameSaved" style="display:none; font-size:13px; color:var(--olive); margin-top:8px;">Saved. <a href="#" onclick="event.preventDefault(); viewBuyerProfile(buyerSession.email);" style="color:inherit; text-decoration:underline;">View your public profile →</a></div>
+
+          <div style="margin-top:18px; padding-top:16px; border-top:1px solid var(--line);">
+            <h3 style="font-size:14px; margin-bottom:4px;">Profile photo</h3>
+            <p class="section-sub" style="margin:0 0 12px; max-width:none; font-size:13px;">Shown on your public profile that sellers can see.</p>
+            <div style="display:flex; align-items:center; gap:14px;">
+              <img id="buyerAvatarPreview" src="" alt="" style="width:64px; height:64px; border-radius:50%; object-fit:cover; background:var(--paper-dim); display:none; border:1px solid var(--line);">
+              <div id="buyerAvatarPlaceholder" style="width:64px; height:64px; border-radius:50%; background:var(--paper-dim); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--ink-soft); text-align:center;">No photo</div>
+              <div style="display:flex; flex-direction:column; gap:6px;">
+                <input type="file" id="buyerAvatarFileInput" accept="image/jpeg,image/png,image/webp,image/heic" style="display:none;" onchange="handleBuyerAvatarSelected(this.files)">
+                <button type="button" class="btn btn-ghost" style="font-size:13px;" onclick="document.getElementById('buyerAvatarFileInput').click()">Upload photo</button>
+                <button type="button" class="small-link" id="buyerAvatarRemoveBtn" style="display:none; text-align:left;" onclick="handleRemoveBuyerAvatar()">Remove photo</button>
+              </div>
+            </div>
+            <div id="buyerAvatarError"></div>
+          </div>
+
+          <div style="margin-top:18px; padding-top:16px; border-top:1px solid var(--line);">
+            <h3 style="font-size:14px; margin-bottom:4px;">Delivery contact</h3>
+            <p class="section-sub" style="margin:0 0 12px; max-width:none; font-size:13px;">Private — not shown on your public profile. Used so sellers and riders know where to reach you.</p>
+            <div id="myProfileBody"></div>
+          </div>
+        </div>
+        <div class="my-listings" id="buyerProfileSection" style="display:none;">
+          <button type="button" class="small-link" style="margin-bottom:12px; display:inline-block;" onclick="closeBuyerProfile()">← Back</button>
+          <div id="buyerProfileContent"></div>
         </div>
         <div class="my-listings" id="savedItemsSection" style="display:none;">
           <h3 style="font-size:16px; margin-bottom:12px;" id="savedItemsHeading">Your saved items</h3>
@@ -642,6 +743,12 @@
         <div class="my-listings" id="myListingsSection" style="display:none;">
           <h3 style="font-size:16px; margin-bottom:12px;" id="myListingsHeading">Your listings</h3>
           <div id="myListingsList"></div>
+        </div>
+
+        <div class="my-listings" id="listingOffersSection" style="display:none;">
+          <button type="button" class="small-link" style="margin-bottom:12px; display:inline-block;" onclick="closeListingOffers()">← Back</button>
+          <h3 style="font-size:16px; margin-bottom:12px;" id="listingOffersTitle">Offers</h3>
+          <div id="listingOffersList"></div>
         </div>
 
         <div class="my-listings" id="mySalesSection" style="display:none;">
@@ -1022,6 +1129,7 @@ function renderMarketplace(listings){
         (!l.always_in_stock && l.stock_qty > 0 && l.stock_qty <= 3 ? '<div class="stock-hint">Only ' + l.stock_qty + ' left</div>' : '') +
         '<div class="price">' + formatNGN(l.price_ngn) + '</div>' +
         '<button class="btn btn-ink" style="margin-top:6px;" onclick="openMarketOrder(\'' + l.id + '\')">Buy this</button>' +
+        '<button class="btn btn-ghost" style="margin-top:6px;" onclick="openMakeOffer(\'' + l.id + '\')">Make an offer</button>' +
         '<button class="btn' + (inCart ? ' btn-ink' : '') + '" style="margin-top:6px;" id="cartBtn-' + l.id + '" onclick="toggleCartItem(\'' + l.id + '\', this)">' + (inCart ? 'Remove from cart' : 'Add to cart') + '</button>' +
         (l.seller_email ? '<button type="button" class="small-link" style="margin-top:6px; display:inline-block;" onclick="viewSellerProfile(\'' + l.seller_email + '\')">View seller →</button>' : '') +
       '</div>' +
@@ -1069,6 +1177,45 @@ function openMarketOrder(listingId){
   document.getElementById('modalBody').innerHTML =
     '<h3>Buy this item</h3>' +
     '<p class="modal-sub">Your payment is held by Amana until you confirm the item arrived as described — the seller isn\'t paid until then.</p>' +
+    '<div class="field"><label for="emailInput">Your email address</label>' +
+    '<input type="email" id="emailInput" placeholder="you@example.com" autofocus></div>' +
+    '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick="handleMarketEmailSubmit()">Continue</button>';
+}
+
+// Make-an-offer flow. Reuses the exact same email → password/OTP →
+// delivery-profile pipeline as a direct "Buy this" (openMarketOrder and
+// everything downstream of it), just tagged with currentOrder.isOffer so
+// proceedToCheckoutProfile branches to finalizeOffer() instead of
+// finalizeMarketOrder() once the buyer is authenticated and their
+// delivery profile is on file (POST /listings/:id/offers requires the
+// same profile fields as a direct purchase — see backend).
+function openMakeOffer(listingId){
+  if(!API_BASE){
+    alert('Offers need the real backend connected.');
+    return;
+  }
+  var listing = marketListingCache[listingId];
+  document.getElementById('orderOverlay').classList.add('open');
+  document.getElementById('modalBody').innerHTML =
+    '<h3>Make an offer</h3>' +
+    (listing ? '<p class="modal-sub">Listed at ' + formatNGN(listing.price_ngn) + '. The seller can accept or decline — you\'ll only have one pending offer on this item at a time.</p>' : '') +
+    '<div class="field"><label for="offerAmountInput">Your offer (₦)</label>' +
+    '<input type="number" id="offerAmountInput" min="1" step="1" placeholder="e.g. 4500" autofocus></div>' +
+    '<div id="offerAmountError"></div>' +
+    '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick="handleOfferAmountSubmit(\'' + listingId + '\')">Continue</button>';
+}
+
+function handleOfferAmountSubmit(listingId){
+  var errEl = document.getElementById('offerAmountError');
+  errEl.innerHTML = '';
+  var amount = Number(document.getElementById('offerAmountInput').value);
+  if(!Number.isFinite(amount) || amount <= 0){
+    errEl.innerHTML = '<p class="inline-error">Enter a valid offer amount.</p>';
+    return;
+  }
+  currentOrder = { marketplace:true, isOffer:true, listingId:listingId, offerAmountNgn:amount, email:null, customer:null, tempCode:null, sessionToken:null, otpPurpose:'signup' };
+  document.getElementById('modalBody').innerHTML =
+    '<h3>Make an offer</h3>' +
     '<div class="field"><label for="emailInput">Your email address</label>' +
     '<input type="email" id="emailInput" placeholder="you@example.com" autofocus></div>' +
     '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick="handleMarketEmailSubmit()">Continue</button>';
@@ -1223,7 +1370,7 @@ async function proceedToCheckoutProfile(){
   var profile = await fetchCustomerProfile(currentOrder.email, currentOrder.sessionToken);
   if(profile && profile.name && profile.phone && profile.address){
     currentOrder.customer = profile;
-    await finalizeMarketOrder();
+    if(currentOrder.isOffer){ await finalizeOffer(); } else { await finalizeMarketOrder(); }
     return;
   }
   showCheckoutProfileStep(profile);
@@ -1260,9 +1407,39 @@ async function handleCheckoutProfileSubmit(){
     var data = await res.json();
     if(!res.ok){ throw new Error(data.error || 'Could not save your details.'); }
     currentOrder.customer = data.customer;
-    await finalizeMarketOrder();
+    if(currentOrder.isOffer){ await finalizeOffer(); } else { await finalizeMarketOrder(); }
   }catch(err){
     errEl.innerHTML = '<p class="inline-error">' + friendlyError(err) + '</p>';
+  }
+}
+
+// Submits the actual offer once the buyer is authenticated and their
+// delivery profile is confirmed on file — mirrors finalizeMarketOrder's
+// shape but posts to POST /listings/:id/offers instead of creating an
+// order directly. No payment step here: money only moves if and when
+// the seller accepts (see PATCH /offers/:id on the backend), so this
+// just confirms the offer was sent.
+async function finalizeOffer(){
+  document.getElementById('modalBody').innerHTML = '<p style="font-size:13px; color:var(--ink-soft);">Sending your offer...</p>';
+  try{
+    Amana.saveSessionToken(currentOrder.email, currentOrder.sessionToken);
+
+    var res = await fetch(API_BASE + '/listings/' + currentOrder.listingId + '/offers', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + currentOrder.sessionToken },
+      body: JSON.stringify({ email: currentOrder.email, offerAmountNgn: currentOrder.offerAmountNgn })
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not send your offer.'); }
+
+    document.getElementById('modalBody').innerHTML =
+      '<h3>Offer sent</h3>' +
+      '<p class="modal-sub">You offered ' + formatNGN(currentOrder.offerAmountNgn) + '. The seller will email you their decision — you can also check back under "My offers".</p>' +
+      '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick="closeModal(); loadMyOffers(currentOrder.email, currentOrder.sessionToken);">View my offers</button>';
+  }catch(err){
+    document.getElementById('modalBody').innerHTML =
+      '<h3>Make an offer</h3>' +
+      '<p class="inline-error">' + friendlyError(err) + '</p>';
   }
 }
 
@@ -1611,10 +1788,12 @@ async function performWishlistToggle(listingId, btnEl){
 
 function hideMarketSidePanels(){
   document.getElementById('myOrdersSection').style.display = 'none';
+  document.getElementById('myOffersSection').style.display = 'none';
   document.getElementById('myProfileSection').style.display = 'none';
   document.getElementById('savedItemsSection').style.display = 'none';
   document.getElementById('sellerSearchSection').style.display = 'none';
   document.getElementById('sellerProfileSection').style.display = 'none';
+  document.getElementById('buyerProfileSection').style.display = 'none';
   document.getElementById('cartSection').style.display = 'none';
 }
 
@@ -1671,6 +1850,36 @@ function toggleCartItem(listingId, btnEl){
   }
   var cartSection = document.getElementById('cartSection');
   if(cartSection.style.display !== 'none') renderCart();
+}
+
+/* ================= "My account" dropdown (orders/offers/saved/profile) ================= */
+
+function toggleAccountMenu(){
+  var menu = document.getElementById('accountMenu');
+  var opening = !menu.classList.contains('open');
+  menu.classList.toggle('open', opening);
+  if(opening){
+    document.addEventListener('click', closeAccountMenuOnOutsideClick, true);
+  }
+}
+
+function closeAccountMenu(){
+  document.getElementById('accountMenu').classList.remove('open');
+  document.removeEventListener('click', closeAccountMenuOnOutsideClick, true);
+}
+
+function closeAccountMenuOnOutsideClick(e){
+  var menu = document.getElementById('accountMenu');
+  if(menu && !menu.contains(e.target)) closeAccountMenu();
+}
+
+// Wraps My orders / My offers / Saved items / My profile so the dropdown
+// closes right before its underlying toggle function runs (those functions
+// call hideMarketSidePanels() themselves, so ordering here doesn't matter
+// for panel visibility — this is purely about closing the little menu).
+function closeAccountMenuThen(fn){
+  closeAccountMenu();
+  fn();
 }
 
 function toggleCart(){
@@ -1809,6 +2018,62 @@ function toggleMyOrders(){
   loadMyOrders();
 }
 
+// Same sign-in gate as "My orders" — a buyer's offers are only visible
+// to that buyer (GET /offers/mine/:email requires their own session).
+function toggleMyOffers(){
+  var section = document.getElementById('myOffersSection');
+  var showing = section.style.display !== 'none';
+  hideMarketSidePanels();
+  if(showing){
+    return;
+  }
+  if(!buyerSession.sessionToken && buyerSession.email){
+    var cached = Amana.getSessionToken(buyerSession.email);
+    if(cached) buyerSession.sessionToken = cached;
+    updateTrackOrderLink();
+  }
+  if(!buyerSession.sessionToken){
+    openBuyerVerifyForOrdersView();
+    return;
+  }
+  section.style.display = 'block';
+  loadMyOffers(buyerSession.email, buyerSession.sessionToken);
+}
+
+async function loadMyOffers(email, token){
+  var section = document.getElementById('myOffersSection');
+  var list = document.getElementById('myOffersList');
+  var heading = document.getElementById('myOffersHeading');
+  section.style.display = 'block';
+  list.innerHTML = '<p style="font-size:13.5px; color:var(--ink-soft);">Loading…</p>';
+  try{
+    var res = await fetch(API_BASE + '/offers/mine/' + email, {
+      headers:{ 'Authorization':'Bearer ' + token }
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not load your offers.'); }
+
+    var offers = data.offers || [];
+    heading.textContent = 'Your offers (' + offers.length + ')';
+    if(!offers.length){
+      list.innerHTML = '<p style="font-size:13.5px; color:var(--ink-soft);">No offers yet — you can make one from any listing in the marketplace.</p>';
+      return;
+    }
+
+    list.innerHTML = offers.map(function(o){
+      var pillClass = o.status === 'accepted' ? 'released' : (o.status === 'rejected' ? '' : 'pending');
+      return '<div class="my-listing-card">' +
+        '<div><div class="name">' + escapeHtml(o.item_name || 'Item') + '</div>' +
+        '<div class="price">Your offer: ' + formatNGN(o.offer_amount_ngn) + '</div>' +
+        '</div>' +
+        '<span class="payout-pill ' + pillClass + '">' + o.status + '</span>' +
+        '</div>';
+    }).join('');
+  }catch(err){
+    list.innerHTML = '<p class="inline-error">' + friendlyError(err) + '</p>';
+  }
+}
+
 // Buyer's own profile — name/phone/address, backed by the same
 // GET/POST /customers endpoints the seller-application flow already
 // uses for delivery contact details. Shares the exact same sign-in gate
@@ -1838,6 +2103,7 @@ function toggleMyProfile(){
 async function loadMyProfile(){
   var body = document.getElementById('myProfileBody');
   body.innerHTML = '<p style="font-size:13.5px; color:var(--ink-soft);">Loading…</p>';
+  loadCurrentBuyerDisplayName(buyerSession.email);
   var contact = await fetchCustomerProfile(buyerSession.email, buyerSession.sessionToken);
   var c = contact || {};
   body.innerHTML =
@@ -1848,6 +2114,188 @@ async function loadMyProfile(){
     '<div id="myProfileError"></div>' +
     '<div id="myProfileSaved" style="display:none; font-size:13px; color:var(--olive); margin:6px 0;">Saved.</div>' +
     '<button class="btn btn-ink" style="width:100%; justify-content:center;" onclick="handleSaveMyProfile()">Save</button>';
+}
+
+// Loads the buyer's display name (if set) and avatar into the "My
+// profile" settings card. Non-critical — a 404 (no customers row yet,
+// e.g. hasn't saved delivery details) just leaves both blank rather than
+// erroring, same tolerance as loadCurrentStoreName on the seller side.
+async function loadCurrentBuyerDisplayName(email){
+  var input = document.getElementById('buyerNameInput');
+  try{
+    var res = await fetch(API_BASE + '/customers/' + email + '/public');
+    if(res.status === 404) return;
+    var data = await res.json();
+    if(res.ok && data.buyer.hasCustomDisplayName){
+      input.value = data.buyer.displayName;
+    }
+    if(res.ok){
+      renderBuyerAvatarPreview(data.buyer.avatarUrl);
+    }
+  }catch(err){
+    // Non-critical — leave fields blank.
+  }
+}
+
+async function handleSaveBuyerDisplayName(){
+  var errEl = document.getElementById('buyerNameError');
+  var savedEl = document.getElementById('buyerNameSaved');
+  errEl.innerHTML = '';
+  savedEl.style.display = 'none';
+  var displayName = document.getElementById('buyerNameInput').value.trim();
+  if(displayName.length < 2 || displayName.length > 40){
+    errEl.innerHTML = '<p class="inline-error">Display name must be between 2 and 40 characters.</p>';
+    return;
+  }
+  try{
+    var res = await fetch(API_BASE + '/customers/' + buyerSession.email + '/display-name', {
+      method:'PATCH',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + buyerSession.sessionToken },
+      body: JSON.stringify({ displayName: displayName })
+    });
+    if(res.status === 401 || res.status === 403){
+      Amana.clearSessionToken(buyerSession.email);
+      buyerSession.sessionToken = null;
+      throw new Error('Your session expired — verify again to save your display name.');
+    }
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not save your display name.'); }
+    savedEl.style.display = 'block';
+  }catch(err){
+    errEl.innerHTML = '<p class="inline-error">' + friendlyError(err) + '</p>';
+  }
+}
+
+function renderBuyerAvatarPreview(avatarUrl){
+  var img = document.getElementById('buyerAvatarPreview');
+  var placeholder = document.getElementById('buyerAvatarPlaceholder');
+  var removeBtn = document.getElementById('buyerAvatarRemoveBtn');
+  if(avatarUrl){
+    img.src = avatarUrl;
+    img.style.display = 'block';
+    placeholder.style.display = 'none';
+    removeBtn.style.display = 'inline-block';
+  }else{
+    img.style.display = 'none';
+    img.src = '';
+    placeholder.style.display = 'flex';
+    removeBtn.style.display = 'none';
+  }
+}
+
+async function handleBuyerAvatarSelected(fileList){
+  var errEl = document.getElementById('buyerAvatarError');
+  errEl.innerHTML = '';
+  var fileInput = document.getElementById('buyerAvatarFileInput');
+  var file = fileList && fileList[0];
+  if(!file){ return; }
+
+  if(!buyerSession.email || !buyerSession.sessionToken){
+    errEl.innerHTML = '<p class="inline-error">Please verify your email first.</p>';
+    fileInput.value = '';
+    return;
+  }
+
+  var formData = new FormData();
+  formData.append('avatar', file);
+
+  try{
+    var res = await fetch(API_BASE + '/customers/' + buyerSession.email + '/avatar', {
+      method:'POST',
+      headers:{ 'Authorization':'Bearer ' + buyerSession.sessionToken },
+      body: formData
+    });
+    if(res.status === 401 || res.status === 403){
+      Amana.clearSessionToken(buyerSession.email);
+      buyerSession.sessionToken = null;
+      throw new Error('Your session expired — verify again to upload a photo.');
+    }
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not upload your photo.'); }
+    renderBuyerAvatarPreview(data.avatarUrl);
+  }catch(err){
+    errEl.innerHTML = '<p class="inline-error">' + friendlyError(err) + '</p>';
+  }finally{
+    fileInput.value = '';
+  }
+}
+
+async function handleRemoveBuyerAvatar(){
+  var errEl = document.getElementById('buyerAvatarError');
+  errEl.innerHTML = '';
+  try{
+    var res = await fetch(API_BASE + '/customers/' + buyerSession.email + '/avatar', {
+      method:'DELETE',
+      headers:{ 'Authorization':'Bearer ' + buyerSession.sessionToken }
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not remove your photo.'); }
+    renderBuyerAvatarPreview(null);
+  }catch(err){
+    errEl.innerHTML = '<p class="inline-error">' + friendlyError(err) + '</p>';
+  }
+}
+
+// Public buyer profile viewer — used by sellers viewing a buyer from
+// their sales list, and by a buyer viewing their own public page via
+// the "View your public profile" link above. No auth required to view,
+// same as viewSellerProfile.
+async function viewBuyerProfile(email, returnTo){
+  hideMarketSidePanels();
+  window._buyerProfileReturnTo = returnTo || 'myProfileSection';
+  var section = document.getElementById('buyerProfileSection');
+  var contentEl = document.getElementById('buyerProfileContent');
+  section.style.display = 'block';
+  contentEl.innerHTML = '<p style="font-size:13.5px; color:var(--ink-soft);">Loading…</p>';
+  try{
+    var res = await fetch(API_BASE + '/customers/' + email + '/public');
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not load this buyer.'); }
+    var b = data.buyer;
+
+    var reviewsRes = await fetch(API_BASE + '/customers/' + email + '/reviews');
+    var reviewsData = await reviewsRes.json();
+    var reviews = (reviewsRes.ok && reviewsData.reviews) || [];
+
+    var avatarHtml = b.avatarUrl
+      ? '<img src="' + b.avatarUrl + '" alt="" style="width:56px; height:56px; border-radius:50%; object-fit:cover; border:1px solid var(--line);">'
+      : '<div style="width:56px; height:56px; border-radius:50%; background:var(--paper-dim); border:1px solid var(--line);"></div>';
+
+    var badgeHtml = b.verified
+      ? '<span class="payout-pill released" style="margin-left:8px;">Verified buyer</span>'
+      : '';
+
+    var statsLine = b.ordersCompleted + ' order' + (b.ordersCompleted === 1 ? '' : 's') + ' completed on Amana' +
+      (b.reviewCount ? ' · ' + b.avgRating + ' ★ (' + b.reviewCount + ' review' + (b.reviewCount === 1 ? '' : 's') + ')' : '') +
+      (b.memberSince ? ' · Member since ' + fmtDate(b.memberSince) : '');
+
+    var reviewsHtml = reviews.length
+      ? reviews.map(function(r){
+          return '<div class="my-listing-card" style="display:block;">' +
+            '<div class="name">' + '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating) + '</div>' +
+            (r.comment ? '<p class="desc" style="margin-top:4px;">' + escapeHtml(r.comment) + '</p>' : '') +
+            '<p class="section-sub" style="margin:4px 0 0; max-width:none; font-size:12px;">' + fmtDate(r.created_at) + '</p>' +
+          '</div>';
+        }).join('')
+      : '<p style="font-size:13.5px; color:var(--ink-soft);">No reviews yet.</p>';
+
+    contentEl.innerHTML =
+      '<div style="display:flex; align-items:center; gap:14px; margin-bottom:4px;">' +
+        avatarHtml +
+        '<div><h3 style="font-size:18px; margin:0;">' + escapeHtml(b.displayName) + badgeHtml + '</h3>' +
+        '<p class="section-sub" style="margin:2px 0 0; max-width:none; font-size:13px;">' + statsLine + '</p></div>' +
+      '</div>' +
+      '<h3 style="font-size:14px; margin-top:18px; margin-bottom:8px;">Reviews from sellers</h3>' +
+      reviewsHtml;
+  }catch(err){
+    contentEl.innerHTML = '<p class="inline-error">' + friendlyError(err) + '</p>';
+  }
+}
+
+function closeBuyerProfile(){
+  document.getElementById('buyerProfileSection').style.display = 'none';
+  var returnTo = window._buyerProfileReturnTo || 'myProfileSection';
+  document.getElementById(returnTo).style.display = 'block';
 }
 
 async function handleSaveMyProfile(){
@@ -2233,9 +2681,17 @@ async function loadSavedItems(){
     listEl.innerHTML = data.listings.map(function(l){
       marketListingCache[l.id] = l;
       var inCart = isInCart(l.id);
+      // price_dropped / price_ngn_at_save come from the backend's
+      // GET /wishlist/:email (see routes/wishlist.js) — it already
+      // compares the listing's current price_ngn against the price it
+      // was at when saved. Nothing previously rendered this; a buyer had
+      // no way to notice a price drop on something they'd saved.
+      var priceDropBadge = l.price_dropped
+        ? '<span style="color:#1a7f37; font-weight:600; margin-left:6px;">↓ was ' + formatNGN(l.price_ngn_at_save) + '</span>'
+        : '';
       return '<div class="my-listing-card">' +
         '<div><div class="name">' + escapeHtml(l.item_name) + '</div>' +
-        '<div class="price">' + categoryLabel(l.category) + ' · ' + formatNGN(l.price_ngn) + '</div>' +
+        '<div class="price">' + categoryLabel(l.category) + ' · ' + formatNGN(l.price_ngn) + priceDropBadge + '</div>' +
         (l.seller_email ? '<button type="button" class="small-link" style="margin-top:4px; display:inline-block;" onclick="viewSellerProfile(\'' + l.seller_email + '\')">View seller →</button>' : '') +
         '</div>' +
         '<button class="btn btn-ink" onclick="openMarketOrder(\'' + l.id + '\')">Buy this</button>' +
@@ -3398,12 +3854,118 @@ async function loadMyListings(email, token){
         '<div class="price">' + categoryLabel(l.category) + ' · ' + formatNGN(l.price_ngn) + '</div>' +
         stockPillHtml(l, false) +
         priceEditPillHtml(l, false) +
+        '<div class="price" style="margin-top:2px;"><a href="#" onclick="event.preventDefault(); viewListingOffers(\'' + l.id + '\', ' + JSON.stringify(l.item_name) + ');" class="small-link" style="display:inline;">View offers →</a></div>' +
         '</div>' +
         '<span class="review-pill ' + l.review_status + '">' + l.review_status.replace('_',' ') + '</span>' +
         '</div>';
     }).join('');
   }catch(err){
     list.innerHTML = '<p class="inline-error">' + friendlyError(err) + '</p>';
+  }
+}
+
+// Seller-facing view of offers on one of their own listings
+// (GET /listings/:listingId/offers, seller-session only). Each offer's
+// buyer profile is fetched from the same public endpoint the buyer-profile
+// panel uses, so the seller sees the buyer's verified badge and rating
+// right on the offer card — the whole point of surfacing this before the
+// sale rather than only after, on "Your sales".
+async function viewListingOffers(listingId, itemName){
+  var email = sellSession.email;
+  var token = Amana.getSessionToken(email);
+  if(!token){ alert('Your session expired — please verify your email again.'); return; }
+
+  var section = document.getElementById('listingOffersSection');
+  var titleEl = document.getElementById('listingOffersTitle');
+  var listEl = document.getElementById('listingOffersList');
+  document.getElementById('myListingsSection').style.display = 'none';
+  section.style.display = 'block';
+  titleEl.textContent = 'Offers on ' + itemName;
+  listEl.innerHTML = '<p style="font-size:13.5px; color:var(--ink-soft);">Loading…</p>';
+
+  try{
+    var res = await fetch(API_BASE + '/listings/' + listingId + '/offers', {
+      headers:{ 'Authorization':'Bearer ' + token }
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not load offers on this listing.'); }
+    var offers = data.offers || [];
+    if(!offers.length){
+      listEl.innerHTML = '<p style="font-size:13.5px; color:var(--ink-soft);">No offers on this listing yet.</p>';
+      return;
+    }
+
+    // Fetch each buyer's public profile in parallel — same data the
+    // buyer-profile panel shows, just inlined onto the offer card.
+    var buyerProfiles = await Promise.all(offers.map(function(o){
+      return fetch(API_BASE + '/customers/' + o.buyer_email + '/public')
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(d){ return d ? d.buyer : null; })
+        .catch(function(){ return null; });
+    }));
+
+    listEl.innerHTML = offers.map(function(o, i){
+      var b = buyerProfiles[i];
+      var badge = b && b.verified ? '<span class="payout-pill released" style="margin-left:6px;">Verified</span>' : '';
+      var ratingLine = b && b.reviewCount ? b.avgRating + ' ★ (' + b.reviewCount + ')' : (b ? 'No reviews yet' : '');
+      var ordersLine = b ? b.ordersCompleted + ' order' + (b.ordersCompleted === 1 ? '' : 's') + ' completed' : '';
+      var actions = '';
+      if(o.status === 'pending'){
+        actions =
+          '<div style="margin-top:8px; display:flex; gap:8px;">' +
+            '<button class="small-link" onclick="handleOfferResponse(\'' + o.id + '\', \'accepted\', this)">Accept</button>' +
+            '<button class="small-link" onclick="handleOfferResponse(\'' + o.id + '\', \'rejected\', this)">Decline</button>' +
+          '</div>' +
+          '<div class="inline-error" id="offerRespondError-' + o.id + '"></div>';
+      }
+      return '<div class="my-listing-card" style="display:block;" id="offerCard-' + o.id + '">' +
+        '<div style="display:flex; justify-content:space-between; align-items:flex-start;">' +
+          '<div>' +
+            '<div class="name">' + (b ? escapeHtml(b.displayName) : escapeHtml(o.buyer_email)) + badge + '</div>' +
+            '<div class="price" style="margin-top:2px;">' + ordersLine + (ratingLine ? ' · ' + ratingLine : '') + '</div>' +
+            '<div class="price">Offer: ' + formatNGN(o.offer_amount_ngn) + '</div>' +
+          '</div>' +
+          '<span class="payout-pill ' + (o.status === 'accepted' ? 'released' : (o.status === 'pending' ? 'pending' : '')) + '">' + o.status + '</span>' +
+        '</div>' +
+        actions +
+      '</div>';
+    }).join('');
+  }catch(err){
+    listEl.innerHTML = '<p class="inline-error">' + friendlyError(err) + '</p>';
+  }
+}
+
+function closeListingOffers(){
+  document.getElementById('listingOffersSection').style.display = 'none';
+  document.getElementById('myListingsSection').style.display = 'block';
+}
+
+async function handleOfferResponse(offerId, status, btn){
+  var email = sellSession.email;
+  var token = Amana.getSessionToken(email);
+  var errEl = document.getElementById('offerRespondError-' + offerId);
+  btn.disabled = true;
+  try{
+    var res = await fetch(API_BASE + '/offers/' + offerId, {
+      method:'PATCH',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + token },
+      body: JSON.stringify({ status: status })
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not update this offer.'); }
+
+    var card = document.getElementById('offerCard-' + offerId);
+    var pill = card.querySelector('.payout-pill');
+    pill.textContent = status;
+    pill.className = 'payout-pill' + (status === 'accepted' ? ' released' : '');
+    // Remove the accept/decline buttons now that this offer is resolved.
+    Array.prototype.forEach.call(card.querySelectorAll('button'), function(b){ b.remove(); });
+    if(status === 'accepted'){
+      card.insertAdjacentHTML('beforeend', '<p class="price" style="margin-top:8px;">Order created — check "Your sales" for handoff details.</p>');
+    }
+  }catch(err){
+    if(errEl) errEl.innerHTML = '<p class="inline-error">' + friendlyError(err) + '</p>';
+    btn.disabled = false;
   }
 }
 
@@ -3583,6 +4145,37 @@ async function submitPriceEditDemo(listingId){
 
 function payoutLabel(status){ return Amana.payoutLabel(status); }
 
+// Seller confirming the seller→rider leg — separate step from
+// handleMarkShipped below, which is gated on the buyer's handoff code
+// and represents the item having reached the buyer. This one just says
+// "I gave it to the rider," using PATCH /:id/rider-pickup (a seller-
+// authenticated sibling of the rider's own PATCH /:id/rider-status).
+async function handleMarkRiderPickup(orderId, btnEl){
+  var errEl = document.getElementById('riderPickupError-' + orderId);
+  errEl.textContent = '';
+  var token = Amana.getSessionToken(sellSession.email);
+  if(!token){
+    errEl.textContent = 'Your session expired — log in again to continue.';
+    return;
+  }
+  btnEl.disabled = true;
+  var original = btnEl.textContent;
+  btnEl.textContent = 'Marking…';
+  try{
+    var res = await fetch(API_BASE + '/orders/' + orderId + '/rider-pickup', {
+      method:'PATCH',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + token }
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not mark this as picked up by the rider.'); }
+    loadMySales(sellSession.email, token);
+  }catch(err){
+    errEl.textContent = friendlyError(err);
+    btnEl.disabled = false;
+    btnEl.textContent = original;
+  }
+}
+
 async function handleMarkShipped(orderId, btnEl){
   var errEl = document.getElementById('shipError-' + orderId);
   errEl.textContent = '';
@@ -3609,6 +4202,55 @@ async function handleMarkShipped(orderId, btnEl){
     var data = await res.json();
     if(!res.ok){ throw new Error(data.error || 'Could not mark this order as handed over.'); }
     loadMySales(sellSession.email, token);
+  }catch(err){
+    errEl.textContent = friendlyError(err);
+    btnEl.disabled = false;
+    btnEl.textContent = original;
+  }
+}
+
+// Static "you already rated this buyer" block — same one used both when
+// the sales list loads with o.buyer_review_rating already set, and swapped
+// in immediately after a successful POST /rate-buyer so the form doesn't
+// keep offering itself until the next reload.
+function renderBuyerRatedBlock(rating, comment){
+  var stars = '★★★★★☆☆☆☆☆'.slice(5 - rating, 10 - rating);
+  return '<div style="margin-top:8px; padding-top:8px; border-top:1px solid var(--line);">' +
+    '<div class="price">You rated this buyer: ' + stars + '</div>' +
+    (comment ? '<div class="price" style="margin-top:2px;">“' + escapeHtml(comment) + '”</div>' : '') +
+  '</div>';
+}
+
+// Seller rates the buyer on a completed order — mirror of the
+// buyer-rates-seller flow (POST /orders/:id/review), requires the
+// seller's own session token, resolved server-side from the order's
+// seller_email. Disables the button while in flight and re-enables it
+// with a message on failure (e.g. already rated) rather than silently
+// retrying. On success, replaces the whole form (not just the button
+// label) with the static rated-state block, so a page reload isn't
+// needed to see it stop offering the form again.
+async function handleRateBuyer(orderId, btnEl){
+  var errEl = document.getElementById('rateBuyerError-' + orderId);
+  errEl.textContent = '';
+  var rating = Number(document.getElementById('rateBuyerStars-' + orderId).value);
+  var comment = document.getElementById('rateBuyerComment-' + orderId).value.trim();
+  var original = btnEl.textContent;
+  btnEl.disabled = true;
+  btnEl.textContent = 'Saving…';
+  try{
+    var res = await fetch(API_BASE + '/orders/' + orderId + '/rate-buyer', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + sellSession.sessionToken },
+      body: JSON.stringify({ rating:rating, comment:comment || undefined })
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not save this rating.'); }
+    var blockEl = document.getElementById('rateBuyerBlock-' + orderId);
+    if(blockEl){
+      blockEl.outerHTML = renderBuyerRatedBlock(rating, comment);
+    }else{
+      btnEl.textContent = 'Rated ✓';
+    }
   }catch(err){
     errEl.textContent = friendlyError(err);
     btnEl.disabled = false;
@@ -3660,18 +4302,71 @@ async function loadMySales(email, token){
         shipBlock =
           '<div style="margin-top:8px; display:flex; align-items:center; gap:8px;">' +
             codeField +
-            '<button class="small-link ship-btn" id="shipBtn-' + o.id + '" onclick="handleMarkShipped(\'' + o.id + '\', this)">Mark as handed over</button>' +
+            '<button class="small-link ship-btn" id="shipBtn-' + o.id + '" onclick="handleMarkShipped(\'' + o.id + '\', this)">' + (o.delivery_zone ? 'Confirm buyer received it' : 'Mark as handed over') + '</button>' +
           '</div>' +
           '<div class="inline-error" id="shipError-' + o.id + '"></div>';
       }
+      // Seller→rider handoff — a separate, earlier step from the
+      // buyer-code "Mark as handed over" above. Only shown once a rider
+      // is actually assigned and only until either the seller or the
+      // rider (from their own link) has reported a pickup or further
+      // along; after that this collapses into a plain status line so
+      // the card doesn't offer a stale action.
+      var riderPickupBlock = '';
+      if(o.delivery_zone && o.rider_id){
+        if(!o.rider_status){
+          riderPickupBlock =
+            '<div style="margin-top:8px; display:flex; align-items:center; gap:8px;">' +
+              '<button class="small-link" id="riderPickupBtn-' + o.id + '" onclick="handleMarkRiderPickup(\'' + o.id + '\', this)">Mark picked up by rider</button>' +
+            '</div>' +
+            '<div class="inline-error" id="riderPickupError-' + o.id + '"></div>';
+        }else{
+          riderPickupBlock = '<div class="price" style="margin-top:2px;">Rider status: ' + escapeHtml(o.rider_status.replace('_', ' ')) + '</div>';
+        }
+      }
       var riderInfo = o.delivery_zone
         ? '<div class="price" style="margin-top:2px;">' + Amana.deliveryZoneLabel(o.delivery_zone) + (o.rider_name ? ' · rider: ' + escapeHtml(o.rider_name) : ' · rider not assigned yet') + '</div>'
+        : '';
+
+      // Rate this buyer — only offered once the order has actually
+      // arrived (same trust checkpoint as payout release and the
+      // buyer's own review-the-seller flow). GET /orders/selling/:email
+      // now LEFT JOINs buyer_reviews, so o.buyer_review_rating tells us
+      // whether this order has already been rated — if so, show the
+      // rating instead of the form (no reload needed to notice it was
+      // rated, since handleRateBuyer also swaps this block in place on
+      // success below).
+      var rateBuyerBlock = '';
+      if(o.status === 'arrived'){
+        if(o.buyer_review_rating){
+          rateBuyerBlock = renderBuyerRatedBlock(o.buyer_review_rating, o.buyer_review_comment);
+        }else{
+          rateBuyerBlock =
+            '<div style="margin-top:8px; padding-top:8px; border-top:1px solid var(--line);" id="rateBuyerBlock-' + o.id + '">' +
+              '<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">' +
+                '<select id="rateBuyerStars-' + o.id + '" style="width:auto;">' +
+                  '<option value="5">★★★★★</option><option value="4">★★★★☆</option>' +
+                  '<option value="3">★★★☆☆</option><option value="2">★★☆☆</option><option value="1">★☆☆☆☆</option>' +
+                '</select>' +
+                '<input type="text" id="rateBuyerComment-' + o.id + '" placeholder="Optional comment" style="flex:1; min-width:120px;">' +
+                '<button class="small-link" onclick="handleRateBuyer(\'' + o.id + '\', this)">Rate this buyer</button>' +
+              '</div>' +
+              '<div class="inline-error" id="rateBuyerError-' + o.id + '"></div>' +
+            '</div>';
+        }
+      }
+
+      var buyerLine = o.email
+        ? '<div class="price" style="margin-top:2px;"><a href="#" onclick="event.preventDefault(); viewBuyerProfile(\'' + o.email + '\', \'mySalesSection\');" class="small-link" style="display:inline;">View buyer profile →</a></div>'
         : '';
       return '<div class="my-listing-card">' +
         '<div style="flex:1;"><div class="name">' + escapeHtml(o.item_name) + '</div>' +
         '<div class="price">Your payout: ' + formatNGN(o.payout_amount_ngn || o.total_ngn) + ' · order ' + o.status + '</div>' +
         riderInfo +
+        buyerLine +
+        riderPickupBlock +
         shipBlock +
+        rateBuyerBlock +
         '</div>' +
         '<span class="payout-pill ' + o.payout_status + '">' + payoutLabel(o.payout_status) + '</span>' +
         '</div>';
@@ -3828,10 +4523,55 @@ function restoreRememberedSessions(){
 
 function updateTrackOrderLink(){
   var link = document.getElementById('trackOrderLink');
-  if(!link) return;
-  link.href = buyerSession.sessionToken && buyerSession.email
-    ? 'status.html?email=' + encodeURIComponent(buyerSession.email)
-    : 'status.html';
+  if(link){
+    link.href = buyerSession.sessionToken && buyerSession.email
+      ? 'status.html?email=' + encodeURIComponent(buyerSession.email)
+      : 'status.html';
+  }
+  updateAccountMenuLabel();
+}
+
+// Swaps the "My account" pill for the buyer's display name (and avatar,
+// if they've set one) once signed in — same public endpoint
+// loadCurrentBuyerDisplayName() uses for the profile panel, so nothing
+// new to keep in sync server-side. Falls back silently to the generic
+// "My account" state on any error or while signed out.
+var accountMenuLabelRequestEmail = null;
+async function updateAccountMenuLabel(){
+  var label = document.getElementById('accountMenuLabel');
+  var icon = document.getElementById('accountMenuIcon');
+  if(!label || !icon) return;
+
+  if(!buyerSession.sessionToken || !buyerSession.email){
+    accountMenuLabelRequestEmail = null;
+    label.textContent = 'My account';
+    icon.innerHTML = '&#128100;';
+    return;
+  }
+
+  var email = buyerSession.email;
+  accountMenuLabelRequestEmail = email;
+  try{
+    var res = await fetch(API_BASE + '/customers/' + email + '/public');
+    if(accountMenuLabelRequestEmail !== email) return; // session changed while this was in flight
+    if(!res.ok){
+      label.textContent = email.split('@')[0];
+      return;
+    }
+    var data = await res.json();
+    if(accountMenuLabelRequestEmail !== email) return;
+    var name = (data.buyer && data.buyer.hasCustomDisplayName) ? data.buyer.displayName : email.split('@')[0];
+    label.textContent = name;
+    var avatarUrl = data.buyer && data.buyer.avatarUrl;
+    if(avatarUrl){
+      icon.innerHTML = '<img src="' + escapeHtml(avatarUrl) + '" alt="">';
+    }else{
+      icon.textContent = name.trim().charAt(0).toUpperCase() || '?';
+    }
+  }catch(err){
+    if(accountMenuLabelRequestEmail !== email) return;
+    label.textContent = email.split('@')[0];
+  }
 }
 
 // Forgets both the buyer and seller session on this device — clears the
