@@ -273,6 +273,22 @@
   .save-heart:hover{ background:#fff; }
   .save-heart.saved{ color:var(--red); border-color:#F0C9C4; }
 
+  .cart-badge-count{
+    display:inline-flex; align-items:center; justify-content:center; min-width:16px; height:16px;
+    padding:0 4px; margin-left:5px; border-radius:100px; background:var(--red,#B23A2E); color:#fff;
+    font-size:10.5px; font-weight:700; line-height:16px; vertical-align:middle;
+  }
+  .cart-seller-group{ border:1px solid #E1D6BA; border-radius:10px; padding:12px 14px; margin-bottom:10px; background:#fff; }
+  .cart-seller-group-header{ font-size:12.5px; font-weight:700; color:var(--ink-soft); margin-bottom:8px; text-transform:uppercase; letter-spacing:.03em; }
+  .cart-item-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:6px 0; border-bottom:1px solid #F0EAD9; }
+  .cart-item-row:last-of-type{ border-bottom:none; }
+  .cart-item-name{ font-size:14px; }
+  .cart-item-price{ font-size:13.5px; color:var(--ink-soft); white-space:nowrap; }
+  .cart-item-remove{ background:none; border:none; color:var(--red,#B23A2E); font-size:12.5px; cursor:pointer; padding:2px 4px; }
+  .cart-seller-fee-note{ font-size:12px; color:var(--ink-soft); margin-top:6px; }
+  .cart-total-row{ display:flex; justify-content:space-between; font-size:16px; font-weight:700; padding:12px 0; border-top:2px solid #E1D6BA; margin-top:6px; }
+  .cart-empty-note{ font-size:13.5px; color:var(--ink-soft); }
+
   /* ============ SELL FORM ============ */
   .sell-panel{ background:var(--cream); border:1px solid #E1D6BA; border-radius:12px; padding:24px; max-width:520px; }
   .sell-panel textarea{ width:100%; padding:11px 13px; border-radius:8px; border:1px solid #C9BFA4; background:#fff; font-size:15px; font-family:inherit; resize:vertical; min-height:80px; }
@@ -460,6 +476,11 @@
           <button type="button" class="small-link" onclick="toggleMyOrders()" id="myOrdersToggle">My orders</button>
           <button type="button" class="small-link" onclick="toggleSavedItems()" id="savedItemsToggle">Saved items</button>
           <button type="button" class="small-link" onclick="toggleSellerSearch()" id="sellerSearchToggle">Find a seller</button>
+          <button type="button" class="small-link" onclick="toggleCart()" id="cartToggle">Cart<span class="cart-badge-count" id="cartBadgeCount" style="display:none;">0</span></button>
+        </div>
+        <div class="my-listings" id="cartSection" style="display:none;">
+          <h3 style="font-size:16px; margin-bottom:12px;">Your cart</h3>
+          <div id="cartList"></div>
         </div>
         <div class="my-listings" id="myOrdersSection" style="display:none;">
           <h3 style="font-size:16px; margin-bottom:12px;" id="myOrdersHeading">Your orders</h3>
@@ -759,6 +780,8 @@ function handleCategoryPillClick(value){
   }
 })();
 
+updateCartBadge();
+
 var marketFilterDebounce = null;
 
 // Renders N skeleton placeholder cards while a fetch is in flight, so the
@@ -828,8 +851,10 @@ function renderMarketplace(listings){
     return;
   }
   grid.innerHTML = listings.map(function(l){
+    marketListingCache[l.id] = l;
     var photo = (l.photo_urls && l.photo_urls[0]) || '';
     var saved = isSavedLocally(l.id);
+    var inCart = isInCart(l.id);
     return '<div class="market-card">' +
       '<div class="photo-wrap">' +
         (photo
@@ -845,6 +870,7 @@ function renderMarketplace(listings){
         (!l.always_in_stock && l.stock_qty > 0 && l.stock_qty <= 3 ? '<div class="stock-hint">Only ' + l.stock_qty + ' left</div>' : '') +
         '<div class="price">' + formatNGN(l.price_ngn) + '</div>' +
         '<button class="btn btn-ink" style="margin-top:6px;" onclick="openMarketOrder(\'' + l.id + '\')">Buy this</button>' +
+        '<button class="btn' + (inCart ? ' btn-ink' : '') + '" style="margin-top:6px;" id="cartBtn-' + l.id + '" onclick="toggleCartItem(\'' + l.id + '\', this)">' + (inCart ? 'Remove from cart' : 'Add to cart') + '</button>' +
         (l.seller_email ? '<button type="button" class="small-link" style="margin-top:6px; display:inline-block;" onclick="viewSellerProfile(\'' + l.seller_email + '\')">View seller →</button>' : '') +
       '</div>' +
     '</div>';
@@ -1092,6 +1118,12 @@ async function finalizeMarketOrder(){
   document.getElementById('modalBody').innerHTML = '<p style="font-size:13px; color:var(--ink-soft);">Placing your order...</p>';
   try{
     Amana.saveSessionToken(currentOrder.email, currentOrder.sessionToken);
+
+    if(currentOrder.cart){
+      await finalizeCartOrder();
+      return;
+    }
+
     var orderRes = await fetch(API_BASE + '/orders/marketplace', {
       method:'POST',
       headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + currentOrder.sessionToken },
@@ -1122,9 +1154,106 @@ async function finalizeMarketOrder(){
       '<a class="btn btn-ochre" style="width:100%; justify-content:center; margin-top:16px;" href="status.html">Track this order</a>';
   }catch(err){
     document.getElementById('modalBody').innerHTML =
-      '<h3>Buy this item</h3>' +
+      '<h3>' + (currentOrder.cart ? 'Buy these items' : 'Buy this item') + '</h3>' +
       '<p class="inline-error">' + friendlyError(err) + '</p>' +
       '<a class="btn btn-ochre" style="width:100%; justify-content:center;" href="status.html">Track this order</a>';
+  }
+}
+
+// The cart-checkout counterpart to the single-item branch above. Calls
+// POST /orders/marketplace/cart (handles any mix of sellers — see that
+// route's own comments in routes/orders.js for why delivery fees end up
+// split per-seller rather than one flat fee for the whole cart), then
+// renders every resulting order grouped by seller with ONE combined
+// "Pay total now" button driving the shared order_group_id through
+// POST /orders/group/:id/pay/initialize. Bank transfer isn't offered here
+// the way it is for single orders — there's no group-level "I've paid,
+// no receipt" claim endpoint on the backend yet, only per-order, so
+// mixing that in here would silently only mark one of several orders as
+// claimed. Paystack (or paying each resulting order individually later
+// from the status page, which already works today) are the two real
+// options for a multi-item cart.
+async function finalizeCartOrder(){
+  var orderRes = await fetch(API_BASE + '/orders/marketplace/cart', {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + currentOrder.sessionToken },
+    body: JSON.stringify({ email: currentOrder.email, listingIds: currentOrder.listingIds })
+  });
+  var orderData = await orderRes.json();
+  if(!orderRes.ok){ throw new Error(orderData.error || 'Could not complete the purchase.'); }
+
+  var group = orderData.group;
+  var orders = orderData.orders;
+  clearCart();
+
+  var bySeller = {};
+  var sellerOrder = [];
+  orders.forEach(function(o){
+    var key = o.seller_email || 'unknown';
+    if(!bySeller[key]){ bySeller[key] = []; sellerOrder.push(key); }
+    bySeller[key].push(o);
+  });
+
+  var sellerBlocks = sellerOrder.map(function(key){
+    var sellerOrders = bySeller[key];
+    var rows = sellerOrders.map(function(o){
+      var feeNote = o.delivery_fee_ngn ? ' (incl. ' + formatNGN(o.delivery_fee_ngn) + ' delivery)' : '';
+      var codeNote = o.handoff_code
+        ? '<div style="font-size:11.5px; color:var(--ink-soft); margin-top:2px;">Handoff code: <strong>' + o.handoff_code + '</strong> — only share with the rider once you\'ve checked this item.</div>'
+        : '';
+      return '<div class="cart-item-row" style="display:block;">' +
+        '<div style="display:flex; justify-content:space-between;"><span class="cart-item-name">' + escapeHtml(o.item_name) + '</span><span class="cart-item-price">' + formatNGN(o.total_ngn) + feeNote + '</span></div>' +
+        codeNote +
+      '</div>';
+    }).join('');
+    return '<div class="cart-seller-group">' + rows + '</div>';
+  }).join('');
+
+  document.getElementById('modalBody').innerHTML =
+    '<h3>Order placed</h3>' +
+    '<p class="modal-sub">' + orders.length + ' items across ' + sellerOrder.length + ' seller' + (sellerOrder.length === 1 ? '' : 's') + '. Each is held by Amana separately until you confirm it arrived as described.</p>' +
+    sellerBlocks +
+    '<button class="btn btn-ochre" style="width:100%; justify-content:center; margin-top:10px;" onclick="handlePayGroupWithPaystackFromModal(\'' + group.id + '\', this)">Pay ' + formatNGN(group.total_ngn) + ' now (all items)</button>' +
+    '<p style="text-align:center; font-size:12px; color:var(--ink-soft); margin:10px 0;">or pay by bank transfer</p>' +
+    Amana.bankDetailsHTML(group.id) +
+    '<div class="claim-paid-row">' +
+      '<input type="file" id="groupReceiptInput-' + group.id + '" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" style="display:none;" onchange="handleGroupClaimPaid(\'' + group.id + '\', this.files[0], this)">' +
+      '<button class="btn btn-ochre" style="width:100%; justify-content:center; margin-top:8px;" onclick="document.getElementById(\'groupReceiptInput-' + group.id + '\').click()">Upload payment receipt</button>' +
+      '<button class="small-link" style="width:100%; margin-top:6px;" onclick="handleGroupClaimPaid(\'' + group.id + '\', null, this)">I\'ve paid, no receipt to attach</button>' +
+    '</div>' +
+    '<div id="groupClaimNote-' + group.id + '"></div>' +
+    '<a class="btn btn-ochre" style="width:100%; justify-content:center; margin-top:16px;" href="status.html">Track these orders</a>';
+}
+
+// Bank-transfer counterpart to handlePayGroupWithPaystackFromModal — signals
+// "I've sent payment for this whole cart" via PATCH /orders/group/:id/claim-paid,
+// which stamps claimed_paid_at (and the receipt, if attached) on every order in
+// the group at once. Mirrors handleClaimPaid's pattern in status.html for a
+// single order, just scoped to a group.
+async function handleGroupClaimPaid(groupId, file, triggerEl){
+  var noteEl = document.getElementById('groupClaimNote-' + groupId);
+  noteEl.innerHTML = '<p style="font-size:12.5px; color:var(--ink-soft); margin-top:8px;">Recording your payment...</p>';
+  try{
+    var res;
+    if(file){
+      var formData = new FormData();
+      formData.append('receipt', file);
+      res = await fetch(API_BASE + '/orders/group/' + groupId + '/claim-paid', {
+        method:'PATCH',
+        headers:{ 'Authorization':'Bearer ' + currentOrder.sessionToken },
+        body: formData
+      });
+    }else{
+      res = await fetch(API_BASE + '/orders/group/' + groupId + '/claim-paid', {
+        method:'PATCH',
+        headers:{ 'Authorization':'Bearer ' + currentOrder.sessionToken }
+      });
+    }
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not record your payment claim.'); }
+    noteEl.innerHTML = '<p style="font-size:12.5px; color:var(--ink-soft); margin-top:8px;">Thanks — we\'ll check and confirm shortly. You can track progress on the status page.</p>';
+  }catch(err){
+    noteEl.innerHTML = '<p class="inline-error">' + friendlyError(err) + '</p>';
   }
 }
 
@@ -1154,8 +1283,40 @@ async function handlePayWithPaystackFromModal(orderId, btnEl){
   }
 }
 
+// Same idea as handlePayWithPaystackFromModal above, but for a cart
+// checkout's combined order_group_id — one Paystack charge for every
+// order created in that group. Stashes {groupId, email} instead of
+// {orderId, email} under the same localStorage key; status.html's
+// checkPendingPaystackPayment() (see that file) checks for groupId first
+// and falls back to the single-order path otherwise, so one resume
+// function covers both redirect-back cases.
+async function handlePayGroupWithPaystackFromModal(groupId, btnEl){
+  var originalLabel = btnEl.textContent;
+  btnEl.disabled = true;
+  btnEl.textContent = 'Starting payment...';
+  try{
+    var res = await fetch(API_BASE + '/orders/group/' + groupId + '/pay/initialize', {
+      method:'POST',
+      headers:{ 'Authorization':'Bearer ' + currentOrder.sessionToken }
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not start payment.'); }
+    window.localStorage.setItem('amana_pending_payment', JSON.stringify({ groupId: groupId, email: currentOrder.email }));
+    window.location.href = data.authorizationUrl;
+  }catch(err){
+    document.getElementById('modalBody').insertAdjacentHTML('beforeend', '<p class="inline-error">' + friendlyError(err) + '</p>');
+    btnEl.disabled = false;
+    btnEl.textContent = originalLabel;
+  }
+}
+
 /* ================= wishlist (marketplace saved items) ================= */
-var buyerSession = { email:null, sessionToken:null };
+// Seeded from the last-remembered buyer email (see Amana.rememberLastEmail),
+// not left null — this is what lets toggleMyOrders()/toggleSavedItems()'s
+// existing "if(!buyerSession.sessionToken && buyerSession.email)" cached-
+// token check actually fire on a normal page load, instead of only ever
+// working after the visitor has already typed their email once THIS visit.
+var buyerSession = { email: Amana.getLastEmail('buyer'), sessionToken:null };
 var locallySavedIds = {};
 
 function isSavedLocally(listingId){
@@ -1298,6 +1459,176 @@ function hideMarketSidePanels(){
   document.getElementById('savedItemsSection').style.display = 'none';
   document.getElementById('sellerSearchSection').style.display = 'none';
   document.getElementById('sellerProfileSection').style.display = 'none';
+  document.getElementById('cartSection').style.display = 'none';
+}
+
+/* ================= cart (multi-item checkout, any mix of sellers) =================
+   Unlike wishlist, the cart needs no login/OTP to build — it's just a list of
+   listingIds in localStorage, exactly like a normal e-commerce cart, since nothing
+   server-side happens until checkout (same "ask for email only when you actually
+   need it" principle the rest of this page already follows for "Buy this").
+   marketListingCache holds the full listing objects (seller, price, delivery zone)
+   for whatever's currently on screen, keyed by id, so the cart can render seller
+   groupings and delivery-fee notes without a second network round trip — it's
+   populated every time renderMarketplace() or renderSavedItems() runs. If the
+   page is reloaded and a cached id's listing hasn't been seen again yet, the cart
+   item still displays (using whatever was last cached) rather than disappearing;
+   checkout re-validates every listing server-side regardless, same as any other
+   purchase, so a stale cache entry can never actually mis-charge anyone. */
+var CART_STORAGE_KEY = 'amana_cart';
+var marketListingCache = {};
+
+function readCart(){
+  try{
+    var raw = window.localStorage.getItem(CART_STORAGE_KEY);
+    var ids = raw ? JSON.parse(raw) : [];
+    return Array.isArray(ids) ? ids : [];
+  }catch(e){ return []; }
+}
+function writeCart(ids){
+  window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(ids));
+  updateCartBadge();
+}
+function isInCart(listingId){ return readCart().indexOf(listingId) !== -1; }
+
+function updateCartBadge(){
+  var count = readCart().length;
+  var badge = document.getElementById('cartBadgeCount');
+  if(!badge) return;
+  badge.textContent = String(count);
+  badge.style.display = count > 0 ? 'inline-flex' : 'none';
+}
+
+function toggleCartItem(listingId, btnEl){
+  var ids = readCart();
+  var idx = ids.indexOf(listingId);
+  if(idx === -1){
+    ids.push(listingId);
+  }else{
+    ids.splice(idx, 1);
+  }
+  writeCart(ids);
+  if(btnEl){
+    var nowIn = isInCart(listingId);
+    btnEl.textContent = nowIn ? 'Remove from cart' : 'Add to cart';
+    btnEl.classList.toggle('btn-ink', nowIn);
+  }
+  var cartSection = document.getElementById('cartSection');
+  if(cartSection.style.display !== 'none') renderCart();
+}
+
+function toggleCart(){
+  var section = document.getElementById('cartSection');
+  var showing = section.style.display !== 'none';
+  hideMarketSidePanels();
+  if(showing) return;
+  section.style.display = 'block';
+  renderCart();
+}
+
+function removeFromCartAndRender(listingId){
+  var ids = readCart().filter(function(id){ return id !== listingId; });
+  writeCart(ids);
+  var btn = document.getElementById('cartBtn-' + listingId);
+  if(btn){ btn.textContent = 'Add to cart'; btn.classList.remove('btn-ink'); }
+  renderCart();
+}
+
+function renderCart(){
+  var ids = readCart();
+  var listEl = document.getElementById('cartList');
+  if(!ids.length){
+    listEl.innerHTML = '<p class="cart-empty-note">Your cart is empty. Add items from the marketplace below.</p>';
+    return;
+  }
+
+  // Group by seller purely for display + the per-seller delivery-fee note —
+  // the actual fee split happens server-side at checkout (see
+  // POST /orders/marketplace/cart), this is just showing the buyer what to
+  // expect before they commit to the purchase.
+  var bySeller = {};
+  var sellerOrder = [];
+  var grandTotal = 0;
+  var anyMissingFromCache = false;
+
+  ids.forEach(function(id){
+    var l = marketListingCache[id];
+    if(!l){ anyMissingFromCache = true; return; }
+    var key = l.seller_email || 'unknown';
+    if(!bySeller[key]){ bySeller[key] = { seller: l.seller, sellerEmail: l.seller_email, items: [] }; sellerOrder.push(key); }
+    bySeller[key].items.push(l);
+  });
+
+  var html = sellerOrder.map(function(key){
+    var group = bySeller[key];
+    var sellerName = (group.seller && group.seller.storeName) || key;
+    var zones = {};
+    group.items.forEach(function(l){ if(l.delivery_area === 'katsina_only') zones[l.delivery_zone] = true; });
+    var zoneKeys = Object.keys(zones);
+    var feeNgn = zoneKeys.length === 1 ? Amana.deliveryZoneFeeNgn(zoneKeys[0]) : null;
+    var subtotal = group.items.reduce(function(sum, l){ return sum + l.price_ngn; }, 0) + (feeNgn || 0);
+    grandTotal += subtotal;
+
+    var rows = group.items.map(function(l){
+      return '<div class="cart-item-row">' +
+        '<span class="cart-item-name">' + escapeHtml(l.item_name) + '</span>' +
+        '<span class="cart-item-price">' + formatNGN(l.price_ngn) +
+          ' <button type="button" class="cart-item-remove" onclick="removeFromCartAndRender(\'' + l.id + '\')">Remove</button>' +
+        '</span>' +
+      '</div>';
+    }).join('');
+
+    var feeNote = zoneKeys.length > 1
+      ? '<div class="cart-seller-fee-note">Items from this seller have mixed delivery zones — you\'ll need to check out separately for these.</div>'
+      : (feeNgn ? '<div class="cart-seller-fee-note">+ ' + formatNGN(feeNgn) + ' delivery for this seller\'s items (one rider trip)</div>' : '');
+
+    return '<div class="cart-seller-group">' +
+      '<div class="cart-seller-group-header">' + escapeHtml(sellerName) + '</div>' +
+      rows + feeNote +
+    '</div>';
+  }).join('');
+
+  html += '<div class="cart-total-row"><span>Total</span><span>' + formatNGN(grandTotal) + '</span></div>';
+  html += '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick="startCartCheckout()" id="cartCheckoutBtn">Checkout (' + ids.length + ' item' + (ids.length === 1 ? '' : 's') + ')</button>';
+
+  if(anyMissingFromCache){
+    html += '<p class="cart-empty-note" style="margin-top:8px;">Some saved items weren\'t visible on this page load — reopen the marketplace list to refresh them before checking out.</p>';
+  }
+
+  listEl.innerHTML = html;
+}
+
+// Reuses the exact same email → OTP/password → profile flow as "Buy this"
+// (openMarketOrder / handleMarketEmailSubmit / proceedToCheckoutProfile),
+// just with currentOrder.cart = true and a list of listingIds instead of a
+// single one — see the branch in finalizeMarketOrder() below for where
+// this actually diverges (which endpoint gets called and what the
+// confirmation screen shows).
+function startCartCheckout(){
+  var ids = readCart();
+  if(!ids.length) return;
+  if(!API_BASE){
+    alert('Checkout needs the real backend connected.');
+    return;
+  }
+  if(ids.length === 1){
+    openMarketOrder(ids[0]);
+    return;
+  }
+  currentOrder = { marketplace:true, cart:true, listingIds:ids, email:null, customer:null, tempCode:null, sessionToken:null, otpPurpose:'signup' };
+  document.getElementById('orderOverlay').classList.add('open');
+  document.getElementById('modalBody').innerHTML =
+    '<h3>Buy these ' + ids.length + ' items</h3>' +
+    '<p class="modal-sub">One payment for everything in your cart. Your payment is held by Amana per item until you confirm each one arrived as described — sellers aren\'t paid until then.</p>' +
+    '<div class="field"><label for="emailInput">Your email address</label>' +
+    '<input type="email" id="emailInput" placeholder="you@example.com" autofocus></div>' +
+    '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick="handleMarketEmailSubmit()">Continue</button>';
+}
+
+function clearCart(){
+  writeCart([]);
+  var section = document.getElementById('cartSection');
+  if(section && section.style.display !== 'none') renderCart();
 }
 
 /* ================= buyer order history ("My orders") ================= */
@@ -1327,7 +1658,7 @@ function openBuyerVerifyForOrdersView(){
     '<h3>View your orders</h3>' +
     '<p class="modal-sub">Enter your email address.</p>' +
     '<div class="field"><label for="ordersEmailInput">Your email address</label>' +
-    '<input type="email" id="ordersEmailInput" placeholder="you@example.com" autofocus></div>' +
+    '<input type="email" id="ordersEmailInput" placeholder="you@example.com" value="' + escapeHtml(buyerSession.email || '') + '" autofocus></div>' +
     '<div id="ordersModalError"></div>' +
     '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick="handleOrdersViewEmailSubmit()">Continue</button>';
 }
@@ -1650,12 +1981,15 @@ async function loadSavedItems(){
       return;
     }
     listEl.innerHTML = data.listings.map(function(l){
+      marketListingCache[l.id] = l;
+      var inCart = isInCart(l.id);
       return '<div class="my-listing-card">' +
         '<div><div class="name">' + escapeHtml(l.item_name) + '</div>' +
         '<div class="price">' + categoryLabel(l.category) + ' · ' + formatNGN(l.price_ngn) + '</div>' +
         (l.seller_email ? '<button type="button" class="small-link" style="margin-top:4px; display:inline-block;" onclick="viewSellerProfile(\'' + l.seller_email + '\')">View seller →</button>' : '') +
         '</div>' +
         '<button class="btn btn-ink" onclick="openMarketOrder(\'' + l.id + '\')">Buy this</button>' +
+        '<button class="btn' + (inCart ? ' btn-ink' : '') + '" style="margin-left:6px;" id="cartBtn-' + l.id + '" onclick="toggleCartItem(\'' + l.id + '\', this)">' + (inCart ? 'Remove from cart' : 'Add to cart') + '</button>' +
         '</div>';
     }).join('');
   }catch(err){
@@ -2022,8 +2356,10 @@ async function viewSellerProfile(email){
     var s = data.seller;
     var itemsHtml = data.listings.length
       ? data.listings.map(function(l){
+          marketListingCache[l.id] = l;
           var photo = (l.photo_urls && l.photo_urls[0]) || '';
           var saved = isSavedLocally(l.id);
+          var inCart = isInCart(l.id);
           return '<div class="market-card">' +
             '<div class="photo-wrap">' +
               (photo
@@ -2037,6 +2373,7 @@ async function viewSellerProfile(email){
               '<p class="desc">' + escapeHtml(l.description) + '</p>' +
               '<div class="price">' + formatNGN(l.price_ngn) + '</div>' +
                     '<button class="btn btn-ink" style="margin-top:6px;" onclick="openMarketOrder(\'' + l.id + '\')">Buy this</button>' +
+                    '<button class="btn' + (inCart ? ' btn-ink' : '') + '" style="margin-top:6px;" id="cartBtn-' + l.id + '" onclick="toggleCartItem(\'' + l.id + '\', this)">' + (inCart ? 'Remove from cart' : 'Add to cart') + '</button>' +
             '</div>' +
           '</div>';
         }).join('')
@@ -2064,7 +2401,7 @@ function closeSellerProfile(){
 }
 
 /* ================= sell an item (seller posting) ================= */
-var sellSession = { email:null, sessionToken:null };
+var sellSession = { email: Amana.getLastEmail('seller'), sessionToken:null };
 
 // Uploaded photos for the listing currently being composed. Each entry is
 // { localId, url (once uploaded), status: 'uploading'|'done'|'error', previewSrc }.
@@ -2603,14 +2940,42 @@ async function loadMyListingsDemo(email){
   }).join('');
 }
 
+// Shared by both the "already have a valid cached token" fast path and the
+// end of the OTP-verify flow below — same success screen either way.
+function showSellerDashboard(email, token){
+  sellSession.email = email; Amana.rememberLastEmail('seller', email);
+  sellSession.sessionToken = token;
+  document.getElementById('storeNameSection').style.display = 'block';
+  loadCurrentStoreName(email);
+  fetchSellerApplication(email, token).then(renderSellerApplication);
+  loadMyListings(email, token);
+  loadMySales(email, token);
+  document.getElementById('myListingsSection').scrollIntoView({ behavior:'smooth' });
+}
+
 function openViewMyListings(){
+  // Silent resume: if this browser already verified a seller email and
+  // that token hasn't expired, skip the "enter your email" modal
+  // entirely — this is the actual fix for "why do I have to enter my
+  // email again to see my store", which previously always showed the
+  // modal unconditionally, never checking for a still-valid session
+  // first, unlike the buyer-side "My orders" panel already did.
+  var lastEmail = Amana.getLastEmail('seller');
+  if(lastEmail){
+    var cachedToken = Amana.getSessionToken(lastEmail);
+    if(cachedToken){
+      showSellerDashboard(lastEmail, cachedToken);
+      return;
+    }
+  }
+
   document.getElementById('orderOverlay').classList.add('open');
   if(!API_BASE){
     document.getElementById('modalBody').innerHTML =
       '<h3>View your listings</h3>' +
       '<div class="demo-banner">Demo preview — no real email code needed here, just enter the email you used when selling.</div>' +
       '<div class="field"><label for="viewListingsEmail">Your email address</label>' +
-      '<input type="email" id="viewListingsEmail" placeholder="you@example.com" autofocus></div>' +
+      '<input type="email" id="viewListingsEmail" placeholder="you@example.com" value="' + escapeHtml(lastEmail || '') + '" autofocus></div>' +
       '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick="handleViewListingsDemo()">View listings</button>';
     return;
   }
@@ -2618,7 +2983,7 @@ function openViewMyListings(){
     '<h3>View your listings</h3>' +
     '<p class="modal-sub">Enter the email you sold under. We\'ll send a code by email to confirm it\'s you.</p>' +
     '<div class="field"><label for="viewListingsEmail">Your email address</label>' +
-    '<input type="email" id="viewListingsEmail" placeholder="you@example.com" autofocus></div>' +
+    '<input type="email" id="viewListingsEmail" placeholder="you@example.com" value="' + escapeHtml(lastEmail || '') + '" autofocus></div>' +
     '<div id="viewListingsError"></div>' +
     '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick="handleViewListingsEmailSubmit()">Continue</button>';
 }
@@ -2646,14 +3011,7 @@ async function handleViewListingsEmailSubmit(){
   var cachedToken = Amana.getSessionToken(email);
   if(cachedToken){
     closeModal();
-    sellSession.email = email; Amana.rememberLastEmail('seller', email);
-    sellSession.sessionToken = cachedToken;
-    document.getElementById('storeNameSection').style.display = 'block';
-    loadCurrentStoreName(email);
-    fetchSellerApplication(email, cachedToken).then(renderSellerApplication);
-    loadMyListings(email, cachedToken);
-    loadMySales(email, cachedToken);
-    document.getElementById('myListingsSection').scrollIntoView({ behavior:'smooth' });
+    showSellerDashboard(email, cachedToken);
     return;
   }
 
@@ -2691,15 +3049,8 @@ async function handleViewListingsVerify(email){
     var data = await res.json();
     if(!res.ok){ throw new Error(data.error || "That code doesn't match — try again."); }
     closeModal();
-    sellSession.email = email; Amana.rememberLastEmail('seller', email);
-    sellSession.sessionToken = data.token;
     Amana.saveSessionToken(email, data.token);
-    document.getElementById('storeNameSection').style.display = 'block';
-    loadCurrentStoreName(email);
-    fetchSellerApplication(email, data.token).then(renderSellerApplication);
-    loadMyListings(email, data.token);
-    loadMySales(email, data.token);
-    document.getElementById('myListingsSection').scrollIntoView({ behavior:'smooth' });
+    showSellerDashboard(email, data.token);
   }catch(err){
     errEl.innerHTML = '<p class="inline-error">' + friendlyError(err) + '</p>';
   }

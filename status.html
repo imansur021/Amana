@@ -302,6 +302,26 @@ var STAGES = [
 
 var session = { email:null, token:null };
 
+// Silently restores a still-valid session on page load, so a returning
+// visitor doesn't have to retype their email every single time — only
+// on the FIRST visit from a device/browser, or once their token actually
+// expires, do they need to go through email/OTP again. Amana.rememberLastEmail
+// is already called at every successful login; this is just the missing
+// other half, reading that back. If there's a remembered email but the
+// token's expired, still prefill the email field (not just leave it
+// blank) so at least the address doesn't need retyping, only the OTP.
+function tryAutoResumeSession(){
+  var lastEmail = Amana.getLastEmail('buyer');
+  if(!lastEmail) return;
+  document.getElementById('emailInput').value = lastEmail;
+  var cachedToken = Amana.getSessionToken(lastEmail);
+  if(cachedToken){
+    session.email = lastEmail;
+    session.token = cachedToken;
+    loadOrders(false);
+  }
+}
+
 function formatNGN(n){
   return new Intl.NumberFormat('en-NG', { style:'currency', currency:'NGN', maximumFractionDigits:0 }).format(Math.round(n));
 }
@@ -926,6 +946,10 @@ function renderOrders(orders, isDemo){
 
 function handleLogout(){
   stopOrdersPolling();
+  if(session.email){
+    Amana.clearSessionToken(session.email);
+    Amana.clearLastEmail('buyer');
+  }
   session = { email:null, token:null, otpPurpose:'signup' };
   document.getElementById('emailInput').value = '';
   document.getElementById('codeInput').value = '';
@@ -973,22 +997,33 @@ async function handlePayWithPaystack(orderId, btnEl){
 // stashed key so a stale one never re-triggers on an unrelated visit.
 async function checkPendingPaystackPayment(){
   var raw = window.localStorage.getItem('amana_pending_payment');
-  if(!raw) return;
+  if(!raw){
+    tryAutoResumeSession();
+    return;
+  }
   window.localStorage.removeItem('amana_pending_payment');
 
   var pending;
-  try{ pending = JSON.parse(raw); }catch(e){ return; }
-  if(!pending || !pending.orderId || !pending.email) return;
+  try{ pending = JSON.parse(raw); }catch(e){ tryAutoResumeSession(); return; }
+  if(!pending || !pending.email || (!pending.orderId && !pending.groupId)){ tryAutoResumeSession(); return; }
 
   var cachedToken = Amana.getSessionToken(pending.email);
-  if(!cachedToken) return; // session expired between leaving and coming back — normal orders list will still load once they log in
+  if(!cachedToken){ tryAutoResumeSession(); return; } // session expired between leaving and coming back — fall back to normal auto-resume/login
 
   session.email = pending.email;
   session.token = cachedToken;
   document.getElementById('emailInput').value = pending.email;
 
+  // Cart checkouts (POST /orders/marketplace/cart or /combo) stash groupId
+  // instead of orderId — same resume pattern, just hitting the group verify
+  // endpoint so ALL orders in that group get marked paid together, not just
+  // the first one found.
+  var verifyUrl = pending.groupId
+    ? API_BASE + '/orders/group/' + pending.groupId + '/pay/verify'
+    : API_BASE + '/orders/' + pending.orderId + '/pay/verify';
+
   try{
-    var res = await fetch(API_BASE + '/orders/' + pending.orderId + '/pay/verify', {
+    var res = await fetch(verifyUrl, {
       headers:{ 'Authorization':'Bearer ' + session.token }
     });
     var data = await res.json();
