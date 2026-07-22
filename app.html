@@ -443,7 +443,7 @@
   <div class="header-links">
     <span id="rememberedEmailNote" class="header-link" style="display:none; color:var(--ink-soft); cursor:default;"></span>
     <a href="#" id="signOutLink" class="header-link" style="display:none;" onclick="event.preventDefault(); handleSignOut();">Not you? Sign out</a>
-    <a href="status.html" class="header-link">Track your order</a>
+    <a href="status.html" id="trackOrderLink" class="header-link">Track your order</a>
     <a href="#" class="header-link" onclick="event.preventDefault(); switchTab('sell'); openViewMyListings();">My store</a>
     <span class="header-divider" aria-hidden="true"></span>
     <a class="btn btn-ochre" id="headerWhatsapp" href="#" target="_blank" rel="noopener">
@@ -474,6 +474,7 @@
         <p class="section-sub" style="margin-bottom:20px;">Items posted by other people in Katsina, reviewed by Amana before they're listed. Payment is held until you confirm the item arrived as described.</p>
         <div style="display:flex; gap:16px; margin:-10px 0 16px;">
           <button type="button" class="small-link" onclick="toggleMyOrders()" id="myOrdersToggle">My orders</button>
+          <button type="button" class="small-link" onclick="toggleMyProfile()" id="myProfileToggle">My profile</button>
           <button type="button" class="small-link" onclick="toggleSavedItems()" id="savedItemsToggle">Saved items</button>
           <button type="button" class="small-link" onclick="toggleSellerSearch()" id="sellerSearchToggle">Find a seller</button>
           <button type="button" class="small-link" onclick="toggleCart()" id="cartToggle">Cart<span class="cart-badge-count" id="cartBadgeCount" style="display:none;">0</span></button>
@@ -485,6 +486,11 @@
         <div class="my-listings" id="myOrdersSection" style="display:none;">
           <h3 style="font-size:16px; margin-bottom:12px;" id="myOrdersHeading">Your orders</h3>
           <div id="myOrdersList"></div>
+        </div>
+        <div class="my-listings" id="myProfileSection" style="display:none;">
+          <h3 style="font-size:16px; margin-bottom:4px;">My profile</h3>
+          <p class="section-sub" style="margin:0 0 12px; max-width:none; font-size:13px;">Your delivery contact details — used so sellers and riders know where to reach you.</p>
+          <div id="myProfileBody"></div>
         </div>
         <div class="my-listings" id="savedItemsSection" style="display:none;">
           <h3 style="font-size:16px; margin-bottom:12px;" id="savedItemsHeading">Your saved items</h3>
@@ -511,7 +517,13 @@
       </div>
 
       <div class="tab-panel" id="panelSell">
-        <div class="sell-panel">
+        <div class="my-listings" id="sellGateSection" style="display:none;">
+          <h3 style="font-size:16px; margin-bottom:4px;" id="sellGateHeading">Become a seller</h3>
+          <p class="section-sub" style="margin:0 0 12px; max-width:none; font-size:13px;" id="sellGateSub">Selling on Amana needs a quick one-time application — a store name and the bank account we'll pay you out to. Amana reviews every application before you can list anything.</p>
+          <div id="sellGateBody"></div>
+        </div>
+
+        <div class="sell-panel" id="sellItemFormPanel" style="display:none;">
           <p class="section-sub" style="margin-bottom:20px; max-width:none;">Post something you'd like to sell. Amana reviews every listing before it goes live — usually within a day.</p>
           <button type="button" class="small-link" style="margin:-10px 0 20px; display:inline-block;" onclick="openViewMyListings()">Already sell here? View your listings</button>
 
@@ -593,7 +605,10 @@
         </div>
 
         <div class="my-listings" id="storeNameSection" style="display:none;">
-          <h3 style="font-size:16px; margin-bottom:4px;">Your store name</h3>
+          <h3 style="font-size:16px; margin-bottom:4px;">My profile</h3>
+          <p class="section-sub" style="margin:0 0 12px; max-width:none; font-size:13px;">Your public store details and private delivery contact info.</p>
+
+          <h3 style="font-size:14px; margin-bottom:4px;">Store name</h3>
           <p class="section-sub" style="margin:0 0 12px; max-width:none; font-size:13px;">Shown on your public seller page instead of your email address. Buyers can search for you by this name.</p>
           <div class="link-row">
             <input type="text" id="storeNameInput" placeholder="e.g. Radio King Lagos" maxlength="40">
@@ -603,7 +618,7 @@
           <div id="storeNameSaved" style="display:none; font-size:13px; color:var(--olive); margin-top:8px;">Saved. <a href="#" onclick="event.preventDefault(); viewSellerProfile(sellSession.email);" style="color:inherit; text-decoration:underline;">View your public page →</a></div>
 
           <div style="margin-top:18px; padding-top:16px; border-top:1px solid var(--line);">
-            <h3 style="font-size:16px; margin-bottom:4px;">Your shop logo</h3>
+            <h3 style="font-size:14px; margin-bottom:4px;">Shop logo</h3>
             <p class="section-sub" style="margin:0 0 12px; max-width:none; font-size:13px;">Shown on your public seller page and next to your listings. Square images look best.</p>
             <div style="display:flex; align-items:center; gap:14px;">
               <img id="storeLogoPreview" src="" alt="" style="width:64px; height:64px; border-radius:10px; object-fit:cover; background:var(--paper-dim); display:none; border:1px solid var(--line);">
@@ -615,6 +630,12 @@
               </div>
             </div>
             <div id="storeLogoError"></div>
+          </div>
+
+          <div style="margin-top:18px; padding-top:16px; border-top:1px solid var(--line);">
+            <h3 style="font-size:14px; margin-bottom:4px;">Delivery contact</h3>
+            <p class="section-sub" style="margin:0 0 12px; max-width:none; font-size:13px;">Private — not shown on your public page. Riders use this to know where to pick up from.</p>
+            <div id="sellerContactBody"></div>
           </div>
         </div>
 
@@ -728,6 +749,137 @@ function switchTab(name){
   if(name === 'sell' && !window._sellFormInit){
     window._sellFormInit = true;
     populateSellCategoryOptions();
+  }
+  if(name === 'sell'){
+    refreshSellTabGate();
+  }
+}
+
+// Runs every time the Sell tab is opened. "Become a seller" needs to
+// happen BEFORE the item-listing form, not after — previously the item
+// form (name, price, photos, etc) was shown first and the seller
+// application only appeared once someone had already filled it all in
+// and hit submit, which meant redoing the mental work of "oh, I need to
+// apply first" after already doing the harder part. This checks
+// approval status up front and only reveals the item form once it's
+// confirmed, same gate submitListing() already enforces server-side.
+async function refreshSellTabGate(){
+  var formPanel = document.getElementById('sellItemFormPanel');
+  var gateSection = document.getElementById('sellGateSection');
+  var gateHeading = document.getElementById('sellGateHeading');
+  var gateSub = document.getElementById('sellGateSub');
+  var gateBody = document.getElementById('sellGateBody');
+
+  // No known seller session yet on this device — nothing to check
+  // against, so ask for an email before showing anything else. This
+  // mirrors the very first field the item form used to open with, just
+  // moved ahead of the item fields instead of alongside them.
+  var lastEmail = Amana.getLastEmail('seller');
+  var cachedToken = lastEmail ? Amana.getSessionToken(lastEmail) : null;
+  if(!lastEmail || !cachedToken){
+    formPanel.style.display = 'none';
+    gateSection.style.display = 'block';
+    gateHeading.textContent = 'Become a seller';
+    gateSub.textContent = 'Enter your email to start your seller application, or continue where you left off.';
+    gateBody.innerHTML =
+      '<div class="field"><label for="sellGateEmail">Your email address</label><input type="email" id="sellGateEmail" placeholder="you@example.com"></div>' +
+      '<div id="sellGateEmailError"></div>' +
+      '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick="handleSellGateEmailContinue()">Continue</button>';
+    return;
+  }
+
+  sellSession.email = lastEmail;
+  sellSession.sessionToken = cachedToken;
+
+  gateSection.style.display = 'block';
+  gateHeading.textContent = 'Checking your seller status…';
+  gateSub.textContent = '';
+  gateBody.innerHTML = '';
+
+  var app = await fetchSellerApplication(lastEmail, cachedToken);
+  var c = app.contact || {};
+  var contactComplete = !!(c.name && c.phone && c.address);
+
+  if(app.applicationStatus === 'approved' && contactComplete){
+    // Approved with delivery contact on file — the actual gate is
+    // cleared, so this is the one path that reveals the item form.
+    gateSection.style.display = 'none';
+    formPanel.style.display = 'block';
+    if(document.getElementById('sellEmail')) document.getElementById('sellEmail').value = lastEmail;
+    return;
+  }
+
+  // Not yet approved (none/pending/rejected), or approved but missing
+  // delivery contact details — keep the item form hidden and show
+  // whichever state applies. renderSellerApplication already knows how
+  // to render all of these; point it at this section instead of the
+  // post-submit one.
+  formPanel.style.display = 'none';
+  activeSellerAppTarget = { section:'sellGateSection', heading:'sellGateHeading', sub:'sellGateSub', body:'sellGateBody' };
+  renderSellerApplicationInto('sellGateSection', 'sellGateHeading', 'sellGateSub', 'sellGateBody', app);
+}
+
+function handleSellGateEmailContinue(){
+  var email = document.getElementById('sellGateEmail').value.trim();
+  var errEl = document.getElementById('sellGateEmailError');
+  if(!/\S+@\S+\.\S+/.test(email)){
+    errEl.innerHTML = '<p class="inline-error">Enter a valid email address.</p>';
+    return;
+  }
+  errEl.innerHTML = '';
+  sellSession.email = email; Amana.rememberLastEmail('seller', email);
+
+  var cachedToken = Amana.getSessionToken(email);
+  if(cachedToken){
+    sellSession.sessionToken = cachedToken;
+    refreshSellTabGate();
+    return;
+  }
+
+  // No valid cached token for this email — send an OTP, same flow the
+  // item form used to run once someone reached the submit button.
+  var gateBody = document.getElementById('sellGateBody');
+  gateBody.innerHTML = '<p style="font-size:13px; color:var(--ink-soft);">Sending a verification code by email…</p>';
+  fetch(API_BASE + '/auth/request-otp', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ email: email })
+  }).then(function(res){ return res.json().then(function(data){ return { res:res, data:data }; }); })
+    .then(function(r){
+      if(!r.res.ok){ throw new Error(r.data.error || 'Could not send code.'); }
+      gateBody.innerHTML =
+        '<div class="field" style="margin-top:14px;"><label for="sellGateCodeInput">Verification code</label>' +
+        '<input type="text" id="sellGateCodeInput" inputmode="numeric" placeholder="Code from email"></div>' +
+        '<div id="sellGateVerifyError"></div>' +
+        '<button class="btn btn-ink" style="width:100%; justify-content:center;" onclick="handleSellGateVerify(' + JSON.stringify(email) + ')">Verify</button>';
+    })
+    .catch(function(err){
+      gateBody.innerHTML =
+        '<div class="field"><label for="sellGateEmail">Your email address</label><input type="email" id="sellGateEmail" placeholder="you@example.com" value="' + escapeHtml(email) + '"></div>' +
+        '<div id="sellGateEmailError"><p class="inline-error">' + friendlyError(err) + '</p></div>' +
+        '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick="handleSellGateEmailContinue()">Continue</button>';
+    });
+}
+
+async function handleSellGateVerify(email){
+  var code = document.getElementById('sellGateCodeInput').value.trim();
+  var errEl = document.getElementById('sellGateVerifyError');
+  if(!code){
+    errEl.innerHTML = '<p class="inline-error">Enter the code you received.</p>';
+    return;
+  }
+  try{
+    var res = await fetch(API_BASE + '/auth/verify-otp', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email: email, code: code })
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || "That code doesn't match — try again."); }
+    sellSession.email = email; Amana.rememberLastEmail('seller', email);
+    sellSession.sessionToken = data.token;
+    Amana.saveSessionToken(email, data.token);
+    refreshSellTabGate();
+  }catch(err){
+    errEl.innerHTML = '<p class="inline-error">' + friendlyError(err) + '</p>';
   }
 }
 
@@ -1335,6 +1487,7 @@ function toggleWishlist(listingId, btnEl){
   if(!buyerSession.sessionToken && buyerSession.email){
     var cached = Amana.getSessionToken(buyerSession.email);
     if(cached) buyerSession.sessionToken = cached;
+    updateTrackOrderLink();
   }
   if(buyerSession.sessionToken){
     performWishlistToggle(listingId, btnEl);
@@ -1370,6 +1523,7 @@ async function handleWishlistEmailSubmit(listingId){
   if(cachedToken){
     buyerSession.email = email; Amana.rememberLastEmail('buyer', email);
     buyerSession.sessionToken = cachedToken;
+    updateTrackOrderLink();
     closeModal();
     var btnEl = window._pendingWishlistBtn;
     window._pendingWishlistBtn = null;
@@ -1412,6 +1566,7 @@ async function handleWishlistVerify(email, listingId){
     if(!res.ok){ throw new Error(data.error || "That code doesn't match — try again."); }
     buyerSession.email = email; Amana.rememberLastEmail('buyer', email);
     buyerSession.sessionToken = data.token;
+    updateTrackOrderLink();
     Amana.saveSessionToken(email, data.token);
     closeModal();
     var btnEl = window._pendingWishlistBtn;
@@ -1456,6 +1611,7 @@ async function performWishlistToggle(listingId, btnEl){
 
 function hideMarketSidePanels(){
   document.getElementById('myOrdersSection').style.display = 'none';
+  document.getElementById('myProfileSection').style.display = 'none';
   document.getElementById('savedItemsSection').style.display = 'none';
   document.getElementById('sellerSearchSection').style.display = 'none';
   document.getElementById('sellerProfileSection').style.display = 'none';
@@ -1643,12 +1799,97 @@ function toggleMyOrders(){
   if(!buyerSession.sessionToken && buyerSession.email){
     var cached = Amana.getSessionToken(buyerSession.email);
     if(cached) buyerSession.sessionToken = cached;
+    updateTrackOrderLink();
   }
   if(!buyerSession.sessionToken){
     openBuyerVerifyForOrdersView();
     return;
   }
   section.style.display = 'block';
+  loadMyOrders();
+}
+
+// Buyer's own profile — name/phone/address, backed by the same
+// GET/POST /customers endpoints the seller-application flow already
+// uses for delivery contact details. Shares the exact same sign-in gate
+// as "My orders" (cached token first, OTP/password modal otherwise) so
+// it behaves consistently with every other buyer-only panel.
+function toggleMyProfile(){
+  var section = document.getElementById('myProfileSection');
+  var showing = section.style.display !== 'none';
+  hideMarketSidePanels();
+  if(showing){
+    return;
+  }
+  if(!buyerSession.sessionToken && buyerSession.email){
+    var cached = Amana.getSessionToken(buyerSession.email);
+    if(cached) buyerSession.sessionToken = cached;
+    updateTrackOrderLink();
+  }
+  if(!buyerSession.sessionToken){
+    window._pendingAfterBuyerLogin = 'profile';
+    openBuyerVerifyForOrdersView();
+    return;
+  }
+  section.style.display = 'block';
+  loadMyProfile();
+}
+
+async function loadMyProfile(){
+  var body = document.getElementById('myProfileBody');
+  body.innerHTML = '<p style="font-size:13.5px; color:var(--ink-soft);">Loading…</p>';
+  var contact = await fetchCustomerProfile(buyerSession.email, buyerSession.sessionToken);
+  var c = contact || {};
+  body.innerHTML =
+    '<div class="field"><label for="myProfileEmail">Email</label><input type="email" id="myProfileEmail" value="' + escapeHtml(buyerSession.email) + '" disabled></div>' +
+    '<div class="field"><label for="myProfileName">Your name</label><input type="text" id="myProfileName" value="' + escapeHtml(c.name || '') + '"></div>' +
+    '<div class="field"><label for="myProfilePhone">Phone number</label><input type="tel" id="myProfilePhone" value="' + escapeHtml(c.phone || '') + '"></div>' +
+    '<div class="field"><label for="myProfileAddress">Delivery address</label><input type="text" id="myProfileAddress" placeholder="Where riders should deliver to" value="' + escapeHtml(c.address || '') + '"></div>' +
+    '<div id="myProfileError"></div>' +
+    '<div id="myProfileSaved" style="display:none; font-size:13px; color:var(--olive); margin:6px 0;">Saved.</div>' +
+    '<button class="btn btn-ink" style="width:100%; justify-content:center;" onclick="handleSaveMyProfile()">Save</button>';
+}
+
+async function handleSaveMyProfile(){
+  var errEl = document.getElementById('myProfileError');
+  var savedEl = document.getElementById('myProfileSaved');
+  errEl.innerHTML = '';
+  savedEl.style.display = 'none';
+  var name = document.getElementById('myProfileName').value.trim();
+  var phone = document.getElementById('myProfilePhone').value.trim();
+  var address = document.getElementById('myProfileAddress').value.trim();
+  if(!name || !address){
+    errEl.innerHTML = '<p class="inline-error">Your name and delivery address are required.</p>';
+    return;
+  }
+  try{
+    var res = await fetch(API_BASE + '/customers', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + buyerSession.sessionToken },
+      body: JSON.stringify({ email: buyerSession.email, name:name, phone:phone, address:address })
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not save your profile.'); }
+    savedEl.style.display = 'block';
+  }catch(err){
+    errEl.innerHTML = '<p class="inline-error">' + friendlyError(err) + '</p>';
+  }
+}
+
+// After any successful sign-in from the "My orders" / "My profile"
+// shared login modal, opens whichever panel actually triggered it —
+// toggleMyProfile() stashes 'profile' before opening the modal, orders
+// leaves it unset. Cleared after use so the next login defaults back
+// to orders unless something sets it again.
+function finishOrdersLoginFlow(){
+  if(window._pendingAfterBuyerLogin === 'profile'){
+    window._pendingAfterBuyerLogin = null;
+    document.getElementById('myProfileSection').style.display = 'block';
+    loadMyProfile();
+    return;
+  }
+  window._pendingAfterBuyerLogin = null;
+  document.getElementById('myOrdersSection').style.display = 'block';
   loadMyOrders();
 }
 
@@ -1675,9 +1916,9 @@ async function handleOrdersViewEmailSubmit(){
   if(cachedToken){
     buyerSession.email = email; Amana.rememberLastEmail('buyer', email);
     buyerSession.sessionToken = cachedToken;
+    updateTrackOrderLink();
     closeModal();
-    document.getElementById('myOrdersSection').style.display = 'block';
-    loadMyOrders();
+    finishOrdersLoginFlow();
     return;
   }
 
@@ -1725,10 +1966,10 @@ async function handleOrdersPasswordLogin(){
     var data = await res.json();
     if(!res.ok){ throw new Error(data.error || 'Incorrect password.'); }
     buyerSession.sessionToken = data.token;
+    updateTrackOrderLink();
     Amana.saveSessionToken(buyerSession.email, data.token);
     closeModal();
-    document.getElementById('myOrdersSection').style.display = 'block';
-    loadMyOrders();
+    finishOrdersLoginFlow();
   }catch(err){
     errEl.innerHTML = '<p class="inline-error">' + friendlyError(err) + '</p>';
   }
@@ -1774,6 +2015,7 @@ async function handleOrdersViewVerify(email){
     if(!res.ok){ throw new Error(data.error || "That code doesn't match — try again."); }
     buyerSession.email = email; Amana.rememberLastEmail('buyer', email);
     buyerSession.sessionToken = data.token;
+    updateTrackOrderLink();
 
     // Offer to set a password now so this email/OTP round-trip isn't
     // needed again next time — mirrors status.html's post-verify step.
@@ -1806,8 +2048,7 @@ async function handleOrdersSetPassword(){
     if(!res.ok){ throw new Error(data.error || 'Could not save that password.'); }
     Amana.saveSessionToken(buyerSession.email, buyerSession.sessionToken);
     closeModal();
-    document.getElementById('myOrdersSection').style.display = 'block';
-    loadMyOrders();
+    finishOrdersLoginFlow();
   }catch(err){
     errEl.innerHTML = '<p class="inline-error">' + friendlyError(err) + '</p>';
   }
@@ -1816,8 +2057,7 @@ async function handleOrdersSetPassword(){
 function handleOrdersSkipPassword(){
   Amana.saveSessionToken(buyerSession.email, buyerSession.sessionToken);
   closeModal();
-  document.getElementById('myOrdersSection').style.display = 'block';
-  loadMyOrders();
+  finishOrdersLoginFlow();
 }
 
 // A compact 4-dot preview of the ordered→shipped→arrived pipeline for the
@@ -1839,6 +2079,13 @@ function miniProgressHtml(status){
 }
 
 async function loadMyOrders(){
+  // This runs right after every buyer login path (OTP verify, password
+  // login, wishlist login, etc all funnel into opening "My orders"), so
+  // it's the one place that reliably catches a freshly-signed-in
+  // buyerSession and syncs the header's "Track your order" link to it —
+  // no need to duplicate this call at each individual login handler.
+  updateTrackOrderLink();
+
   var listEl = document.getElementById('myOrdersList');
   var heading = document.getElementById('myOrdersHeading');
   listEl.innerHTML = '<p style="font-size:13.5px; color:var(--ink-soft);">Loading…</p>';
@@ -1879,6 +2126,7 @@ function toggleSavedItems(){
   if(!buyerSession.sessionToken && buyerSession.email){
     var cached = Amana.getSessionToken(buyerSession.email);
     if(cached) buyerSession.sessionToken = cached;
+    updateTrackOrderLink();
   }
   if(!buyerSession.sessionToken){
     openBuyerVerifyForSavedView();
@@ -1911,6 +2159,7 @@ async function handleSavedViewEmailSubmit(){
   if(cachedToken){
     buyerSession.email = email; Amana.rememberLastEmail('buyer', email);
     buyerSession.sessionToken = cachedToken;
+    updateTrackOrderLink();
     closeModal();
     document.getElementById('savedItemsSection').style.display = 'block';
     loadSavedItems();
@@ -1952,6 +2201,7 @@ async function handleSavedViewVerify(email){
     if(!res.ok){ throw new Error(data.error || "That code doesn't match — try again."); }
     buyerSession.email = email; Amana.rememberLastEmail('buyer', email);
     buyerSession.sessionToken = data.token;
+    updateTrackOrderLink();
     Amana.saveSessionToken(email, data.token);
     closeModal();
     document.getElementById('savedItemsSection').style.display = 'block';
@@ -2011,6 +2261,52 @@ async function loadCurrentStoreName(email){
     }
   }catch(err){
     // Non-critical — leave the field blank rather than blocking the sell flow over this.
+  }
+}
+
+// Seller's own delivery contact card, in the "My profile" dashboard
+// section. Same underlying data (name/phone/address on the customers
+// table) as the buyer profile and the seller-application form both use —
+// this is just a third place to view/edit it, for a seller who already
+// applied and doesn't want to hunt through the application form to fix
+// a typo in their phone number.
+async function loadSellerContactSection(email, token){
+  var body = document.getElementById('sellerContactBody');
+  body.innerHTML = '<p style="font-size:13.5px; color:var(--ink-soft);">Loading…</p>';
+  var contact = await fetchCustomerProfile(email, token);
+  var c = contact || {};
+  body.innerHTML =
+    '<div class="field"><label for="sellerContactName">Your name</label><input type="text" id="sellerContactName" value="' + escapeHtml(c.name || '') + '"></div>' +
+    '<div class="field"><label for="sellerContactPhone">Phone number</label><input type="tel" id="sellerContactPhone" value="' + escapeHtml(c.phone || '') + '"></div>' +
+    '<div class="field"><label for="sellerContactAddress">Address</label><input type="text" id="sellerContactAddress" placeholder="Where riders pick up from" value="' + escapeHtml(c.address || '') + '"></div>' +
+    '<div id="sellerContactError"></div>' +
+    '<div id="sellerContactSaved" style="display:none; font-size:13px; color:var(--olive); margin:6px 0;">Saved.</div>' +
+    '<button class="btn btn-ink" onclick="handleSaveSellerContact()">Save</button>';
+}
+
+async function handleSaveSellerContact(){
+  var errEl = document.getElementById('sellerContactError');
+  var savedEl = document.getElementById('sellerContactSaved');
+  errEl.innerHTML = '';
+  savedEl.style.display = 'none';
+  var name = document.getElementById('sellerContactName').value.trim();
+  var phone = document.getElementById('sellerContactPhone').value.trim();
+  var address = document.getElementById('sellerContactAddress').value.trim();
+  if(!name || !address){
+    errEl.innerHTML = '<p class="inline-error">Your name and address are required.</p>';
+    return;
+  }
+  try{
+    var res = await fetch(API_BASE + '/customers', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + sellSession.sessionToken },
+      body: JSON.stringify({ email: sellSession.email, name:name, phone:phone, address:address })
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not save your contact details.'); }
+    savedEl.style.display = 'block';
+  }catch(err){
+    errEl.innerHTML = '<p class="inline-error">' + friendlyError(err) + '</p>';
   }
 }
 
@@ -2127,15 +2423,16 @@ async function fetchSellerApplication(email, token){
   }
 }
 
-// Renders the seller-application section for the given status: the apply
-// form (none/rejected), a pending notice, or an approved confirmation.
-// Shared by the "post an item" gate and the "view my listings" entry
-// point so both places show the same thing.
-function renderSellerApplication(app){
-  var section = document.getElementById('sellerApplicationSection');
-  var heading = document.getElementById('sellerApplicationHeading');
-  var sub = document.getElementById('sellerApplicationSub');
-  var body = document.getElementById('sellerApplicationBody');
+// Renders a seller-application status (apply form, pending notice, or
+// approved confirmation) into whichever section's ids are passed in.
+// Shared by the pre-submit "Sell an item" gate, the post-submit gate
+// submitListing() falls back to, and "view my listings" — all three
+// need to show the same states, just possibly in different containers.
+function renderSellerApplicationInto(sectionId, headingId, subId, bodyId, app){
+  var section = document.getElementById(sectionId);
+  var heading = document.getElementById(headingId);
+  var sub = document.getElementById(subId);
+  var body = document.getElementById(bodyId);
   section.style.display = 'block';
 
   if(app.applicationStatus === 'approved'){
@@ -2188,6 +2485,17 @@ function renderSellerApplication(app){
     '<button class="btn btn-ink" style="width:100%; justify-content:center;" onclick="handleSellerApplicationSubmit()">Submit application</button>';
 }
 
+// Which seller-application section is currently on screen — the
+// pre-submit "Sell an item" gate, or the original post-submit gate
+// (also reused by "view my listings"). Both handleSellerContactOnlySubmit
+// and handleSellerApplicationSubmit render their result here instead of
+// a hardcoded section, since either one can be the one currently visible.
+var activeSellerAppTarget = { section:'sellerApplicationSection', heading:'sellerApplicationHeading', sub:'sellerApplicationSub', body:'sellerApplicationBody' };
+
+function renderSellerApplication(app){
+  renderSellerApplicationInto(activeSellerAppTarget.section, activeSellerAppTarget.heading, activeSellerAppTarget.sub, activeSellerAppTarget.body, app);
+}
+
 async function handleSellerContactOnlySubmit(){
   var errEl = document.getElementById('sellerAppError');
   errEl.innerHTML = '';
@@ -2206,7 +2514,15 @@ async function handleSellerContactOnlySubmit(){
     });
     var data = await res.json();
     if(!res.ok){ throw new Error(data.error || 'Could not save your delivery contact details.'); }
-    renderSellerApplication({ applicationStatus:'approved', contact:{ name:name, phone:phone, address:address } });
+    if(activeSellerAppTarget.section === 'sellGateSection'){
+      // Gate is now fully cleared — swap straight to the item form
+      // instead of leaving the seller staring at a static confirmation.
+      document.getElementById('sellGateSection').style.display = 'none';
+      document.getElementById('sellItemFormPanel').style.display = 'block';
+      if(document.getElementById('sellEmail')) document.getElementById('sellEmail').value = sellSession.email;
+    }else{
+      renderSellerApplication({ applicationStatus:'approved', contact:{ name:name, phone:phone, address:address } });
+    }
   }catch(err){
     errEl.innerHTML = '<p class="inline-error">' + friendlyError(err) + '</p>';
   }
@@ -2766,6 +3082,7 @@ async function submitListing(token, pendingListing, errEl){
     var c = app.contact || {};
     var contactComplete = !!(c.name && c.phone && c.address);
     if(app.applicationStatus !== 'approved' || !contactComplete){
+      activeSellerAppTarget = { section:'sellerApplicationSection', heading:'sellerApplicationHeading', sub:'sellerApplicationSub', body:'sellerApplicationBody' };
       renderSellerApplication(app);
       document.getElementById('sellerApplicationSection').scrollIntoView({ behavior:'smooth' });
       errEl.innerHTML = '';
@@ -2947,6 +3264,8 @@ function showSellerDashboard(email, token){
   sellSession.sessionToken = token;
   document.getElementById('storeNameSection').style.display = 'block';
   loadCurrentStoreName(email);
+  loadSellerContactSection(email, token);
+  activeSellerAppTarget = { section:'sellerApplicationSection', heading:'sellerApplicationHeading', sub:'sellerApplicationSub', body:'sellerApplicationBody' };
   fetchSellerApplication(email, token).then(renderSellerApplication);
   loadMyListings(email, token);
   loadMySales(email, token);
@@ -3498,6 +3817,21 @@ function restoreRememberedSessions(){
     note.style.display = 'inline-flex';
     document.getElementById('signOutLink').style.display = 'inline-flex';
   }
+
+  // Keep the header's "Track your order" link in sync with whichever
+  // buyer session is currently live, so following it hands status.html
+  // the same email deep-link ("My orders" already uses this pattern),
+  // letting it auto-resume from the shared session-token cache instead
+  // of asking the buyer to type their email in again.
+  updateTrackOrderLink();
+}
+
+function updateTrackOrderLink(){
+  var link = document.getElementById('trackOrderLink');
+  if(!link) return;
+  link.href = buyerSession.sessionToken && buyerSession.email
+    ? 'status.html?email=' + encodeURIComponent(buyerSession.email)
+    : 'status.html';
 }
 
 // Forgets both the buyer and seller session on this device — clears the
@@ -3519,6 +3853,7 @@ function handleSignOut(){
 
   document.getElementById('rememberedEmailNote').style.display = 'none';
   document.getElementById('signOutLink').style.display = 'none';
+  updateTrackOrderLink();
 
   // Any panel currently showing this person's data (orders, saved
   // items, their store) is now stale and would need a fresh OTP to
