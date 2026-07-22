@@ -225,18 +225,30 @@
     return (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
   }
 
+  // Color-codes the chip by seller standing so buyers can tell at a
+  // glance, without reading numbers: green = top-rated (4.5+), indigo =
+  // rated, ochre = no rating history yet.
+  function sellerTier(seller) {
+    if (seller.avg_rating && seller.avg_rating >= 4.5) return 'top';
+    if (seller.avg_rating) return 'rated';
+    return 'new';
+  }
+
   function sellerChipHtml(seller) {
     if (!seller || !seller.display_name) return '';
     var name = escapeForChip(seller.display_name);
+    var tier = sellerTier(seller);
     var ratingHtml = seller.avg_rating
-      ? '<span class="rating">★' + seller.avg_rating.toFixed(1) + '</span>'
-      : '';
+      ? '<span class="rating' + (tier === 'top' ? ' tier-top' : '') + '">★' + seller.avg_rating.toFixed(1) + '</span>'
+      : '<span class="new-badge" title="No sales history yet">New</span>';
     var verifiedHtml = seller.verified
       ? '<span class="verified" title="Verified seller">✓</span>'
       : '';
     return (
       '<div class="seller-chip">' +
-        '<span class="avatar">' + sellerInitials(seller.display_name) + '</span>' +
+        '<span class="avatar tier-' + tier + '" title="' +
+          (tier === 'top' ? 'Top-rated seller' : tier === 'rated' ? 'Rated seller' : 'New seller') +
+        '">' + sellerInitials(seller.display_name) + '</span>' +
         '<span class="name">' + name + '</span>' +
         ratingHtml +
         verifiedHtml +

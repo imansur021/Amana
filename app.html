@@ -209,9 +209,14 @@
   .market-card .price{ font-family:var(--font-mono); font-size:16px; font-weight:600; margin-top:auto; }
   .seller-chip{ display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--ink-soft); }
   .seller-chip .avatar{ width:16px; height:16px; border-radius:50%; background:var(--indigo-700); color:#fff; font-family:var(--font-mono); font-size:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .seller-chip .avatar.tier-top{ background:var(--olive); }
+  .seller-chip .avatar.tier-rated{ background:var(--indigo-700); }
+  .seller-chip .avatar.tier-new{ background:var(--ochre-light); }
   .seller-chip .name{ font-weight:600; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .seller-chip .rating{ font-family:var(--font-mono); color:var(--ochre-dark); flex-shrink:0; }
+  .seller-chip .rating.tier-top{ color:var(--olive); font-weight:700; }
   .seller-chip .verified{ color:var(--olive); font-size:13px; line-height:1; flex-shrink:0; }
+  .seller-chip .new-badge{ font-size:10px; font-weight:700; color:var(--ochre-dark); background:#FBF0E2; border:1px solid var(--ochre-light); border-radius:6px; padding:1px 5px; flex-shrink:0; }
   .market-empty{ color:var(--ink-soft); font-size:14.5px; padding:20px 0; }
 
   /* Sticky filter bar — stays in view while scrolling a long grid, styled
@@ -608,6 +613,10 @@
           <button type="button" class="small-link" style="margin-bottom:12px; display:inline-block;" onclick="closeSellerProfile()">← Back</button>
           <div id="sellerProfileContent"></div>
         </div>
+        <div class="my-listings" id="listingDetailSection" style="display:none;">
+          <button type="button" class="small-link" style="margin-bottom:12px; display:inline-block;" onclick="closeListingDetail()">← Back</button>
+          <div id="listingDetailContent"></div>
+        </div>
         <div class="market-filters">
           <input type="text" id="marketSearchInput" placeholder="Search marketplace…" oninput="handleMarketFilterChange()" aria-label="Search marketplace">
           <input type="number" id="marketMinPrice" placeholder="Min ₦" min="0" oninput="handleMarketFilterChange()" aria-label="Minimum price">
@@ -657,6 +666,18 @@
               <input type="file" id="photoFileInput" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple style="display:none;" onchange="handlePhotoFilesSelected(this.files)">
               <button type="button" class="add-photo-link" onclick="document.getElementById('photoFileInput').click()">+ Add photos</button>
               <p style="font-size:12px; color:var(--ink-soft); margin-top:6px;">Take or choose photos of the actual item — up to 8MB each. The first photo is what buyers see on the marketplace grid.</p>
+            </div>
+            <div class="field">
+              <label>Colors <span style="font-weight:normal; color:var(--ink-soft);">(optional)</span></label>
+              <p style="font-size:12px; color:var(--ink-soft); margin:0 0 8px;">If this item comes in more than one color, add each one with its own photo so buyers know exactly what they're getting before they buy.</p>
+              <div id="sellVariantsList"></div>
+              <button type="button" class="add-photo-link" onclick="addSellVariant()">+ Add a color</button>
+            </div>
+            <div class="field">
+              <label>Item details <span style="font-weight:normal; color:var(--ink-soft);">(optional)</span></label>
+              <p style="font-size:12px; color:var(--ink-soft); margin:0 0 8px;">Add whatever a buyer would ask about this specific item — flavor and serving size for a cake, storage and battery health for a phone, fabric for clothing, whatever's relevant. These show right on your listing.</p>
+              <div id="sellAttributesList"></div>
+              <button type="button" class="add-photo-link" onclick="addSellAttribute()">+ Add a detail</button>
             </div>
             <div id="sellStep1Error"></div>
             <button type="button" class="btn btn-ochre" style="width:100%; justify-content:center; margin-top:6px;" onclick="goToSellStep(2)">Continue →</button>
@@ -957,7 +978,7 @@ function handleSellGateEmailContinue(){
         '<div class="field" style="margin-top:14px;"><label for="sellGateCodeInput">Verification code</label>' +
         '<input type="text" id="sellGateCodeInput" inputmode="numeric" placeholder="Code from email"></div>' +
         '<div id="sellGateVerifyError"></div>' +
-        '<button class="btn btn-ink" style="width:100%; justify-content:center;" onclick="handleSellGateVerify(' + JSON.stringify(email) + ')">Verify</button>';
+        '<button class="btn btn-ink" style="width:100%; justify-content:center;" onclick="handleSellGateVerify()">Verify</button>';
     })
     .catch(function(err){
       gateBody.innerHTML =
@@ -967,7 +988,8 @@ function handleSellGateEmailContinue(){
     });
 }
 
-async function handleSellGateVerify(email){
+async function handleSellGateVerify(){
+  var email = sellSession.email;
   var code = document.getElementById('sellGateCodeInput').value.trim();
   var errEl = document.getElementById('sellGateVerifyError');
   if(!code){
@@ -1115,7 +1137,7 @@ function renderMarketplace(listings){
     var saved = isSavedLocally(l.id);
     var inCart = isInCart(l.id);
     return '<div class="market-card">' +
-      '<div class="photo-wrap">' +
+      '<div class="photo-wrap" style="cursor:pointer;" onclick="openListingDetail(\'' + l.id + '\')">' +
         (photo
           ? '<img src="' + photo + '" alt="" loading="lazy" onerror="this.parentElement.innerHTML=\'' + PHOTO_PLACEHOLDER_SVG.replace(/'/g, "\\'") + '\'">'
           : PHOTO_PLACEHOLDER_SVG) +
@@ -1123,7 +1145,7 @@ function renderMarketplace(listings){
       '<button type="button" class="save-heart' + (saved ? ' saved' : '') + '" data-listing-id="' + l.id + '" onclick="toggleWishlist(\'' + l.id + '\', this)" aria-label="' + (saved ? 'Remove from saved items' : 'Save this item') + '">' + (saved ? '♥' : '♡') + '</button>' +
       '<div class="body">' +
         '<span class="cond">' + categoryLabel(l.category) + ' · ' + conditionLabel(l.condition) + '</span>' +
-        '<h3>' + escapeHtml(l.item_name) + '</h3>' +
+        '<h3 style="cursor:pointer;" onclick="openListingDetail(\'' + l.id + '\')">' + escapeHtml(l.item_name) + '</h3>' +
         '<p class="desc">' + escapeHtml(l.description) + '</p>' +
         Amana.sellerChipHtml(l.seller) +
         (!l.always_in_stock && l.stock_qty > 0 && l.stock_qty <= 3 ? '<div class="stock-hint">Only ' + l.stock_qty + ' left</div>' : '') +
@@ -1793,6 +1815,7 @@ function hideMarketSidePanels(){
   document.getElementById('savedItemsSection').style.display = 'none';
   document.getElementById('sellerSearchSection').style.display = 'none';
   document.getElementById('sellerProfileSection').style.display = 'none';
+  document.getElementById('listingDetailSection').style.display = 'none';
   document.getElementById('buyerProfileSection').style.display = 'none';
   document.getElementById('cartSection').style.display = 'none';
 }
@@ -3133,7 +3156,7 @@ async function viewSellerProfile(email){
           var saved = isSavedLocally(l.id);
           var inCart = isInCart(l.id);
           return '<div class="market-card">' +
-            '<div class="photo-wrap">' +
+            '<div class="photo-wrap" style="cursor:pointer;" onclick="openListingDetail(\'' + l.id + '\')">' +
               (photo
                 ? '<img src="' + photo + '" alt="" loading="lazy" onerror="this.parentElement.innerHTML=\'' + PHOTO_PLACEHOLDER_SVG.replace(/'/g, "\\'") + '\'">'
                 : PHOTO_PLACEHOLDER_SVG) +
@@ -3141,7 +3164,7 @@ async function viewSellerProfile(email){
             '<button type="button" class="save-heart' + (saved ? ' saved' : '') + '" data-listing-id="' + l.id + '" onclick="toggleWishlist(\'' + l.id + '\', this)" aria-label="' + (saved ? 'Remove from saved items' : 'Save this item') + '">' + (saved ? '♥' : '♡') + '</button>' +
             '<div class="body">' +
               '<span class="cond">' + categoryLabel(l.category) + ' · ' + conditionLabel(l.condition) + '</span>' +
-              '<h3>' + escapeHtml(l.item_name) + '</h3>' +
+              '<h3 style="cursor:pointer;" onclick="openListingDetail(\'' + l.id + '\')">' + escapeHtml(l.item_name) + '</h3>' +
               '<p class="desc">' + escapeHtml(l.description) + '</p>' +
               '<div class="price">' + formatNGN(l.price_ngn) + '</div>' +
                     '<button class="btn btn-ink" style="margin-top:6px;" onclick="openMarketOrder(\'' + l.id + '\')">Buy this</button>' +
@@ -3170,6 +3193,84 @@ async function viewSellerProfile(email){
 function closeSellerProfile(){
   document.getElementById('sellerProfileSection').style.display = 'none';
   document.getElementById('sellerSearchSection').style.display = 'block';
+}
+
+// Full-detail view for a single marketplace listing — opened by tapping
+// a market-card's photo or title (the card's action buttons keep their
+// own onclick handlers and don't trigger this). Uses marketListingCache,
+// which renderMarketplace/viewSellerProfile already populate from the
+// same /listings response, so this needs no extra request: every field
+// shown here (all photos, not just the cover one; category/condition;
+// full description; seller name + verified badge + rating) is already
+// sitting in memory by the time someone taps a card.
+// Renders a seller's custom item details (e.g. Flavor / Serves / Allergens
+// for a cake, Storage / Battery health for a phone) as a compact label:value
+// list on the listing detail page. Returns '' when there are none, same
+// "just omit the section" pattern as the stock-hint and rating lines above.
+function attributesTableHtml(attributes){
+  if(!attributes || !attributes.length) return '';
+  return '<div class="attributes-table" style="margin:2px 0 12px; border-top:1px solid #E1D6BA; padding-top:10px;">' +
+    attributes.map(function(a){
+      return '<div style="display:flex; justify-content:space-between; gap:12px; font-size:13px; padding:4px 0; border-bottom:1px solid #EFE7D3;">' +
+        '<span style="color:var(--ink-soft);">' + escapeHtml(a.label) + '</span>' +
+        '<span style="font-weight:600; text-align:right;">' + escapeHtml(a.value) + '</span>' +
+      '</div>';
+    }).join('') +
+  '</div>';
+}
+
+function openListingDetail(listingId){
+  var l = marketListingCache[listingId];
+  hideMarketSidePanels();
+  var section = document.getElementById('listingDetailSection');
+  var contentEl = document.getElementById('listingDetailContent');
+  section.style.display = 'block';
+  if(!l){
+    contentEl.innerHTML = '<p class="inline-error">Couldn\'t find that listing — it may have been removed.</p>';
+    return;
+  }
+
+  var photos = (l.photo_urls && l.photo_urls.length) ? l.photo_urls : [];
+  var galleryHtml = photos.length
+    ? '<div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:4px;">' +
+        photos.map(function(url){
+          return '<div class="photo-wrap" style="flex:0 0 auto; width:220px; height:220px;">' +
+            '<img src="' + url + '" alt="" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentElement.innerHTML=\'' + PHOTO_PLACEHOLDER_SVG.replace(/'/g, "\\'") + '\'">' +
+          '</div>';
+        }).join('') +
+      '</div>'
+    : '<div class="photo-wrap" style="width:220px; height:220px;">' + PHOTO_PLACEHOLDER_SVG + '</div>';
+
+  var saved = isSavedLocally(l.id);
+  var inCart = isInCart(l.id);
+  var s = l.seller || {};
+  var ratingLine = (s.avg_rating != null)
+    ? '★' + s.avg_rating.toFixed(1) + (s.rating_count ? ' (' + s.rating_count + ' review' + (s.rating_count === 1 ? '' : 's') + ')' : '')
+    : 'No reviews yet';
+
+  contentEl.innerHTML =
+    '<div style="margin-bottom:14px;">' + galleryHtml + '</div>' +
+    '<span class="cond">' + categoryLabel(l.category) + ' · ' + conditionLabel(l.condition) + '</span>' +
+    '<h3 style="margin:4px 0 6px;">' + escapeHtml(l.item_name) + '</h3>' +
+    '<p class="desc" style="white-space:pre-wrap;">' + escapeHtml(l.description) + '</p>' +
+    attributesTableHtml(l.attributes) +
+    (!l.always_in_stock && l.stock_qty > 0 && l.stock_qty <= 3 ? '<div class="stock-hint">Only ' + l.stock_qty + ' left</div>' : '') +
+    '<div class="price" style="margin:8px 0;">' + formatNGN(l.price_ngn) + '</div>' +
+    (s.display_name
+      ? '<div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">' +
+          Amana.sellerChipHtml(s) +
+          '<span style="font-family:var(--font-mono); font-size:13px; color:var(--ink-soft);">' + ratingLine + '</span>' +
+        '</div>'
+      : '') +
+    '<button class="btn btn-ink" style="width:100%; justify-content:center; margin-top:6px;" onclick="openMarketOrder(\'' + l.id + '\')">Buy this</button>' +
+    '<button class="btn btn-ghost" style="width:100%; justify-content:center; margin-top:6px;" onclick="openMakeOffer(\'' + l.id + '\')">Make an offer</button>' +
+    '<button class="btn' + (inCart ? ' btn-ink' : '') + '" style="width:100%; justify-content:center; margin-top:6px;" id="cartBtn-' + l.id + '" onclick="toggleCartItem(\'' + l.id + '\', this)">' + (inCart ? 'Remove from cart' : 'Add to cart') + '</button>' +
+    '<button type="button" class="save-heart' + (saved ? ' saved' : '') + '" data-listing-id="' + l.id + '" onclick="toggleWishlist(\'' + l.id + '\', this)" aria-label="' + (saved ? 'Remove from saved items' : 'Save this item') + '" style="position:static; margin-top:10px;">' + (saved ? '♥ Saved' : '♡ Save this item') + '</button>' +
+    (l.seller_email ? '<button type="button" class="small-link" style="margin-top:10px; display:block;" onclick="viewSellerProfile(\'' + l.seller_email + '\')">View seller →</button>' : '');
+}
+
+function closeListingDetail(){
+  document.getElementById('listingDetailSection').style.display = 'none';
 }
 
 /* ================= sell an item (seller posting) ================= */
@@ -3203,6 +3304,209 @@ function renderPhotoThumbs(){
 function removePendingPhoto(localId){
   pendingPhotos = pendingPhotos.filter(function(p){ return p.localId !== localId; });
   renderPhotoThumbs();
+}
+
+// Color variants — each one is { localId, color, photos }, where photos
+// is the exact same shape/lifecycle as pendingPhotos above (localId, url,
+// status, previewSrc), just scoped to one color instead of the whole
+// listing. A variant is only sent with the listing (see collectVariants)
+// once it has both a color name and at least one successfully-uploaded
+// photo — an empty or half-filled-in variant row is just dropped rather
+// than blocking submission, so a seller can start adding a color, change
+// their mind, and remove it without friction.
+var sellVariants = [];
+var sellVariantSeq = 0;
+var variantPhotoSeq = 0;
+
+// ---- Custom item details (label/value pairs a seller adds themselves) ----
+// Same free-form idea as colors above, but for facts rather than photos —
+// lets a cake seller add "Flavor" / "Serves" / "Allergens", a phone seller
+// add "Storage" / "Battery health", etc, instead of everything being
+// crammed into the single description textarea.
+var sellAttributes = [];
+var sellAttributeSeq = 0;
+var MAX_SELL_ATTRIBUTES = 15;
+
+function addSellAttribute(){
+  if(sellAttributes.length >= MAX_SELL_ATTRIBUTES) return;
+  sellAttributeSeq++;
+  sellAttributes.push({ localId: sellAttributeSeq, label: '', value: '' });
+  renderSellAttributes();
+}
+
+function removeSellAttribute(localId){
+  sellAttributes = sellAttributes.filter(function(a){ return a.localId !== localId; });
+  renderSellAttributes();
+}
+
+function updateSellAttributeLabel(localId, value){
+  var a = sellAttributes.find(function(x){ return x.localId === localId; });
+  if(a) a.label = value;
+}
+
+function updateSellAttributeValue(localId, value){
+  var a = sellAttributes.find(function(x){ return x.localId === localId; });
+  if(a) a.value = value;
+}
+
+// Only pairs with both a label and a value make it into the payload —
+// same "half-filled entries just get dropped" reasoning as collectVariants().
+function collectAttributes(){
+  return sellAttributes
+    .filter(function(a){ return a.label.trim() && a.value.trim(); })
+    .map(function(a){ return { label: a.label.trim(), value: a.value.trim() }; });
+}
+
+function renderSellAttributes(){
+  var wrap = document.getElementById('sellAttributesList');
+  wrap.innerHTML = sellAttributes.map(function(a){
+    return '<div class="my-listing-card" style="display:block; margin-bottom:10px;" data-attribute-id="' + a.localId + '">' +
+      '<div style="display:flex; gap:8px; align-items:center;">' +
+        '<input type="text" placeholder="e.g. Flavor" maxlength="40" value="' + escapeHtml(a.label) + '" oninput="updateSellAttributeLabel(' + a.localId + ', this.value)" style="flex:1;">' +
+        '<input type="text" placeholder="e.g. Red velvet" maxlength="200" value="' + escapeHtml(a.value) + '" oninput="updateSellAttributeValue(' + a.localId + ', this.value)" style="flex:1;">' +
+        '<button type="button" class="thumb-remove" style="position:static;" onclick="removeSellAttribute(' + a.localId + ')" aria-label="Remove this detail">&times;</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  var addBtn = wrap.nextElementSibling;
+  if(addBtn) addBtn.style.display = sellAttributes.length >= MAX_SELL_ATTRIBUTES ? 'none' : '';
+}
+
+function addSellVariant(){
+  sellVariantSeq++;
+  sellVariants.push({ localId: sellVariantSeq, color: '', photos: [] });
+  renderSellVariants();
+}
+
+function removeSellVariant(localId){
+  sellVariants = sellVariants.filter(function(v){ return v.localId !== localId; });
+  renderSellVariants();
+}
+
+function updateSellVariantColor(localId, value){
+  var v = sellVariants.find(function(x){ return x.localId === localId; });
+  if(v) v.color = value;
+}
+
+function removeVariantPhoto(variantLocalId, photoLocalId){
+  var v = sellVariants.find(function(x){ return x.localId === variantLocalId; });
+  if(!v) return;
+  v.photos = v.photos.filter(function(p){ return p.localId !== photoLocalId; });
+  renderSellVariants();
+}
+
+// collectVariants() only includes variants that are actually usable —
+// a color name plus at least one done photo. Anything mid-upload,
+// mid-typing, or abandoned just doesn't make it into the payload.
+function collectVariants(){
+  return sellVariants
+    .filter(function(v){ return v.color.trim() && v.photos.some(function(p){ return p.status === 'done' && p.url; }); })
+    .map(function(v){
+      return {
+        color: v.color.trim(),
+        photoUrls: v.photos.filter(function(p){ return p.status === 'done' && p.url; }).map(function(p){ return p.url; })
+      };
+    });
+}
+
+function sellVariantsStillUploading(){
+  return sellVariants.some(function(v){ return v.photos.some(function(p){ return p.status === 'uploading'; }); });
+}
+
+function renderSellVariants(){
+  var wrap = document.getElementById('sellVariantsList');
+  wrap.innerHTML = sellVariants.map(function(v){
+    var thumbsHtml = v.photos.map(function(p){
+      var statusHtml = '';
+      if(p.status === 'uploading'){ statusHtml = '<div class="thumb-status">Uploading…</div>'; }
+      else if(p.status === 'error'){ statusHtml = '<div class="thumb-status error">Failed</div>'; }
+      return '<div class="photo-thumb" data-local-id="' + p.localId + '">' +
+        '<img src="' + p.previewSrc + '" alt="">' +
+        statusHtml +
+        '<button type="button" class="thumb-remove" onclick="removeVariantPhoto(' + v.localId + ',' + p.localId + ')" aria-label="Remove photo">&times;</button>' +
+        '</div>';
+    }).join('');
+    return '<div class="my-listing-card" style="display:block; margin-bottom:10px;" data-variant-id="' + v.localId + '">' +
+      '<div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">' +
+        '<input type="text" placeholder="e.g. Red, Black, Navy blue" value="' + escapeHtml(v.color) + '" oninput="updateSellVariantColor(' + v.localId + ', this.value)" style="flex:1;">' +
+        '<button type="button" class="thumb-remove" style="position:static;" onclick="removeSellVariant(' + v.localId + ')" aria-label="Remove this color">&times;</button>' +
+      '</div>' +
+      '<div class="photo-thumbs">' + thumbsHtml + '</div>' +
+      '<input type="file" id="variantPhotoInput-' + v.localId + '" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple style="display:none;" onchange="handleVariantPhotoFilesSelected(' + v.localId + ', this.files)">' +
+      '<button type="button" class="add-photo-link" onclick="document.getElementById(\'variantPhotoInput-' + v.localId + '\').click()">+ Add photo for this color</button>' +
+    '</div>';
+  }).join('');
+}
+
+async function handleVariantPhotoFilesSelected(variantLocalId, fileList){
+  var errEl = document.getElementById('sellStep1Error');
+  errEl.innerHTML = '';
+
+  var email = document.getElementById('sellEmail').value.trim();
+  if(!/\S+@\S+\.\S+/.test(email)){
+    errEl.innerHTML = '<p class="inline-error">Enter your email address above first, then add photos.</p>';
+    document.getElementById('variantPhotoInput-' + variantLocalId).value = '';
+    return;
+  }
+  if(!API_BASE){
+    errEl.innerHTML = '<p class="inline-error">Photo upload needs the real backend connected.</p>';
+    document.getElementById('variantPhotoInput-' + variantLocalId).value = '';
+    return;
+  }
+
+  var token = sellSession.sessionToken && sellSession.email === email
+    ? sellSession.sessionToken
+    : Amana.getSessionToken(email);
+
+  if(!token){
+    document.getElementById('variantPhotoInput-' + variantLocalId).value = '';
+    openSellerVerifyForPhotoUpload(email, fileList, variantLocalId);
+    return;
+  }
+
+  sellSession.email = email; Amana.rememberLastEmail('seller', email);
+  sellSession.sessionToken = token;
+  await uploadVariantPhotoFiles(variantLocalId, fileList, token);
+  document.getElementById('variantPhotoInput-' + variantLocalId).value = '';
+}
+
+async function uploadVariantPhotoFiles(variantLocalId, fileList, token){
+  var v = sellVariants.find(function(x){ return x.localId === variantLocalId; });
+  if(!v) return;
+  var errEl = document.getElementById('sellStep1Error');
+  var files = Array.prototype.slice.call(fileList);
+
+  files.forEach(function(file){
+    variantPhotoSeq++;
+    var entry = { localId: variantPhotoSeq, url: null, status: 'uploading', previewSrc: URL.createObjectURL(file) };
+    v.photos.push(entry);
+    renderSellVariants();
+
+    var formData = new FormData();
+    formData.append('email', sellSession.email);
+    formData.append('photo', file);
+
+    fetch(API_BASE + '/listings/upload-photo', {
+      method:'POST',
+      headers:{ 'Authorization':'Bearer ' + token },
+      body: formData
+    }).then(async function(res){
+      if(res.status === 401 || res.status === 403){
+        Amana.clearSessionToken(sellSession.email);
+        sellSession.sessionToken = null;
+        throw new Error('Your session expired — verify again to keep uploading.');
+      }
+      var data = await res.json();
+      if(!res.ok){ throw new Error(data.error || 'Upload failed.'); }
+      entry.status = 'done';
+      entry.url = data.url;
+      renderSellVariants();
+    }).catch(function(err){
+      entry.status = 'error';
+      renderSellVariants();
+      errEl.insertAdjacentHTML('beforeend', '<p class="inline-error">' + friendlyError(err) + '</p>');
+    });
+  });
 }
 
 // Fired when the seller picks one or more files. Each file gets an
@@ -3289,7 +3593,7 @@ async function uploadPhotoFiles(fileList, token){
 // this form. In that case we run a lightweight inline OTP prompt (a
 // smaller version of the full sell-submit verify step) just to unlock
 // uploads, then resume uploading the files they'd already picked.
-function openSellerVerifyForPhotoUpload(email, fileList){
+function openSellerVerifyForPhotoUpload(email, fileList, variantLocalId){
   document.getElementById('orderOverlay').classList.add('open');
   document.getElementById('modalBody').innerHTML =
     '<h3>Verify your email to add photos</h3>' +
@@ -3298,6 +3602,7 @@ function openSellerVerifyForPhotoUpload(email, fileList){
     '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick=\'sendPhotoVerifyCode(' + JSON.stringify(email) + ')\'>Send code</button>';
   sendPhotoVerifyCode(email);
   window._pendingPhotoFiles = fileList;
+  window._pendingPhotoVariantId = variantLocalId || null;
 }
 
 async function sendPhotoVerifyCode(email){
@@ -3339,8 +3644,13 @@ async function handlePhotoVerifySubmit(email){
     Amana.saveSessionToken(email, data.token);
     closeModal();
     var files = window._pendingPhotoFiles;
+    var variantId = window._pendingPhotoVariantId;
     window._pendingPhotoFiles = null;
-    if(files && files.length){ await uploadPhotoFiles(files, data.token); }
+    window._pendingPhotoVariantId = null;
+    if(files && files.length){
+      if(variantId){ await uploadVariantPhotoFiles(variantId, files, data.token); }
+      else { await uploadPhotoFiles(files, data.token); }
+    }
   }catch(err){
     errEl.innerHTML = '<p class="inline-error">' + friendlyError(err) + '</p>';
   }
@@ -3429,6 +3739,21 @@ function goToSellStep(step){
       step1ErrEl.innerHTML = '<p class="inline-error">Add at least one photo of the item.</p>';
       return;
     }
+    if(sellVariantsStillUploading()){
+      step1ErrEl.innerHTML = '<p class="inline-error">Wait for color photos to finish uploading before continuing.</p>';
+      return;
+    }
+    var variantWithNoPhoto = sellVariants.find(function(v){ return v.color.trim() && !v.photos.some(function(p){ return p.status === 'done'; }); });
+    if(variantWithNoPhoto){
+      step1ErrEl.innerHTML = '<p class="inline-error">Add a photo for "' + escapeHtml(variantWithNoPhoto.color.trim()) + '", or remove that color.</p>';
+      return;
+    }
+    var variantColorCounts = {};
+    collectVariants().forEach(function(v){ variantColorCounts[v.color.toLowerCase()] = (variantColorCounts[v.color.toLowerCase()] || 0) + 1; });
+    if(Object.values(variantColorCounts).some(function(n){ return n > 1; })){
+      step1ErrEl.innerHTML = '<p class="inline-error">Each color needs a different name.</p>';
+      return;
+    }
   }
   step1ErrEl.innerHTML = '';
   document.getElementById('sellStepPanel1').classList.toggle('active', step === 1);
@@ -3453,6 +3778,8 @@ async function handleSellSubmit(){
   var condition = document.getElementById('sellCondition').value;
   var priceNgn = Number(document.getElementById('sellPrice').value);
   var photoUrls = collectPhotoUrls();
+  var variants = collectVariants();
+  var attributes = collectAttributes();
   var alwaysInStock = document.getElementById('sellAlwaysInStock').checked;
   var stockQty = alwaysInStock ? 0 : Number(document.getElementById('sellStockQty').value);
   var deliveryArea = document.getElementById('sellDeliveryArea').value;
@@ -3483,9 +3810,24 @@ async function handleSellSubmit(){
     errEl.innerHTML = '<p class="inline-error">Add at least one photo of the item.</p>';
     return;
   }
+  if(sellVariantsStillUploading()){
+    errEl.innerHTML = '<p class="inline-error">Wait for color photos to finish uploading before submitting.</p>';
+    return;
+  }
+  var variantWithNoPhotoSubmit = sellVariants.find(function(v){ return v.color.trim() && !v.photos.some(function(p){ return p.status === 'done'; }); });
+  if(variantWithNoPhotoSubmit){
+    errEl.innerHTML = '<p class="inline-error">Add a photo for "' + escapeHtml(variantWithNoPhotoSubmit.color.trim()) + '", or remove that color.</p>';
+    return;
+  }
+  var variantColorCountsSubmit = {};
+  variants.forEach(function(v){ variantColorCountsSubmit[v.color.toLowerCase()] = (variantColorCountsSubmit[v.color.toLowerCase()] || 0) + 1; });
+  if(Object.values(variantColorCountsSubmit).some(function(n){ return n > 1; })){
+    errEl.innerHTML = '<p class="inline-error">Each color needs a different name.</p>';
+    return;
+  }
   if(!API_BASE){
     sellSession.email = email; Amana.rememberLastEmail('seller', email);
-    renderSellVerifyStepDemo({ itemName:itemName, description:description, category:category, condition:condition, priceNgn:priceNgn, photoUrls:photoUrls, stockQty:stockQty, alwaysInStock:alwaysInStock, deliveryArea:deliveryArea, deliveryZone:deliveryZone });
+    renderSellVerifyStepDemo({ itemName:itemName, description:description, category:category, condition:condition, priceNgn:priceNgn, photoUrls:photoUrls, variants:variants, attributes:attributes, stockQty:stockQty, alwaysInStock:alwaysInStock, deliveryArea:deliveryArea, deliveryZone:deliveryZone });
     return;
   }
 
@@ -3497,7 +3839,7 @@ async function handleSellSubmit(){
   if(cachedToken){
     sellSession.sessionToken = cachedToken;
     errEl.innerHTML = '<p style="font-size:13px; color:var(--ink-soft);">Submitting…</p>';
-    await submitListing(cachedToken, { itemName:itemName, description:description, category:category, condition:condition, priceNgn:priceNgn, photoUrls:photoUrls, stockQty:stockQty, alwaysInStock:alwaysInStock, deliveryArea:deliveryArea, deliveryZone:deliveryZone }, errEl);
+    await submitListing(cachedToken, { itemName:itemName, description:description, category:category, condition:condition, priceNgn:priceNgn, photoUrls:photoUrls, variants:variants, attributes:attributes, stockQty:stockQty, alwaysInStock:alwaysInStock, deliveryArea:deliveryArea, deliveryZone:deliveryZone }, errEl);
     return;
   }
 
@@ -3511,7 +3853,7 @@ async function handleSellSubmit(){
     var data = await res.json();
     if(!res.ok){ throw new Error(data.error || 'Could not send code.'); }
 
-    renderSellVerifyStep({ itemName:itemName, description:description, category:category, condition:condition, priceNgn:priceNgn, photoUrls:photoUrls, stockQty:stockQty, alwaysInStock:alwaysInStock, deliveryArea:deliveryArea, deliveryZone:deliveryZone });
+    renderSellVerifyStep({ itemName:itemName, description:description, category:category, condition:condition, priceNgn:priceNgn, photoUrls:photoUrls, variants:variants, attributes:attributes, stockQty:stockQty, alwaysInStock:alwaysInStock, deliveryArea:deliveryArea, deliveryZone:deliveryZone });
   }catch(err){
     errEl.innerHTML = '<p class="inline-error">' + friendlyError(err) + '</p>';
   }
@@ -3556,6 +3898,8 @@ async function submitListing(token, pendingListing, errEl){
         condition: pendingListing.condition,
         priceNgn: pendingListing.priceNgn,
         photoUrls: pendingListing.photoUrls,
+        variants: pendingListing.variants || [],
+        attributes: pendingListing.attributes || [],
         stockQty: pendingListing.stockQty,
         alwaysInStock: pendingListing.alwaysInStock,
         deliveryArea: pendingListing.deliveryArea,
@@ -3635,6 +3979,7 @@ async function handleSellVerifyDemo(pendingListing){
     condition: pendingListing.condition,
     price_ngn: pendingListing.priceNgn,
     photo_urls: pendingListing.photoUrls,
+    attributes: pendingListing.attributes || [],
     stock_qty: pendingListing.stockQty,
     always_in_stock: pendingListing.alwaysInStock,
     in_stock: pendingListing.alwaysInStock || pendingListing.stockQty > 0,
