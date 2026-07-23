@@ -756,6 +756,7 @@
   .sell-step-panel{ display:none; }
   .sell-step-panel.active{ display:block; }
 </style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
@@ -1113,6 +1114,44 @@ var FEE_PERCENT = Amana.FEE_PERCENT;
 // e.g. 'https://amana-backend.onrender.com'. Leave as '' to keep using
 // the demo-only storage simulation instead of real WhatsApp OTP.
 var API_BASE = 'https://amana-backend-ln2p.onrender.com';
+
+// Google Sign-In — must be the same OAuth Client ID configured as
+// GOOGLE_CLIENT_ID on the backend (see .env.example there), since Google
+// checks both this page's origin+client_id and the backend's aud check
+// before trusting a sign-in. Get one at
+// https://console.cloud.google.com/apis/credentials.
+var GOOGLE_CLIENT_ID = '13645819723-2ss6hrmoom9n9qgnc3m516ttd743s427.apps.googleusercontent.com';
+
+// Renders a "Sign in with Google" button into containerId and wires its
+// result to onCredential(response) — response.credential is the ID token
+// to send to POST /auth/google. Safe to call every time a login step is
+// (re)rendered; google.accounts.id.renderButton just replaces the
+// container's contents each time.
+function renderGoogleSignInButton(containerId, onCredential){
+  var el = document.getElementById(containerId);
+  if(!el) return;
+  if(!window.google || !window.google.accounts || !window.google.accounts.id){
+    // GIS script hasn't loaded yet (slow network, blocked, etc.) — retry
+    // briefly rather than silently showing nothing.
+    var attempts = el.getAttribute('data-gsi-attempts') || 0;
+    if(Number(attempts) > 20) return;
+    el.setAttribute('data-gsi-attempts', Number(attempts) + 1);
+    setTimeout(function(){ renderGoogleSignInButton(containerId, onCredential); }, 250);
+    return;
+  }
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: onCredential
+  });
+  google.accounts.id.renderButton(el, {
+    type: 'standard', theme: 'outline', size: 'large', width: 320, text: 'continue_with'
+  });
+}
+
+// Shared "or" divider markup dropped between the Google button and the
+// email field on every login step that offers both.
+var GOOGLE_DIVIDER_HTML = '<div style="display:flex; align-items:center; gap:10px; margin:14px 0; color:var(--ink-soft); font-size:12px;">' +
+  '<div style="flex:1; height:1px; background:var(--rule, #ddd);"></div>or<div style="flex:1; height:1px; background:var(--rule, #ddd);"></div></div>';
 
 /* Shown in the photo slot for any listing with no image, and swapped in
    if a photo URL 404s — keeps every card the same height instead of
@@ -1501,9 +1540,12 @@ function openMarketOrder(listingId){
   document.getElementById('modalBody').innerHTML =
     '<h3>Buy this item</h3>' +
     '<p class="modal-sub">Your payment is held by Amana until you confirm the item arrived as described — the seller isn\'t paid until then.</p>' +
+    '<div id="googleSignInDiv" style="display:flex; justify-content:center;"></div>' +
+    GOOGLE_DIVIDER_HTML +
     '<div class="field"><label for="emailInput">Your email address</label>' +
     '<input type="email" id="emailInput" placeholder="you@example.com" autofocus></div>' +
     '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick="handleMarketEmailSubmit()">Continue</button>';
+  renderGoogleSignInButton('googleSignInDiv', handleGoogleCredentialForOrder);
 }
 
 // Make-an-offer flow. Reuses the exact same email → password/OTP →
@@ -1540,9 +1582,37 @@ function handleOfferAmountSubmit(listingId){
   currentOrder = { marketplace:true, isOffer:true, listingId:listingId, offerAmountNgn:amount, email:null, customer:null, tempCode:null, sessionToken:null, otpPurpose:'signup' };
   document.getElementById('modalBody').innerHTML =
     '<h3>Make an offer</h3>' +
+    '<div id="googleSignInDiv" style="display:flex; justify-content:center;"></div>' +
+    GOOGLE_DIVIDER_HTML +
     '<div class="field"><label for="emailInput">Your email address</label>' +
     '<input type="email" id="emailInput" placeholder="you@example.com" autofocus></div>' +
     '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick="handleMarketEmailSubmit()">Continue</button>';
+  renderGoogleSignInButton('googleSignInDiv', handleGoogleCredentialForOrder);
+}
+
+// Fires when Google Identity Services returns a signed credential for the
+// buy/offer/cart checkout modal. Exchanges it for a session token the same
+// way handleMarketVerifySubmit does for an email code, then continues
+// straight into the delivery-profile step — no password/OTP needed.
+async function handleGoogleCredentialForOrder(response){
+  var modalBody = document.getElementById('modalBody');
+  modalBody.insertAdjacentHTML('beforeend', '<p style="font-size:13px; color:var(--ink-soft); margin-top:10px;">Signing you in with Google…</p>');
+  try{
+    var res = await fetch(API_BASE + '/auth/google', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ credential: response.credential })
+    });
+    var data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not sign in with Google.'); }
+    currentOrder.email = data.email;
+    currentOrder.sessionToken = data.token;
+    Amana.rememberLastEmail('buyer', data.email);
+    Amana.saveSessionToken(data.email, data.token);
+    if(data.googleName){ currentOrder.googleName = data.googleName; }
+    await proceedToCheckoutProfile();
+  }catch(err){
+    modalBody.insertAdjacentHTML('beforeend', '<p class="inline-error">' + friendlyError(err) + '</p>');
+  }
 }
 
 async function handleMarketEmailSubmit(){
@@ -1702,10 +1772,11 @@ async function proceedToCheckoutProfile(){
 
 function showCheckoutProfileStep(profile){
   profile = profile || {};
+  var prefillName = profile.name || (currentOrder && currentOrder.googleName) || '';
   document.getElementById('modalBody').innerHTML =
     '<h3>Delivery details</h3>' +
     '<p class="modal-sub">So the seller and rider know where to send this.</p>' +
-    '<div class="field"><label for="checkoutNameInput">Your name</label><input type="text" id="checkoutNameInput" value="' + escapeHtml(profile.name || '') + '" autofocus></div>' +
+    '<div class="field"><label for="checkoutNameInput">Your name</label><input type="text" id="checkoutNameInput" value="' + escapeHtml(prefillName) + '" autofocus></div>' +
     '<div class="field"><label for="checkoutPhoneInput">Phone number</label><input type="tel" id="checkoutPhoneInput" value="' + escapeHtml(profile.phone || '') + '"></div>' +
     '<div class="field"><label for="checkoutAddressInput">Delivery address</label><input type="text" id="checkoutAddressInput" value="' + escapeHtml(profile.address || '') + '"></div>' +
     '<div id="checkoutProfileError"></div>' +
@@ -2409,9 +2480,12 @@ function startCartCheckout(){
   document.getElementById('modalBody').innerHTML =
     '<h3>Buy these ' + ids.length + ' items</h3>' +
     '<p class="modal-sub">One payment for everything selected. Your payment is held by Amana per item until you confirm each one arrived as described — sellers aren\'t paid until then.</p>' +
+    '<div id="googleSignInDiv" style="display:flex; justify-content:center;"></div>' +
+    GOOGLE_DIVIDER_HTML +
     '<div class="field"><label for="emailInput">Your email address</label>' +
     '<input type="email" id="emailInput" placeholder="you@example.com" autofocus></div>' +
     '<button class="btn btn-ochre" style="width:100%; justify-content:center;" onclick="handleMarketEmailSubmit()">Continue</button>';
+  renderGoogleSignInButton('googleSignInDiv', handleGoogleCredentialForOrder);
 }
 
 function clearCart(){
