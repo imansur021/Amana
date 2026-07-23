@@ -1234,26 +1234,22 @@ function renderMarketplace(listings){
     var photo = (l.photo_urls && l.photo_urls[0]) || '';
     var saved = isSavedLocally(l.id);
     var inCart = isInCart(l.id);
-    return '<div class="market-card">' +
-      '<div class="photo-wrap" style="cursor:pointer;" onclick="openListingDetail(\'' + l.id + '\')">' +
+    return '<div class="market-card" style="cursor:pointer;" onclick="openListingDetail(\'' + l.id + '\')">' +
+      '<div class="photo-wrap">' +
         (photo
           ? '<img src="' + photo + '" alt="" loading="lazy" onerror="this.parentElement.innerHTML=\'' + PHOTO_PLACEHOLDER_SVG.replace(/'/g, "\\'") + '\'">'
           : PHOTO_PLACEHOLDER_SVG) +
       '</div>' +
-      '<button type="button" class="save-heart' + (saved ? ' saved' : '') + '" data-listing-id="' + l.id + '" onclick="toggleWishlist(\'' + l.id + '\', this)" aria-label="' + (saved ? 'Remove from saved items' : 'Save this item') + '">' + (saved ? '♥' : '♡') + '</button>' +
+      '<button type="button" class="save-heart' + (saved ? ' saved' : '') + '" data-listing-id="' + l.id + '" onclick="event.stopPropagation(); toggleWishlist(\'' + l.id + '\', this)" aria-label="' + (saved ? 'Remove from saved items' : 'Save this item') + '">' + (saved ? '♥' : '♡') + '</button>' +
       '<div class="body">' +
         '<span class="cond">' + categoryLabel(l.category) + ' · ' + conditionLabel(l.condition) + '</span>' +
-        '<h3 style="cursor:pointer;" onclick="openListingDetail(\'' + l.id + '\')">' + escapeHtml(l.item_name) + '</h3>' +
+        '<h3>' + escapeHtml(l.item_name) + '</h3>' +
         '<p class="desc">' + escapeHtml(l.description) + '</p>' +
         Amana.sellerChipHtml(l.seller) +
         (!l.always_in_stock && l.stock_qty > 0 && l.stock_qty <= 3 ? '<div class="stock-hint">Only ' + l.stock_qty + ' left</div>' : '') +
         '<div class="price">' + formatNGN(l.price_ngn) + '</div>' +
         '<div class="meta-line"><span class="pin">&#128205;</span><span>' + escapeHtml(Amana.listingLocationLabel(l)) + '</span></div>' +
         (l.created_at ? '<p class="posted-line">Posted ' + Amana.timeAgo(l.created_at).replace(/^Yesterday$/, 'yesterday') + '</p>' : '') +
-        '<button class="btn btn-ink" style="margin-top:6px;" onclick="openMarketOrder(\'' + l.id + '\')">Buy this</button>' +
-        '<button class="btn btn-ghost" style="margin-top:6px;" onclick="openMakeOffer(\'' + l.id + '\')">Make an offer</button>' +
-        '<button class="btn' + (inCart ? ' btn-ink' : '') + '" style="margin-top:6px;" id="cartBtn-' + l.id + '" onclick="toggleCartItem(\'' + l.id + '\', this)">' + (inCart ? 'Remove from cart' : 'Add to cart') + '</button>' +
-        (l.seller_email ? '<button type="button" class="small-link" style="margin-top:6px; display:inline-block;" onclick="viewSellerProfile(\'' + l.seller_email + '\')">View seller →</button>' : '') +
       '</div>' +
     '</div>';
   }).join('');
@@ -3274,20 +3270,18 @@ async function viewSellerProfile(email){
           var photo = (l.photo_urls && l.photo_urls[0]) || '';
           var saved = isSavedLocally(l.id);
           var inCart = isInCart(l.id);
-          return '<div class="market-card">' +
-            '<div class="photo-wrap" style="cursor:pointer;" onclick="openListingDetail(\'' + l.id + '\')">' +
+          return '<div class="market-card" style="cursor:pointer;" onclick="openListingDetail(\'' + l.id + '\')">' +
+            '<div class="photo-wrap">' +
               (photo
                 ? '<img src="' + photo + '" alt="" loading="lazy" onerror="this.parentElement.innerHTML=\'' + PHOTO_PLACEHOLDER_SVG.replace(/'/g, "\\'") + '\'">'
                 : PHOTO_PLACEHOLDER_SVG) +
             '</div>' +
-            '<button type="button" class="save-heart' + (saved ? ' saved' : '') + '" data-listing-id="' + l.id + '" onclick="toggleWishlist(\'' + l.id + '\', this)" aria-label="' + (saved ? 'Remove from saved items' : 'Save this item') + '">' + (saved ? '♥' : '♡') + '</button>' +
+            '<button type="button" class="save-heart' + (saved ? ' saved' : '') + '" data-listing-id="' + l.id + '" onclick="event.stopPropagation(); toggleWishlist(\'' + l.id + '\', this)" aria-label="' + (saved ? 'Remove from saved items' : 'Save this item') + '">' + (saved ? '♥' : '♡') + '</button>' +
             '<div class="body">' +
               '<span class="cond">' + categoryLabel(l.category) + ' · ' + conditionLabel(l.condition) + '</span>' +
-              '<h3 style="cursor:pointer;" onclick="openListingDetail(\'' + l.id + '\')">' + escapeHtml(l.item_name) + '</h3>' +
+              '<h3>' + escapeHtml(l.item_name) + '</h3>' +
               '<p class="desc">' + escapeHtml(l.description) + '</p>' +
               '<div class="price">' + formatNGN(l.price_ngn) + '</div>' +
-                    '<button class="btn btn-ink" style="margin-top:6px;" onclick="openMarketOrder(\'' + l.id + '\')">Buy this</button>' +
-                    '<button class="btn' + (inCart ? ' btn-ink' : '') + '" style="margin-top:6px;" id="cartBtn-' + l.id + '" onclick="toggleCartItem(\'' + l.id + '\', this)">' + (inCart ? 'Remove from cart' : 'Add to cart') + '</button>' +
             '</div>' +
           '</div>';
         }).join('')
