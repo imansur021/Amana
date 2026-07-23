@@ -132,6 +132,17 @@
   function deliveryZoneFeeNgn(z) { return (DELIVERY_ZONES[z] || {}).feeNgn || 0; }
   function deliveryZoneEtaLabel(z) { return (DELIVERY_ZONES[z] || {}).etaLabel || ''; }
 
+  // Short location tag for a marketplace card — "Katsina metro", "Other
+  // Katsina LGA", or "Nationwide delivery" for listings not restricted to
+  // Katsina. Distinct from deliveryZoneLabel/deliveryAreaLabel above:
+  // those are used in longer delivery-fee explanations elsewhere, this is
+  // the compact one-line version that fits next to a pin icon on a card.
+  function listingLocationLabel(l) {
+    if (!l) return '';
+    if (l.delivery_area === 'nationwide') return 'Nationwide delivery';
+    return deliveryZoneLabel(l.delivery_zone);
+  }
+
   // ---- pricing — edit these by hand as the real numbers change; mirrors amana-backend/.env USD_TO_NGN / FEE_PERCENT ----
   var USD_TO_NGN = 1374;
   var FEE_PERCENT = 5;
@@ -169,6 +180,25 @@
     var d = new Date(String(sqliteDateStr).replace(' ', 'T') + 'Z');
     if (isNaN(d.getTime())) return sqliteDateStr;
     return d.toLocaleDateString('en-NG', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  // "Posted 2 hours ago" style — buyers scanning a feed of listings care
+  // about recency more than the exact date, same as any marketplace app.
+  // Falls back to fmtDate's absolute format once something is old enough
+  // (7+ days) that "X days ago" stops being a useful signal.
+  function timeAgo(sqliteDateStr) {
+    if (!sqliteDateStr) return '';
+    var d = new Date(String(sqliteDateStr).replace(' ', 'T') + 'Z');
+    if (isNaN(d.getTime())) return '';
+    var seconds = Math.floor((Date.now() - d.getTime()) / 1000);
+    if (seconds < 60) return 'Just now';
+    var minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return minutes + (minutes === 1 ? ' minute ago' : ' minutes ago');
+    var hours = Math.floor(minutes / 60);
+    if (hours < 24) return hours + (hours === 1 ? ' hour ago' : ' hours ago');
+    var days = Math.floor(hours / 24);
+    if (days < 7) return days === 1 ? 'Yesterday' : days + ' days ago';
+    return fmtDate(sqliteDateStr);
   }
 
   function formatRateDate() {
@@ -416,6 +446,7 @@
     deliveryZoneLabel: deliveryZoneLabel,
     deliveryZoneFeeNgn: deliveryZoneFeeNgn,
     deliveryZoneEtaLabel: deliveryZoneEtaLabel,
+    listingLocationLabel: listingLocationLabel,
     DELIVERY_ZONES: DELIVERY_ZONES,
     payoutLabel: payoutLabel,
     escrowNote: escrowNote,
@@ -423,6 +454,7 @@
     formatNGN: formatNGN,
     formatUSD: formatUSD,
     fmtDate: fmtDate,
+    timeAgo: timeAgo,
     formatRateDate: formatRateDate,
     getSessionToken: getSessionToken,
     saveSessionToken: saveSessionToken,

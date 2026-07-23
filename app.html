@@ -204,9 +204,16 @@
   .market-card .photo-placeholder svg{ width:36px; height:36px; }
   .market-card .body{ padding:14px 16px; display:flex; flex-direction:column; gap:6px; flex:1; }
   .market-card h3{ font-size:15px; font-weight:600; font-family:var(--font-body); margin:0; line-height:1.3; }
-  .market-card .cond{ font-family:var(--font-mono); font-size:10.5px; color:var(--olive); text-transform:uppercase; letter-spacing:.04em; }
+  .market-card .cond{
+    align-self:flex-start; font-family:var(--font-mono); font-size:10px; font-weight:600; color:var(--olive);
+    text-transform:uppercase; letter-spacing:.04em; background:#EEF1E7; border:1px solid #D6DFC9;
+    border-radius:5px; padding:2px 7px;
+  }
   .market-card .desc{ font-size:12.5px; color:var(--ink-soft); line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
   .market-card .price{ font-family:var(--font-mono); font-size:16px; font-weight:600; margin-top:auto; }
+  .market-card .meta-line{ display:flex; align-items:center; gap:5px; font-size:11px; color:var(--ink-soft); }
+  .market-card .meta-line .pin{ flex-shrink:0; }
+  .market-card .posted-line{ font-size:10.5px; color:#888780; margin:-2px 0 0; }
   .seller-chip{ display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--ink-soft); }
   .seller-chip .avatar{ width:16px; height:16px; border-radius:50%; background:var(--indigo-700); color:#fff; font-family:var(--font-mono); font-size:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
   .seller-chip .avatar.tier-top{ background:var(--olive); }
@@ -242,17 +249,26 @@
      since wrapping pills push the grid down unpredictably as filters
      change; a scroll row keeps the layout height stable. */
   .category-pills{
-    display:flex; gap:8px; overflow-x:auto; padding:2px 0 14px; margin-top:-4px;
+    display:flex; gap:18px; overflow-x:auto; padding:4px 2px 16px; margin-top:-4px;
     scrollbar-width:none;
   }
   .category-pills::-webkit-scrollbar{ display:none; }
   .category-pill{
-    flex-shrink:0; font-family:var(--font-body); font-size:13px; font-weight:600;
-    padding:8px 16px; border-radius:999px; border:1px solid #C9BFA4; background:#fff;
-    color:var(--ink-soft); cursor:pointer; white-space:nowrap; transition:background .12s ease, color .12s ease, border-color .12s ease;
+    flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:6px;
+    font-family:var(--font-body); font-size:11.5px; font-weight:600;
+    padding:0; border:none; background:transparent;
+    color:var(--ink-soft); cursor:pointer; white-space:nowrap; width:60px;
+    transition:color .12s ease;
   }
-  .category-pill:hover{ border-color:var(--ochre-light); }
-  .category-pill.active{ background:var(--ochre); border-color:var(--ochre); color:var(--cream); }
+  .category-pill .cat-icon{
+    width:48px; height:48px; border-radius:50%; background:var(--cream);
+    border:1px solid #E1D6BA; display:flex; align-items:center; justify-content:center;
+    font-size:21px; transition:background .12s ease, border-color .12s ease, transform .12s ease;
+  }
+  .category-pill:hover .cat-icon{ border-color:var(--ochre-light); transform:translateY(-1px); }
+  .category-pill.active{ color:var(--ochre-dark); }
+  .category-pill.active .cat-icon{ background:var(--ochre); border-color:var(--ochre); }
+  .category-pill span.cat-label{ line-height:1.2; text-align:center; }
 
   /* Skeleton loading cards — shown while a fetch is in flight instead of
      a blank/plain-text page, so the layout doesn't jump once results
@@ -370,7 +386,20 @@
   footer .wrap{ display:flex; flex-direction:column; gap:6px; }
   footer .foot-note{ margin-top:10px; color:#8A90AC; }
 
-  /* ============ FLOATING BUTTONS ============ */
+  /* ============ BOTTOM NAV ============ */
+  .bottom-nav{ position:fixed; left:0; right:0; bottom:0; z-index:60; display:flex; justify-content:space-around; align-items:center; background:var(--cream); border-top:1px solid #E1D6BA; padding:8px 4px calc(8px + env(safe-area-inset-bottom)); box-shadow:0 -2px 10px rgba(27,32,51,.06); }
+  .bottom-nav-item{ display:flex; flex-direction:column; align-items:center; gap:2px; background:none; border:none; cursor:pointer; padding:4px 8px; flex:1; color:var(--ink-soft); font-family:var(--font-body); }
+  .bottom-nav-item .icon{ font-size:19px; line-height:1; position:relative; }
+  .bottom-nav-item .label{ font-size:10.5px; font-weight:500; }
+  .bottom-nav-item.active{ color:var(--ochre-dark); }
+  .bottom-nav-item .icon .nav-cart-badge{
+    position:absolute; top:-6px; right:-9px; min-width:15px; height:15px; padding:0 3px;
+    border-radius:100px; background:var(--red,#B23A2E); color:#fff; font-size:9.5px; font-weight:700;
+    line-height:15px; text-align:center; font-family:var(--font-body);
+  }
+  body{ padding-bottom:64px; }
+  @media (min-width:781px){ .bottom-nav{ display:none; } body{ padding-bottom:0; } }
+
   .float-stack{
     position:fixed; right:20px; bottom:20px; display:flex; flex-direction:column; align-items:flex-end; gap:12px; z-index:70;
     /* Keeps clear of the home-indicator/gesture bar on notched phones
@@ -468,6 +497,24 @@
     color:var(--ink); padding:9px 10px; border-radius:6px; cursor:pointer; text-decoration:none; min-height:auto;
   }
   .account-menu-panel button:hover{ background:var(--parchment-dim); }
+
+  .account-hub-header{ display:flex; align-items:center; gap:12px; margin-bottom:18px; }
+  .account-hub-avatar{
+    width:48px; height:48px; border-radius:50%; background:var(--parchment-dim); border:1px solid var(--ink-soft);
+    display:flex; align-items:center; justify-content:center; flex:none; font-size:18px; font-weight:700; color:var(--ink-soft);
+    overflow:hidden;
+  }
+  .account-hub-avatar img{ width:100%; height:100%; object-fit:cover; }
+  .account-hub-name{ font-size:17px; font-weight:700; color:var(--ink); }
+  .account-hub-row{
+    display:flex; align-items:center; gap:12px; width:100%; text-align:left; background:#fff;
+    border:1px solid #E1D6BA; border-radius:10px; padding:14px 16px; margin-bottom:10px; cursor:pointer;
+    font-size:14.5px; font-weight:600; color:var(--ink); font-family:inherit;
+  }
+  .account-hub-row:hover{ background:var(--parchment-dim); }
+  .account-hub-row .icon{ font-size:18px; flex:none; width:22px; text-align:center; }
+  .account-hub-row .chev{ margin-left:auto; color:var(--ink-soft); flex:none; }
+  .account-hub-row.signout{ color:var(--red,#B23A2E); }
   .nav-row{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin:-10px 0 16px; flex-wrap:wrap; }
   .nav-row-left{ display:flex; align-items:center; gap:16px; }
   .nav-row-right{ display:flex; align-items:center; gap:16px; }
@@ -516,10 +563,6 @@
 </div>
   <section class="section section--dim" id="order">
     <div class="wrap">
-      <p class="eyebrow">Start an order</p>
-      <h2 class="section-title">What are you looking for?</h2>
-      <p class="section-sub">A marketplace where people in Katsina buy and sell directly, with Amana holding payment until you confirm the item arrived as described.</p>
-
       <div class="order-tabs">
         <button class="tab-btn active" id="tabBtnMarket" onclick="switchTab('market')">Marketplace</button>
         <button class="tab-btn" id="tabBtnSell" onclick="switchTab('sell')">Sell an item</button>
@@ -532,25 +575,28 @@
             <button type="button" class="seller-search-link" onclick="toggleSellerSearch()" id="sellerSearchToggle"><span class="seller-search-icon">&#128269;</span>Find a seller</button>
           </div>
           <div class="nav-row-right">
-            <div class="account-menu" id="accountMenu">
-              <button type="button" class="account-menu-btn" id="accountMenuToggle" onclick="toggleAccountMenu()">
-                <span class="account-icon" id="accountMenuIcon">&#128100;</span>
-                <span class="account-label" id="accountMenuLabel">My account</span>
-                <span class="caret">&#9662;</span>
-              </button>
-              <div class="account-menu-panel" id="accountMenuPanel">
-                <button type="button" onclick="closeAccountMenuThen(toggleMyOrders)" id="myOrdersToggle">My orders</button>
-                <button type="button" onclick="closeAccountMenuThen(toggleMyOffers)" id="myOffersToggle">My offers</button>
-                <button type="button" onclick="closeAccountMenuThen(toggleSavedItems)" id="savedItemsToggle">Saved items</button>
-                <button type="button" onclick="closeAccountMenuThen(toggleMyProfile)" id="myProfileToggle">My profile</button>
-              </div>
-            </div>
+            <button type="button" class="account-menu-btn" id="accountMenuToggle" onclick="toggleAccountHub()">
+              <span class="account-icon" id="accountMenuIcon">&#128100;</span>
+              <span class="account-label" id="accountMenuLabel">My account</span>
+            </button>
             <button type="button" class="cart-pill" onclick="toggleCart()" id="cartToggle"><span class="cart-pill-icon">&#128722;</span>Cart<span class="cart-badge-count" id="cartBadgeCount" style="display:none;">0</span></button>
           </div>
         </div>
         <div class="my-listings" id="cartSection" style="display:none;">
           <h3 style="font-size:16px; margin-bottom:12px;">Your cart</h3>
           <div id="cartList"></div>
+        </div>
+        <div class="my-listings" id="accountHubSection" style="display:none;">
+          <div class="account-hub-header">
+            <span class="account-hub-avatar" id="accountHubAvatar">&#128100;</span>
+            <span class="account-hub-name" id="accountHubName">My account</span>
+          </div>
+          <button type="button" class="account-hub-row" onclick="toggleMyOrders()"><span class="icon">&#128230;</span>My orders<span class="chev">&#8250;</span></button>
+          <button type="button" class="account-hub-row" onclick="toggleMyOffers()"><span class="icon">&#129309;</span>My offers<span class="chev">&#8250;</span></button>
+          <button type="button" class="account-hub-row" onclick="toggleSavedItems()"><span class="icon">&#9825;</span>Saved items<span class="chev">&#8250;</span></button>
+          <button type="button" class="account-hub-row" onclick="hideMarketSidePanels(); window.location.href='status.html';"><span class="icon">&#128230;</span>Track your order<span class="chev">&#8250;</span></button>
+          <button type="button" class="account-hub-row" onclick="toggleMyProfile()"><span class="icon">&#9881;</span>My profile<span class="chev">&#8250;</span></button>
+          <button type="button" class="account-hub-row signout" id="accountHubSignOut" style="display:none;" onclick="handleSignOut()"><span class="icon">&#128682;</span>Sign out</button>
         </div>
         <div class="my-listings" id="myOrdersSection" style="display:none;">
           <h3 style="font-size:16px; margin-bottom:12px;" id="myOrdersHeading">Your orders</h3>
@@ -1031,12 +1077,34 @@ function populateSellCategoryOptions(){
 // native form control doing it for us. '' means "All categories".
 var selectedMarketCategory = '';
 
+// One emoji per category — purely decorative (a quick visual anchor while
+// scanning the strip), the real filtering still runs on cat.value same as
+// before. Falls back to a shopping-bag glyph for anything unmapped so a
+// future category added to CATEGORIES doesn't render blank.
+var CATEGORY_ICONS = {
+  '': '&#10024;',
+  electronics: '&#128241;',
+  fashion: '&#128085;',
+  home: '&#127968;',
+  beauty: '&#128132;',
+  baby_kids: '&#129528;',
+  sports_outdoors: '&#9917;',
+  food: '&#127850;',
+  other: '&#128717;&#65039;'
+};
+
 function renderMarketCategoryPills(){
   var wrap = document.getElementById('marketCategoryPills');
-  var all = [{ value:'', label:'All categories' }].concat(CATEGORIES);
+  var all = [{ value:'', label:'All' }].concat(CATEGORIES.map(function(cat){
+    // Shorten the label under the icon (full name still shows via title=)
+    // so the strip doesn't force every chip to the width of "Sports & Outdoors".
+    return { value:cat.value, label:cat.label.split(' & ')[0].split(' ')[0], full:cat.label };
+  }));
   wrap.innerHTML = all.map(function(cat){
     var active = cat.value === selectedMarketCategory;
-    return '<button type="button" class="category-pill' + (active ? ' active' : '') + '" data-category="' + cat.value + '" aria-pressed="' + active + '">' + cat.label + '</button>';
+    var icon = CATEGORY_ICONS[cat.value] || CATEGORY_ICONS.other;
+    return '<button type="button" class="category-pill' + (active ? ' active' : '') + '" data-category="' + cat.value + '" title="' + (cat.full || cat.label) + '" aria-pressed="' + active + '">' +
+      '<span class="cat-icon" aria-hidden="true">' + icon + '</span><span class="cat-label">' + cat.label + '</span></button>';
   }).join('');
 }
 
@@ -1150,6 +1218,8 @@ function renderMarketplace(listings){
         Amana.sellerChipHtml(l.seller) +
         (!l.always_in_stock && l.stock_qty > 0 && l.stock_qty <= 3 ? '<div class="stock-hint">Only ' + l.stock_qty + ' left</div>' : '') +
         '<div class="price">' + formatNGN(l.price_ngn) + '</div>' +
+        '<div class="meta-line"><span class="pin">&#128205;</span><span>' + escapeHtml(Amana.listingLocationLabel(l)) + '</span></div>' +
+        (l.created_at ? '<p class="posted-line">Posted ' + Amana.timeAgo(l.created_at).replace(/^Yesterday$/, 'yesterday') + '</p>' : '') +
         '<button class="btn btn-ink" style="margin-top:6px;" onclick="openMarketOrder(\'' + l.id + '\')">Buy this</button>' +
         '<button class="btn btn-ghost" style="margin-top:6px;" onclick="openMakeOffer(\'' + l.id + '\')">Make an offer</button>' +
         '<button class="btn' + (inCart ? ' btn-ink' : '') + '" style="margin-top:6px;" id="cartBtn-' + l.id + '" onclick="toggleCartItem(\'' + l.id + '\', this)">' + (inCart ? 'Remove from cart' : 'Add to cart') + '</button>' +
@@ -1809,6 +1879,7 @@ async function performWishlistToggle(listingId, btnEl){
 }
 
 function hideMarketSidePanels(){
+  document.getElementById('accountHubSection').style.display = 'none';
   document.getElementById('myOrdersSection').style.display = 'none';
   document.getElementById('myOffersSection').style.display = 'none';
   document.getElementById('myProfileSection').style.display = 'none';
@@ -1852,9 +1923,15 @@ function isInCart(listingId){ return readCart().indexOf(listingId) !== -1; }
 function updateCartBadge(){
   var count = readCart().length;
   var badge = document.getElementById('cartBadgeCount');
-  if(!badge) return;
-  badge.textContent = String(count);
-  badge.style.display = count > 0 ? 'inline-flex' : 'none';
+  if(badge){
+    badge.textContent = String(count);
+    badge.style.display = count > 0 ? 'inline-flex' : 'none';
+  }
+  var navBadge = document.getElementById('navCartBadge');
+  if(navBadge){
+    navBadge.textContent = String(count);
+    navBadge.style.display = count > 0 ? 'inline-block' : 'none';
+  }
 }
 
 function toggleCartItem(listingId, btnEl){
@@ -1875,34 +1952,15 @@ function toggleCartItem(listingId, btnEl){
   if(cartSection.style.display !== 'none') renderCart();
 }
 
-/* ================= "My account" dropdown (orders/offers/saved/profile) ================= */
+/* ================= "My account" hub (orders/offers/saved/profile) ================= */
 
-function toggleAccountMenu(){
-  var menu = document.getElementById('accountMenu');
-  var opening = !menu.classList.contains('open');
-  menu.classList.toggle('open', opening);
-  if(opening){
-    document.addEventListener('click', closeAccountMenuOnOutsideClick, true);
-  }
-}
-
-function closeAccountMenu(){
-  document.getElementById('accountMenu').classList.remove('open');
-  document.removeEventListener('click', closeAccountMenuOnOutsideClick, true);
-}
-
-function closeAccountMenuOnOutsideClick(e){
-  var menu = document.getElementById('accountMenu');
-  if(menu && !menu.contains(e.target)) closeAccountMenu();
-}
-
-// Wraps My orders / My offers / Saved items / My profile so the dropdown
-// closes right before its underlying toggle function runs (those functions
-// call hideMarketSidePanels() themselves, so ordering here doesn't matter
-// for panel visibility — this is purely about closing the little menu).
-function closeAccountMenuThen(fn){
-  closeAccountMenu();
-  fn();
+function toggleAccountHub(){
+  var section = document.getElementById('accountHubSection');
+  var showing = section.style.display !== 'none';
+  hideMarketSidePanels();
+  if(showing) return;
+  document.getElementById('accountHubSignOut').style.display = buyerSession.email ? 'block' : 'none';
+  section.style.display = 'block';
 }
 
 function toggleCart(){
@@ -4885,12 +4943,16 @@ var accountMenuLabelRequestEmail = null;
 async function updateAccountMenuLabel(){
   var label = document.getElementById('accountMenuLabel');
   var icon = document.getElementById('accountMenuIcon');
+  var hubName = document.getElementById('accountHubName');
+  var hubAvatar = document.getElementById('accountHubAvatar');
   if(!label || !icon) return;
 
   if(!buyerSession.sessionToken || !buyerSession.email){
     accountMenuLabelRequestEmail = null;
     label.textContent = 'My account';
     icon.innerHTML = '&#128100;';
+    if(hubName) hubName.textContent = 'My account';
+    if(hubAvatar) hubAvatar.innerHTML = '&#128100;';
     return;
   }
 
@@ -4901,21 +4963,26 @@ async function updateAccountMenuLabel(){
     if(accountMenuLabelRequestEmail !== email) return; // session changed while this was in flight
     if(!res.ok){
       label.textContent = email.split('@')[0];
+      if(hubName) hubName.textContent = email.split('@')[0];
       return;
     }
     var data = await res.json();
     if(accountMenuLabelRequestEmail !== email) return;
     var name = (data.buyer && data.buyer.hasCustomDisplayName) ? data.buyer.displayName : email.split('@')[0];
     label.textContent = name;
+    if(hubName) hubName.textContent = name;
     var avatarUrl = data.buyer && data.buyer.avatarUrl;
     if(avatarUrl){
       icon.innerHTML = '<img src="' + escapeHtml(avatarUrl) + '" alt="">';
+      if(hubAvatar) hubAvatar.innerHTML = '<img src="' + escapeHtml(avatarUrl) + '" alt="">';
     }else{
       icon.textContent = name.trim().charAt(0).toUpperCase() || '?';
+      if(hubAvatar) hubAvatar.textContent = name.trim().charAt(0).toUpperCase() || '?';
     }
   }catch(err){
     if(accountMenuLabelRequestEmail !== email) return;
     label.textContent = email.split('@')[0];
+    if(hubName) hubName.textContent = email.split('@')[0];
   }
 }
 
@@ -4951,7 +5018,45 @@ function handleSignOut(){
   if(mySalesSection) mySalesSection.style.display = 'none';
 }
 
-/* ================= init ================= */
+// Wires the fixed bottom nav to the panels/tabs that already exist —
+// Home and Sell reuse switchTab (the same tab system the page already
+// had), Saved and Profile reuse the account-menu panels that already
+// existed inside the market tab, and Messages opens WhatsApp since
+// Amana doesn't have in-app messaging. This function doesn't introduce
+// any new page state, just gives existing features a persistent entry
+// point instead of only being reachable from inside the account dropdown.
+function handleBottomNavClick(which){
+  ['home','sellersearch','cart','sell','messages','profile'].forEach(function(name){
+    var btn = document.getElementById('nav' + name.charAt(0).toUpperCase() + name.slice(1) + 'Btn');
+    if(btn) btn.classList.toggle('active', name === which);
+  });
+  if(which === 'home'){
+    switchTab('market');
+    hideMarketSidePanels();
+    window.scrollTo({ top:0, behavior:'smooth' });
+  } else if(which === 'sell'){
+    switchTab('sell');
+    window.scrollTo({ top:0, behavior:'smooth' });
+  } else if(which === 'sellersearch'){
+    switchTab('market');
+    toggleSellerSearch();
+  } else if(which === 'cart'){
+    switchTab('market');
+    toggleCart();
+  } else if(which === 'profile'){
+    switchTab('market');
+    toggleAccountHub();
+  } else if(which === 'messages'){
+    window.open(document.getElementById('headerWhatsapp').href, '_blank', 'noopener');
+    // Messages doesn't correspond to a page state, so restore whichever
+    // tab was actually active instead of leaving the nav showing
+    // "Messages" as selected.
+    var wasSell = document.getElementById('panelSell').classList.contains('active');
+    document.getElementById(wasSell ? 'navSellBtn' : 'navHomeBtn').classList.add('active');
+    document.getElementById('navMessagesBtn').classList.remove('active');
+  }
+}
+
 syncHeaderHeight();
 restoreRememberedSessions();
 renderMarketCategoryPills();
@@ -4970,5 +5075,25 @@ if(initialHash === 'sell' || initialHash === 'sell-mystore'){
   switchTab('market');
 }
 </script>
+<nav class="bottom-nav" aria-label="Main navigation">
+  <button type="button" class="bottom-nav-item active" id="navHomeBtn" onclick="handleBottomNavClick('home')">
+    <span class="icon">&#127968;</span><span class="label">Home</span>
+  </button>
+  <button type="button" class="bottom-nav-item" id="navSellersearchBtn" onclick="handleBottomNavClick('sellersearch')">
+    <span class="icon">&#128269;</span><span class="label">Find seller</span>
+  </button>
+  <button type="button" class="bottom-nav-item" id="navCartBtn" onclick="handleBottomNavClick('cart')">
+    <span class="icon">&#128722;<span class="nav-cart-badge" id="navCartBadge" style="display:none;">0</span></span><span class="label">Cart</span>
+  </button>
+  <button type="button" class="bottom-nav-item" id="navSellBtn" onclick="handleBottomNavClick('sell')">
+    <span class="icon">&#10133;</span><span class="label">Sell</span>
+  </button>
+  <button type="button" class="bottom-nav-item" id="navMessagesBtn" onclick="handleBottomNavClick('messages')">
+    <span class="icon">&#128172;</span><span class="label">Messages</span>
+  </button>
+  <button type="button" class="bottom-nav-item" id="navProfileBtn" onclick="handleBottomNavClick('profile')">
+    <span class="icon">&#128100;</span><span class="label">Profile</span>
+  </button>
+</nav>
 </body>
 </html>
