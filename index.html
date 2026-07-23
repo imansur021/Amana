@@ -521,6 +521,45 @@
     padding:12px 20px calc(12px + env(safe-area-inset-bottom, 0px));
     background:var(--parchment); border-top:1px solid #E1D6BA;
   }
+
+  /* ============ LISTING GALLERY (AliExpress-style swipe hero) ============
+     A full-bleed, edge-to-edge image carousel above the fold on the
+     listing detail panel. One photo fills the width at a time; swiping
+     (touch) or dragging (mouse) advances between them, with dots + an
+     "N / total" chip tracking position, plus a heart button for saving
+     directly off the photo — the same pattern AliExpress/Temu use. */
+  .gallery-hero{
+    position:relative; width:100%; aspect-ratio:1/1; background:#EFE7D3;
+    overflow:hidden; touch-action:pan-y; user-select:none;
+  }
+  .gallery-track{
+    display:flex; height:100%; transition:transform .32s cubic-bezier(.22,.61,.36,1);
+    will-change:transform;
+  }
+  .gallery-track.dragging{ transition:none; }
+  .gallery-slide{ flex:0 0 100%; height:100%; display:flex; align-items:center; justify-content:center; }
+  .gallery-slide img{ width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; }
+  .gallery-counter{
+    position:absolute; top:14px; left:14px; background:rgba(20,27,51,.65); color:#fff;
+    font-family:var(--font-mono); font-size:12px; padding:5px 11px; border-radius:20px;
+    letter-spacing:.02em; pointer-events:none;
+  }
+  .gallery-heart{
+    position:absolute; top:14px; right:14px; width:38px; height:38px; border-radius:50%;
+    background:rgba(20,27,51,.55); border:none; color:#fff; font-size:18px;
+    display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer;
+  }
+  .gallery-heart.saved{ color:var(--ochre-light); }
+  .gallery-dots{
+    position:absolute; bottom:12px; left:0; right:0; display:flex; justify-content:center; gap:6px;
+    pointer-events:none;
+  }
+  .gallery-dots span{
+    width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.55);
+    transition:background .15s ease, transform .15s ease;
+  }
+  .gallery-dots span.active{ background:#fff; transform:scale(1.3); }
+  #listingDetailSection.mobile-overlay-panel .listing-detail-body-pad{ padding:16px 20px 0; }
   .my-listing-card{ background:#fff; border:1px solid #E1D6BA; border-radius:10px; padding:14px 16px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
   .my-listing-card .name{ font-weight:600; font-size:14.5px; }
   .my-listing-card .price{ font-family:var(--font-mono); font-size:13px; color:var(--ink-soft); }
@@ -1400,7 +1439,7 @@ function renderMarketplace(listings){
     return '<div class="market-card">' +
       '<div class="photo-wrap" style="cursor:pointer;" onclick="openListingDetail(\'' + l.id + '\')">' +
         (photo
-          ? '<img src="' + photo + '" alt="" loading="lazy" onerror="this.parentElement.innerHTML=\'' + PHOTO_PLACEHOLDER_SVG.replace(/'/g, "\\'") + '\'">'
+          ? '<img src="' + photo + '" alt="" loading="lazy" onerror="this.parentElement.innerHTML=&#39;' + PHOTO_PLACEHOLDER_SVG.replace(/'/g, "&#39;").replace(/"/g, "&quot;") + '&#39;">'
           : PHOTO_PLACEHOLDER_SVG) +
       '</div>' +
       '<button type="button" class="save-heart' + (saved ? ' saved' : '') + '" data-listing-id="' + l.id + '" onclick="toggleWishlist(\'' + l.id + '\', this)" aria-label="' + (saved ? 'Remove from saved items' : 'Save this item') + '">' + (saved ? '♥' : '♡') + '</button>' +
@@ -2058,11 +2097,19 @@ async function performWishlistToggle(listingId, btnEl){
     if(!res.ok){ throw new Error(data.error || 'Could not update saved items.'); }
 
     locallySavedIds[listingId] = saving;
-    if(btnEl){
-      btnEl.classList.toggle('saved', saving);
-      btnEl.textContent = saving ? '♥' : '♡';
-      btnEl.setAttribute('aria-label', saving ? 'Remove from saved items' : 'Save this item');
-    }
+    // Two hearts can exist at once for the same listing on the detail
+    // panel — the compact one overlaid on the gallery photo, and the
+    // full "♥ Saved" button below the description — so update every
+    // element tagged with this listing's id rather than just the one
+    // that was clicked, otherwise the other stays visually stale.
+    document.querySelectorAll('[data-listing-id="' + listingId + '"]').forEach(function(el){
+      if(!el.classList.contains('gallery-heart') && !el.classList.contains('save-heart')) return;
+      el.classList.toggle('saved', saving);
+      el.textContent = el.classList.contains('gallery-heart')
+        ? (saving ? '♥' : '♡')
+        : (saving ? '♥ Saved' : '♡ Save this item');
+      el.setAttribute('aria-label', saving ? 'Remove from saved items' : 'Save this item');
+    });
     if(document.getElementById('savedItemsSection').style.display !== 'none'){
       loadSavedItems();
     }
@@ -3512,7 +3559,7 @@ async function viewSellerProfile(email){
           return '<div class="market-card">' +
             '<div class="photo-wrap" style="cursor:pointer;" onclick="openListingDetail(\'' + l.id + '\')">' +
               (photo
-                ? '<img src="' + photo + '" alt="" loading="lazy" onerror="this.parentElement.innerHTML=\'' + PHOTO_PLACEHOLDER_SVG.replace(/'/g, "\\'") + '\'">'
+                ? '<img src="' + photo + '" alt="" loading="lazy" onerror="this.parentElement.innerHTML=&#39;' + PHOTO_PLACEHOLDER_SVG.replace(/'/g, "&#39;").replace(/"/g, "&quot;") + '&#39;">'
                 : PHOTO_PLACEHOLDER_SVG) +
             '</div>' +
             '<button type="button" class="save-heart' + (saved ? ' saved' : '') + '" data-listing-id="' + l.id + '" onclick="toggleWishlist(\'' + l.id + '\', this)" aria-label="' + (saved ? 'Remove from saved items' : 'Save this item') + '">' + (saved ? '♥' : '♡') + '</button>' +
@@ -3586,17 +3633,26 @@ function openListingDetail(listingId){
   }
 
   var photos = (l.photo_urls && l.photo_urls.length) ? l.photo_urls : [];
-  var galleryHtml = photos.length
-    ? '<div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:4px;">' +
-        photos.map(function(url){
-          return '<div class="photo-wrap" style="flex:0 0 auto; width:220px; height:220px;">' +
-            '<img src="' + url + '" alt="" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentElement.innerHTML=\'' + PHOTO_PLACEHOLDER_SVG.replace(/'/g, "\\'") + '\'">' +
-          '</div>';
-        }).join('') +
-      '</div>'
-    : '<div class="photo-wrap" style="width:220px; height:220px;">' + PHOTO_PLACEHOLDER_SVG + '</div>';
-
   var saved = isSavedLocally(l.id);
+
+  var galleryHtml = photos.length
+    ? '<div class="gallery-hero" id="galleryHero">' +
+        '<div class="gallery-track" id="galleryTrack">' +
+          photos.map(function(url){
+            return '<div class="gallery-slide"><img src="' + url + '" alt="" loading="lazy" ' +
+              'onerror="this.closest(&#39;.gallery-slide&#39;).innerHTML=&#39;' + PHOTO_PLACEHOLDER_SVG.replace(/'/g, "&#39;").replace(/"/g, "&quot;") + '&#39;"></div>';
+          }).join('') +
+        '</div>' +
+        (photos.length > 1 ? '<div class="gallery-counter" id="galleryCounter">1 / ' + photos.length + '</div>' : '') +
+        '<button type="button" class="gallery-heart' + (saved ? ' saved' : '') + '" id="galleryHeart" data-listing-id="' + l.id + '" onclick="toggleWishlist(\'' + l.id + '\', this)" aria-label="' + (saved ? 'Remove from saved items' : 'Save this item') + '">' + (saved ? '♥' : '♡') + '</button>' +
+        (photos.length > 1
+          ? '<div class="gallery-dots" id="galleryDots">' +
+              photos.map(function(_, i){ return '<span class="' + (i === 0 ? 'active' : '') + '"></span>'; }).join('') +
+            '</div>'
+          : '') +
+      '</div>'
+    : '<div class="gallery-hero"><div class="photo-wrap" style="width:100%; height:100%;">' + PHOTO_PLACEHOLDER_SVG + '</div></div>';
+
   var inCart = isInCart(l.id);
   var s = l.seller || {};
   var ratingLine = (s.avg_rating != null)
@@ -3604,7 +3660,8 @@ function openListingDetail(listingId){
     : 'No reviews yet';
 
   contentEl.innerHTML =
-    '<div style="margin-bottom:14px;">' + galleryHtml + '</div>' +
+    galleryHtml +
+    '<div class="listing-detail-body-pad" style="padding:16px 0 0;">' +
     '<span class="cond">' + categoryLabel(l.category) + ' · ' + conditionLabel(l.condition) + '</span>' +
     '<h3 style="margin:4px 0 6px;">' + escapeHtml(l.item_name) + '</h3>' +
     '<p class="desc" style="white-space:pre-wrap;">' + escapeHtml(l.description) + '</p>' +
@@ -3618,7 +3675,10 @@ function openListingDetail(listingId){
         '</div>'
       : '') +
     '<button type="button" class="save-heart' + (saved ? ' saved' : '') + '" data-listing-id="' + l.id + '" onclick="toggleWishlist(\'' + l.id + '\', this)" aria-label="' + (saved ? 'Remove from saved items' : 'Save this item') + '" style="position:static; margin-top:10px;">' + (saved ? '♥ Saved' : '♡ Save this item') + '</button>' +
-    (l.seller_email ? '<button type="button" class="small-link" style="margin-top:10px; display:block;" onclick="viewSellerProfile(\'' + l.seller_email + '\')">View seller →</button>' : '');
+    (l.seller_email ? '<button type="button" class="small-link" style="margin-top:10px; display:block;" onclick="viewSellerProfile(\'' + l.seller_email + '\')">View seller →</button>' : '') +
+    '</div>';
+
+  if(photos.length > 1) initGallerySwipe(photos.length);
 
   // Buy / offer / cart stay in a footer pinned to the bottom of the
   // overlay (like AliExpress's product page) instead of scrolling away
@@ -3631,6 +3691,80 @@ function openListingDetail(listingId){
       '<button class="btn btn-ghost" style="flex:1; justify-content:center;" onclick="openMakeOffer(\'' + l.id + '\')">Make an offer</button>' +
       '<button class="btn' + (inCart ? ' btn-ink' : '') + '" style="flex:1; justify-content:center;" id="cartBtn-' + l.id + '" onclick="toggleCartItem(\'' + l.id + '\', this)">' + (inCart ? 'Remove from cart' : 'Add to cart') + '</button>' +
     '</div>';
+}
+
+// Wires touch/mouse drag-to-swipe on the listing detail's gallery-hero.
+// photoCount tells us how many slides exist so we know when to clamp at
+// the ends. Position is tracked as an index (0-based) rather than a raw
+// pixel offset, and every drag/swipe ultimately snaps to the nearest
+// whole slide — there's no "settle mid-way between two photos" state,
+// matching the AliExpress-style paging feel from the reference screenshots.
+function initGallerySwipe(photoCount){
+  var hero = document.getElementById('galleryHero');
+  var track = document.getElementById('galleryTrack');
+  var counter = document.getElementById('galleryCounter');
+  var dotsWrap = document.getElementById('galleryDots');
+  if(!hero || !track) return;
+
+  var current = 0;
+  var startX = 0, startY = 0, deltaX = 0, dragging = false, lockedAxis = null;
+
+  function goTo(index){
+    current = Math.max(0, Math.min(photoCount - 1, index));
+    track.style.transform = 'translateX(-' + (current * 100) + '%)';
+    if(counter) counter.textContent = (current + 1) + ' / ' + photoCount;
+    if(dotsWrap){
+      Array.prototype.forEach.call(dotsWrap.children, function(dot, i){
+        dot.classList.toggle('active', i === current);
+      });
+    }
+  }
+
+  function pointerX(e){ return (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX; }
+  function pointerY(e){ return (e.touches && e.touches[0]) ? e.touches[0].clientY : e.clientY; }
+
+  function onStart(e){
+    dragging = true; lockedAxis = null;
+    startX = pointerX(e); startY = pointerY(e); deltaX = 0;
+    track.classList.add('dragging');
+  }
+  function onMove(e){
+    if(!dragging) return;
+    var x = pointerX(e), y = pointerY(e);
+    deltaX = x - startX;
+    var deltaY = y - startY;
+    // Decide once per gesture whether this is a horizontal swipe (ours)
+    // or a vertical scroll (the page's) — locking prevents a mostly-
+    // vertical scroll gesture from also nudging the carousel sideways.
+    if(lockedAxis === null && (Math.abs(deltaX) > 6 || Math.abs(deltaY) > 6)){
+      lockedAxis = Math.abs(deltaX) > Math.abs(deltaY) ? 'x' : 'y';
+    }
+    if(lockedAxis === 'y') return;
+    if(e.cancelable) e.preventDefault();
+    var pct = (deltaX / hero.offsetWidth) * 100;
+    track.style.transform = 'translateX(calc(-' + (current * 100) + '% + ' + deltaX + 'px))';
+  }
+  function onEnd(){
+    if(!dragging) return;
+    dragging = false;
+    track.classList.remove('dragging');
+    if(lockedAxis === 'x'){
+      var threshold = hero.offsetWidth * 0.18;
+      if(deltaX <= -threshold) goTo(current + 1);
+      else if(deltaX >= threshold) goTo(current - 1);
+      else goTo(current);
+    }
+    deltaX = 0; lockedAxis = null;
+  }
+
+  hero.addEventListener('touchstart', onStart, { passive:true });
+  hero.addEventListener('touchmove', onMove, { passive:false });
+  hero.addEventListener('touchend', onEnd);
+  hero.addEventListener('mousedown', onStart);
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onEnd);
+
+  goTo(0);
 }
 
 function closeListingDetail(){
