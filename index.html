@@ -422,6 +422,17 @@
        instead of sitting flush against the very edge of the screen. */
     padding-bottom:env(safe-area-inset-bottom, 0px);
   }
+  @media (max-width:780px){
+    /* On mobile the fixed .bottom-nav (~64px incl. its own safe-area
+       padding) runs along the very bottom of the screen. float-stack
+       used the same bottom:20px offset as desktop, which put the
+       WhatsApp/Ask-Amana buttons directly on top of the bottom-nav's
+       Messages/Profile buttons (float-stack's z-index:70 is above
+       bottom-nav's z-index:60), silently swallowing taps meant for the
+       nav. Push the stack up by the nav's height so they stack instead
+       of overlap. */
+    .float-stack{ bottom:calc(64px + 20px); }
+  }
   .fab{
     width:54px; height:54px; border-radius:50%; display:flex; align-items:center; justify-content:center;
     font-size:22px; border:none; box-shadow:0 3px 10px rgba(0,0,0,.25); flex-shrink:0; align-self:flex-end;
